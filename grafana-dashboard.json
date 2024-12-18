@@ -1,0 +1,601 @@
+{
+	"annotations": {
+	  "list": [
+		{
+		  "builtIn": 1,
+		  "datasource": {
+			"type": "grafana",
+			"uid": "-- Grafana --"
+		  },
+		  "enable": true,
+		  "hide": true,
+		  "iconColor": "rgba(0, 211, 255, 1)",
+		  "name": "Annotations & Alerts",
+		  "type": "dashboard"
+		}
+	  ]
+	},
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": 36,
+	"links": [],
+	"panels": [
+	  {
+		"collapsed": true,
+		"gridPos": {
+		  "h": 1,
+		  "w": 24,
+		  "x": 0,
+		  "y": 0
+		},
+		"id": 9,
+		"panels": [
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "bdy7ccu1ntm2oa"
+			},
+			"fieldConfig": {
+			  "defaults": {
+				"color": {
+				  "mode": "palette-classic"
+				},
+				"custom": {
+				  "axisBorderShow": false,
+				  "axisCenteredZero": false,
+				  "axisColorMode": "text",
+				  "axisLabel": "",
+				  "axisPlacement": "auto",
+				  "barAlignment": 0,
+				  "barWidthFactor": 0.6,
+				  "drawStyle": "line",
+				  "fillOpacity": 0,
+				  "gradientMode": "none",
+				  "hideFrom": {
+					"legend": false,
+					"tooltip": false,
+					"viz": false
+				  },
+				  "insertNulls": false,
+				  "lineInterpolation": "linear",
+				  "lineWidth": 1,
+				  "pointSize": 5,
+				  "scaleDistribution": {
+					"type": "linear"
+				  },
+				  "showPoints": "auto",
+				  "spanNulls": true,
+				  "stacking": {
+					"group": "A",
+					"mode": "none"
+				  },
+				  "thresholdsStyle": {
+					"mode": "off"
+				  }
+				},
+				"mappings": [],
+				"thresholds": {
+				  "mode": "absolute",
+				  "steps": [
+					{
+					  "color": "green",
+					  "value": null
+					},
+					{
+					  "color": "red",
+					  "value": 80
+					}
+				  ]
+				}
+			  },
+			  "overrides": []
+			},
+			"gridPos": {
+			  "h": 10,
+			  "w": 12,
+			  "x": 0,
+			  "y": 1
+			},
+			"id": 6,
+			"options": {
+			  "legend": {
+				"calcs": [],
+				"displayMode": "list",
+				"placement": "bottom",
+				"showLegend": true
+			  },
+			  "tooltip": {
+				"mode": "single",
+				"sort": "none"
+			  }
+			},
+			"pluginVersion": "11.3.1",
+			"targets": [
+			  {
+				"datasource": {
+				  "type": "prometheus",
+				  "uid": "bdy7ccu1ntm2oa"
+				},
+				"disableTextWrap": false,
+				"editorMode": "builder",
+				"expr": "invidious_companion_subreason_protect_community",
+				"fullMetaSearch": false,
+				"includeNullMetadata": true,
+				"legendFormat": "{{instance}}",
+				"range": true,
+				"refId": "A",
+				"useBackend": false
+			  }
+			],
+			"title": "This helps protect our community.",
+			"type": "timeseries"
+		  }
+		],
+		"title": "Subreasons of \"Sign in to confirm you’re not a bot.\"",
+		"type": "row"
+	  },
+	  {
+		"collapsed": true,
+		"gridPos": {
+		  "h": 1,
+		  "w": 24,
+		  "x": 0,
+		  "y": 1
+		},
+		"id": 8,
+		"panels": [
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "bdy7ccu1ntm2oa"
+			},
+			"fieldConfig": {
+			  "defaults": {
+				"color": {
+				  "mode": "palette-classic"
+				},
+				"custom": {
+				  "axisBorderShow": false,
+				  "axisCenteredZero": false,
+				  "axisColorMode": "text",
+				  "axisLabel": "",
+				  "axisPlacement": "auto",
+				  "barAlignment": 0,
+				  "barWidthFactor": 0.6,
+				  "drawStyle": "line",
+				  "fillOpacity": 0,
+				  "gradientMode": "none",
+				  "hideFrom": {
+					"legend": false,
+					"tooltip": false,
+					"viz": false
+				  },
+				  "insertNulls": false,
+				  "lineInterpolation": "linear",
+				  "lineStyle": {
+					"fill": "solid"
+				  },
+				  "lineWidth": 1,
+				  "pointSize": 5,
+				  "scaleDistribution": {
+					"type": "linear"
+				  },
+				  "showPoints": "auto",
+				  "spanNulls": true,
+				  "stacking": {
+					"group": "A",
+					"mode": "none"
+				  },
+				  "thresholdsStyle": {
+					"mode": "off"
+				  }
+				},
+				"mappings": [],
+				"thresholds": {
+				  "mode": "absolute",
+				  "steps": [
+					{
+					  "color": "green",
+					  "value": null
+					},
+					{
+					  "color": "red",
+					  "value": 80
+					}
+				  ]
+				}
+			  },
+			  "overrides": []
+			},
+			"gridPos": {
+			  "h": 10,
+			  "w": 12,
+			  "x": 0,
+			  "y": 2
+			},
+			"id": 4,
+			"options": {
+			  "legend": {
+				"calcs": [],
+				"displayMode": "list",
+				"placement": "bottom",
+				"showLegend": true
+			  },
+			  "tooltip": {
+				"mode": "single",
+				"sort": "none"
+			  }
+			},
+			"pluginVersion": "11.3.1",
+			"targets": [
+			  {
+				"datasource": {
+				  "type": "prometheus",
+				  "uid": "bdy7ccu1ntm2oa"
+				},
+				"disableTextWrap": false,
+				"editorMode": "builder",
+				"expr": "invidious_companion_reason_bot",
+				"fullMetaSearch": false,
+				"includeNullMetadata": true,
+				"legendFormat": "{{instance}}",
+				"range": true,
+				"refId": "A",
+				"useBackend": false
+			  }
+			],
+			"title": "Sign in to confirm you’re not a bot.",
+			"type": "timeseries"
+		  }
+		],
+		"title": "Reasons",
+		"type": "row"
+	  },
+	  {
+		"collapsed": true,
+		"gridPos": {
+		  "h": 1,
+		  "w": 24,
+		  "x": 0,
+		  "y": 2
+		},
+		"id": 10,
+		"panels": [
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "bdy7ccu1ntm2oa"
+			},
+			"fieldConfig": {
+			  "defaults": {
+				"color": {
+				  "mode": "palette-classic"
+				},
+				"custom": {
+				  "axisBorderShow": false,
+				  "axisCenteredZero": false,
+				  "axisColorMode": "text",
+				  "axisLabel": "",
+				  "axisPlacement": "auto",
+				  "barAlignment": 0,
+				  "barWidthFactor": 0.6,
+				  "drawStyle": "line",
+				  "fillOpacity": 0,
+				  "gradientMode": "none",
+				  "hideFrom": {
+					"legend": false,
+					"tooltip": false,
+					"viz": false
+				  },
+				  "insertNulls": false,
+				  "lineInterpolation": "linear",
+				  "lineWidth": 1,
+				  "pointSize": 5,
+				  "scaleDistribution": {
+					"type": "linear"
+				  },
+				  "showPoints": "auto",
+				  "spanNulls": false,
+				  "stacking": {
+					"group": "A",
+					"mode": "none"
+				  },
+				  "thresholdsStyle": {
+					"mode": "off"
+				  }
+				},
+				"mappings": [],
+				"thresholds": {
+				  "mode": "absolute",
+				  "steps": [
+					{
+					  "color": "green",
+					  "value": null
+					},
+					{
+					  "color": "red",
+					  "value": 80
+					}
+				  ]
+				}
+			  },
+			  "overrides": []
+			},
+			"gridPos": {
+			  "h": 10,
+			  "w": 12,
+			  "x": 0,
+			  "y": 3
+			},
+			"id": 3,
+			"options": {
+			  "legend": {
+				"calcs": [],
+				"displayMode": "list",
+				"placement": "bottom",
+				"showLegend": true
+			  },
+			  "tooltip": {
+				"mode": "single",
+				"sort": "none"
+			  }
+			},
+			"pluginVersion": "11.3.1",
+			"targets": [
+			  {
+				"datasource": {
+				  "type": "prometheus",
+				  "uid": "bdy7ccu1ntm2oa"
+				},
+				"disableTextWrap": false,
+				"editorMode": "builder",
+				"expr": "invidious_companion_externaltokengenerator_fail",
+				"fullMetaSearch": false,
+				"includeNullMetadata": true,
+				"legendFormat": "{{instance}}",
+				"range": true,
+				"refId": "A",
+				"useBackend": false
+			  }
+			],
+			"title": "External Token Generation Fail",
+			"type": "timeseries"
+		  },
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "bdy7ccu1ntm2oa"
+			},
+			"fieldConfig": {
+			  "defaults": {
+				"color": {
+				  "mode": "palette-classic"
+				},
+				"custom": {
+				  "axisBorderShow": false,
+				  "axisCenteredZero": false,
+				  "axisColorMode": "text",
+				  "axisLabel": "",
+				  "axisPlacement": "auto",
+				  "barAlignment": 0,
+				  "barWidthFactor": 0.6,
+				  "drawStyle": "line",
+				  "fillOpacity": 0,
+				  "gradientMode": "none",
+				  "hideFrom": {
+					"legend": false,
+					"tooltip": false,
+					"viz": false
+				  },
+				  "insertNulls": false,
+				  "lineInterpolation": "linear",
+				  "lineWidth": 1,
+				  "pointSize": 5,
+				  "scaleDistribution": {
+					"type": "linear"
+				  },
+				  "showPoints": "auto",
+				  "spanNulls": false,
+				  "stacking": {
+					"group": "A",
+					"mode": "none"
+				  },
+				  "thresholdsStyle": {
+					"mode": "off"
+				  }
+				},
+				"mappings": [],
+				"thresholds": {
+				  "mode": "absolute",
+				  "steps": [
+					{
+					  "color": "green",
+					  "value": null
+					},
+					{
+					  "color": "red",
+					  "value": 80
+					}
+				  ]
+				}
+			  },
+			  "overrides": []
+			},
+			"gridPos": {
+			  "h": 10,
+			  "w": 12,
+			  "x": 12,
+			  "y": 3
+			},
+			"id": 7,
+			"options": {
+			  "legend": {
+				"calcs": [],
+				"displayMode": "list",
+				"placement": "bottom",
+				"showLegend": true
+			  },
+			  "tooltip": {
+				"mode": "single",
+				"sort": "none"
+			  }
+			},
+			"pluginVersion": "11.3.1",
+			"targets": [
+			  {
+				"datasource": {
+				  "type": "prometheus",
+				  "uid": "bdy7ccu1ntm2oa"
+				},
+				"disableTextWrap": false,
+				"editorMode": "builder",
+				"expr": "invidious_companion_potoken_fail",
+				"fullMetaSearch": false,
+				"includeNullMetadata": true,
+				"legendFormat": "{{instance}}",
+				"range": true,
+				"refId": "A",
+				"useBackend": false
+			  }
+			],
+			"title": "PoToken Generation Fail",
+			"type": "timeseries"
+		  }
+		],
+		"title": "Errors",
+		"type": "row"
+	  },
+	  {
+		"collapsed": true,
+		"gridPos": {
+		  "h": 1,
+		  "w": 24,
+		  "x": 0,
+		  "y": 3
+		},
+		"id": 11,
+		"panels": [
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "bdy7ccu1ntm2oa"
+			},
+			"fieldConfig": {
+			  "defaults": {
+				"color": {
+				  "mode": "palette-classic"
+				},
+				"custom": {
+				  "axisBorderShow": false,
+				  "axisCenteredZero": false,
+				  "axisColorMode": "text",
+				  "axisLabel": "",
+				  "axisPlacement": "auto",
+				  "barAlignment": 0,
+				  "barWidthFactor": 0.6,
+				  "drawStyle": "line",
+				  "fillOpacity": 0,
+				  "gradientMode": "none",
+				  "hideFrom": {
+					"legend": false,
+					"tooltip": false,
+					"viz": false
+				  },
+				  "insertNulls": false,
+				  "lineInterpolation": "linear",
+				  "lineWidth": 1,
+				  "pointSize": 5,
+				  "scaleDistribution": {
+					"type": "linear"
+				  },
+				  "showPoints": "auto",
+				  "spanNulls": false,
+				  "stacking": {
+					"group": "A",
+					"mode": "none"
+				  },
+				  "thresholdsStyle": {
+					"mode": "off"
+				  }
+				},
+				"mappings": [],
+				"thresholds": {
+				  "mode": "absolute",
+				  "steps": [
+					{
+					  "color": "green",
+					  "value": null
+					},
+					{
+					  "color": "red",
+					  "value": 80
+					}
+				  ]
+				}
+			  },
+			  "overrides": []
+			},
+			"gridPos": {
+			  "h": 10,
+			  "w": 12,
+			  "x": 0,
+			  "y": 11
+			},
+			"id": 1,
+			"options": {
+			  "legend": {
+				"calcs": [],
+				"displayMode": "list",
+				"placement": "bottom",
+				"showLegend": true
+			  },
+			  "tooltip": {
+				"mode": "single",
+				"sort": "none"
+			  }
+			},
+			"pluginVersion": "11.3.1",
+			"targets": [
+			  {
+				"datasource": {
+				  "type": "prometheus",
+				  "uid": "bdy7ccu1ntm2oa"
+				},
+				"disableTextWrap": false,
+				"editorMode": "builder",
+				"expr": "invidious_companion_cached_entries",
+				"fullMetaSearch": false,
+				"includeNullMetadata": true,
+				"legendFormat": "{{instance}}",
+				"range": true,
+				"refId": "A",
+				"useBackend": false
+			  }
+			],
+			"title": "Total Cached Entries",
+			"type": "timeseries"
+		  }
+		],
+		"title": "Misc",
+		"type": "row"
+	  }
+	],
+	"preload": false,
+	"refresh": "5s",
+	"schemaVersion": 40,
+	"tags": [],
+	"templating": {
+	  "list": []
+	},
+	"time": {
+	  "from": "now-15m",
+	  "to": "now"
+	},
+	"timepicker": {},
+	"timezone": "browser",
+	"title": "Invidious - Companion",
+	"uid": "fe78rgvy20k5ce",
+	"version": 8,
+	"weekStart": ""
+  }
