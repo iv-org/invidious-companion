@@ -24,6 +24,8 @@ dashManifest.get("/:videoId", async (c) => {
         Record<string, unknown>
     >;
 
+    const maxDashResolution = Deno.env.get("SERVER_MAX_DASH_RESOLUTION") || konfigStore.get("server.max_dash_resolution") as number;
+
     if (konfigStore.get("server.verify_requests") && check == undefined) {
         throw new HTTPException(400, {
             res: new Response("No check ID."),
@@ -67,7 +69,12 @@ dashManifest.get("/:videoId", async (c) => {
                         ).includes("av01")
                     ) {
                         if (i.mime_type.includes("av01")) {
-                            return true;
+                            // @ts-ignore 'i.height' is possibly 'undefined'.
+                            if (i.height > maxDashResolution) {
+                                return false;
+                            } else {
+                                return true;
+                            }
                         } else {
                             return false;
                         }

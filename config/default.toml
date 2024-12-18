@@ -5,6 +5,7 @@ host = "127.0.0.1"
 secret_key = "CHANGE_ME"
 base_url = "http://localhost:8282"
 verify_requests = false
+# max_dash_resolution = 1080
 
 [cache]
 enabled = true
