@@ -23,5 +23,5 @@ export const routes = (app: Hono, konfigStore: Store<Record<string, unknown>>) =
   app.route("/latest_version", invidiousRouteLatestVersion);
   app.route("/api/manifest/dash/id", invidiousRouteDashManifest);
   app.route("/videoplayback", videoPlaybackProxy);
-  app.route("/health", health);
+  app.route("/healthz", health);
 };

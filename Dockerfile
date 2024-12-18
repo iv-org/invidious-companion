@@ -35,7 +35,7 @@ ENV PORT=8282 \
     HOST=0.0.0.0
 
 ENV THC_PORT=${PORT} \
-    THC_PATH=/health
+    THC_PATH=/healthz
 
 # Copy passwd file for the non-privileged user from the user-stage
 COPY --from=user-stage /etc/passwd /etc/passwd
