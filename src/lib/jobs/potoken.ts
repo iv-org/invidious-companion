@@ -1,8 +1,9 @@
 import { BG } from "bgutils";
-import type { BgConfig } from "bgutils";
+import type { BgConfig, PoTokenResult } from "bgutils";
 import { JSDOM } from "jsdom";
 import { Innertube, UniversalCache } from "youtubei.js";
 import { Store } from "@willsoto/node-konfig-core";
+import { poTokenFail } from "../../routes/index.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -51,6 +52,7 @@ export const poTokenGenerate = async (
     const bgChallenge = await BG.Challenge.create(bgConfig);
 
     if (!bgChallenge) {
+        poTokenFail.inc()
         throw new Error("Could not get challenge");
     }
 
@@ -59,21 +61,37 @@ export const poTokenGenerate = async (
 
     if (interpreterJavascript) {
         new Function(interpreterJavascript)();
-    } else throw new Error("Could not load VM");
+    } else { 
+        poTokenFail.inc()
+        throw new Error("Could not load VM");
+    }
 
-    const poTokenResult = await BG.PoToken.generate({
-        program: bgChallenge.program,
-        globalName: bgChallenge.globalName,
-        bgConfig,
-    });
+    let poTokenResult: PoTokenResult
+    try {
+        poTokenResult = await BG.PoToken.generate({
+            program: bgChallenge.program,
+            globalName: bgChallenge.globalName,
+            bgConfig,
+        });
+    } catch(_) {
+        poTokenFail.inc()
+        throw new Error("Failed to generate a poToken")
+    }
 
     await BG.PoToken.generatePlaceholder(visitorData);
 
-    return (await Innertube.create({
-        po_token: poTokenResult.poToken,
-        visitor_data: visitorData,
-        fetch: getFetchClient(konfigStore),
-        cache: innertubeClientCache,
-        generate_session_locally: true,
-    }));
+    let innertube: Innertube
+    try {
+        innertube = await Innertube.create({
+            po_token: poTokenResult.poToken,
+            visitor_data: visitorData,
+            fetch: getFetchClient(konfigStore),
+            cache: innertubeClientCache,
+            generate_session_locally: true,
+        })
+    } catch(_) {
+        poTokenFail.inc()
+        throw new Error("Failed to create a new Innertube session")
+    }
+    return innertube;
 };

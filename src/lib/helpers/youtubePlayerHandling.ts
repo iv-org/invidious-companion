@@ -2,6 +2,7 @@ import { ApiResponse, Innertube, YT } from "youtubei.js";
 import { generateRandomString } from "youtubei.js/Utils";
 import { compress, decompress } from "https://deno.land/x/brotli@0.1.7/mod.ts";
 import { Store } from "@willsoto/node-konfig-core";
+import { cachedEntries } from "../../routes/index.ts";
 let youtubePlayerReqLocation = "youtubePlayerReq";
 if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -132,6 +133,7 @@ export const youtubePlayerParsing = async (
                         expireIn: 1000 * 60 * 60,
                     },
                 );
+                cachedEntries.inc()
             })();
         }
 
