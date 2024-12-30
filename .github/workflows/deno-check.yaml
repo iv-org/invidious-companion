@@ -17,9 +17,8 @@ jobs:
         with:
           deno-version: v2.x
 
-      # Uncomment this step to verify the use of 'deno fmt' on each commit.
-      # - name: Verify formatting
-      #   run: deno fmt --check src/**
+      - name: Verify formatting
+        run: deno fmt --check src/**
       
       - name: Run linter
         run: deno lint
