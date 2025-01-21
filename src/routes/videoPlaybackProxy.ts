@@ -80,29 +80,31 @@ videoPlaybackProxy.get("/", async (c) => {
 
     const fetchClient = await getFetchClient(konfigStore);
 
-    const getGoogleVideoResponse = () => fetchClient.call(
-        undefined,
-        `https://${host}/videoplayback?${queryParams.toString()}`,
-        {
-            method: "POST",
-            body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
-            headers: headersToSend,
-            signal: AbortSignal.timeout(5000)
-        },
-    );
+    const getGoogleVideoResponse = () =>
+        fetchClient.call(
+            undefined,
+            `https://${host}/videoplayback?${queryParams.toString()}`,
+            {
+                method: "POST",
+                body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
+                headers: headersToSend,
+                signal: AbortSignal.timeout(5000),
+            },
+        );
     let googlevideoResponse = await succeedOrRetry(5, getGoogleVideoResponse);
 
     if (googlevideoResponse.headers.has("location")) {
-        const getRedirectedGoogleVideo = () => fetchClient.call(
-            undefined,
-            googlevideoResponse.headers.get("location") as string,
-            {
-                method: "POST",
-                body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses)
-                headers: headersToSend,
-                signal: AbortSignal.timeout(5000)
-            },
-        );
+        const getRedirectedGoogleVideo = () =>
+            fetchClient.call(
+                undefined,
+                googlevideoResponse.headers.get("location") as string,
+                {
+                    method: "POST",
+                    body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses)
+                    headers: headersToSend,
+                    signal: AbortSignal.timeout(5000),
+                },
+            );
         googlevideoResponse = await succeedOrRetry(5, getRedirectedGoogleVideo);
     }
 
@@ -125,7 +127,7 @@ videoPlaybackProxy.get("/", async (c) => {
 
 async function succeedOrRetry(count: number, fn: () => any) {
     if (count <= 0) {
-        throw Error('failed after retries');
+        throw Error("failed after retries");
     }
 
     try {
