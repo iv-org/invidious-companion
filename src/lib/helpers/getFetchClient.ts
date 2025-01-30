@@ -1,5 +1,5 @@
 import { Store } from "@willsoto/node-konfig-core";
-import { retry, RetryError, type RetryOptions } from "jsr:@std/async";
+import { retry, type RetryOptions } from "jsr:@std/async";
 
 const retryOptions: RetryOptions = {
     maxAttempts: 3,
