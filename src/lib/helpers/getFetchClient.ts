@@ -49,7 +49,7 @@ async function fetchShim(
     ...[input, init]: Parameters<typeof globalThis.fetch>
 ): ReturnType<typeof globalThis.fetch> {
     const callFetch = () =>
-        fetch(input, {
+        globalThis.fetch(input, {
             signal: AbortSignal.timeout(10000),
             ...(init || {}),
         });
