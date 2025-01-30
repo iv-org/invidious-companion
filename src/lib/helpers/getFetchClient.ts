@@ -45,7 +45,7 @@ export const getFetchClient = (konfigStore: Store): {
     return fetchShim;
 };
 
-async function fetchShim(
+function fetchShim(
     ...[input, init]: Parameters<typeof globalThis.fetch>
 ): ReturnType<typeof globalThis.fetch> {
     const callFetch = () =>
@@ -53,5 +53,5 @@ async function fetchShim(
             signal: AbortSignal.timeout(10000),
             ...(init || {}),
         });
-    return await retry(callFetch, retryOptions);
+    return retry(callFetch, retryOptions);
 }
