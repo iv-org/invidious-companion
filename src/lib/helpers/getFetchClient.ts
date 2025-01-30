@@ -2,10 +2,10 @@ import { Store } from "@willsoto/node-konfig-core";
 import { retry, RetryError, type RetryOptions } from "jsr:@std/async";
 
 const retryOptions: RetryOptions = {
-  maxAttempts: 3,
-  minTimeout: 500,
-  multiplier: 2,
-  jitter: 0,
+    maxAttempts: 3,
+    minTimeout: 500,
+    multiplier: 2,
+    jitter: 0,
 };
 
 export const getFetchClient = (konfigStore: Store): {
@@ -45,9 +45,13 @@ export const getFetchClient = (konfigStore: Store): {
     return fetchShim;
 };
 
-async function fetchShim(...[input, init]: Parameters<typeof globalThis.fetch>): ReturnType<typeof globalThis.fetch> {
-  const callFetch = () => fetch(input, {
-    signal: AbortSignal.timeout(10000), ...(init || {})
-  });
-  return await retry(callFetch, retryOptions);
+async function fetchShim(
+    ...[input, init]: Parameters<typeof globalThis.fetch>
+): ReturnType<typeof globalThis.fetch> {
+    const callFetch = () =>
+        fetch(input, {
+            signal: AbortSignal.timeout(10000),
+            ...(init || {}),
+        });
+    return await retry(callFetch, retryOptions);
 }
