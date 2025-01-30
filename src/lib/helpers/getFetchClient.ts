@@ -1,4 +1,12 @@
 import { Store } from "@willsoto/node-konfig-core";
+import { retry, RetryError, type RetryOptions } from "jsr:@std/async";
+
+const retryOptions: RetryOptions = {
+  maxAttempts: 3,
+  minTimeout: 500,
+  multiplier: 2,
+  jitter: 0,
+};
 
 export const getFetchClient = (konfigStore: Store): {
     (input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
@@ -21,7 +29,7 @@ export const getFetchClient = (konfigStore: Store): {
                         konfigStore.get("networking.proxy") as string,
                 },
             });
-            const fetchRes = await fetch(input, {
+            const fetchRes = await fetchShim(input, {
                 client,
                 headers: init?.headers,
                 method: init?.method,
@@ -34,5 +42,12 @@ export const getFetchClient = (konfigStore: Store): {
         };
     }
 
-    return globalThis.fetch;
+    return fetchShim;
 };
+
+async function fetchShim(...[input, init]: Parameters<typeof globalThis.fetch>): ReturnType<typeof globalThis.fetch> {
+  const callFetch = () => fetch(input, {
+    signal: AbortSignal.timeout(10000), ...(init || {})
+  });
+  return await retry(callFetch, retryOptions);
+}
