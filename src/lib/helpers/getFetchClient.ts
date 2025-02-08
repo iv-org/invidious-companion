@@ -54,7 +54,7 @@ function fetchShim(
         "networking.fetch_retry_initial_debounce",
     );
     const fetchDebounceMultiplier = konfigStore.get(
-        "fetch_retry_debounce_multiplier",
+        "networking.fetch_retry_debounce_multiplier",
     );
     const retryOptions: RetryOptions = {
         maxAttempts: Number(fetchMaxAttempts) || 1,
