@@ -1,27 +1,23 @@
 import { Store } from "@willsoto/node-konfig-core";
 import { retry, type RetryOptions } from "jsr:@std/async";
 
-const retryOptions: RetryOptions = {
-    maxAttempts: 3,
-    minTimeout: 500,
-    multiplier: 2,
-    jitter: 0,
-};
+type FetchInputParameter = Parameters<typeof fetch>[0];
+type FetchInitParameter = Parameters<typeof fetch>[1];
+type FetchInitParameterWithClient =
+    | FetchInitParameter
+    | FetchInitParameter & { client: Deno.HttpClient };
+type FetchReturn = ReturnType<typeof fetch>
 
 export const getFetchClient = (konfigStore: Store): {
-    (input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
     (
-        input: Request | URL | string,
-        init?: RequestInit & {
-            client: Deno.HttpClient;
-        },
-    ): Promise<Response>;
-    (input: URL | Request | string, init?: RequestInit): Promise<Response>;
+        input: FetchInputParameter,
+        init?: FetchInitParameterWithClient,
+    ): FetchReturn
 } => {
     if (Deno.env.get("PROXY") || konfigStore.get("networking.proxy")) {
         return async (
-            input: RequestInfo | URL,
-            init?: RequestInit,
+            input: FetchInputParameter,
+            init?: FetchInitParameter,
         ) => {
             const client = Deno.createHttpClient({
                 proxy: {
@@ -29,7 +25,7 @@ export const getFetchClient = (konfigStore: Store): {
                         konfigStore.get("networking.proxy") as string,
                 },
             });
-            const fetchRes = await fetchShim(input, {
+            const fetchRes = await fetchShim(konfigStore, input, {
                 client,
                 headers: init?.headers,
                 method: init?.method,
@@ -42,16 +38,39 @@ export const getFetchClient = (konfigStore: Store): {
         };
     }
 
-    return fetchShim;
+    return (input: FetchInputParameter, init?: FetchInitParameterWithClient) =>
+        fetchShim(konfigStore, input, init);
 };
 
 function fetchShim(
-    ...[input, init]: Parameters<typeof globalThis.fetch>
-): ReturnType<typeof globalThis.fetch> {
+    konfigStore: Store,
+    ...fetchArgs: [FetchInputParameter, FetchInitParameterWithClient]
+): FetchReturn {
+    const fetchTimeout = konfigStore.get("networking.fetch_timeout");
+    const fetchRetry = konfigStore.get("networking.fetch_retry_enable");
+
+    const fetchMaxAttempts = konfigStore.get("networking.fetch_retry_times");
+    const fetchInitialDebounce = konfigStore.get(
+        "networking.fetch_retry_initial_debounce",
+    );
+    const fetchDebounceMultiplier = konfigStore.get(
+        "fetch_retry_debounce_multiplier",
+    );
+    const retryOptions: RetryOptions = {
+        maxAttempts: Number(fetchMaxAttempts) || 1,
+        minTimeout: Number(fetchInitialDebounce) || 0,
+        multiplier: Number(fetchDebounceMultiplier) || 0,
+        jitter: 0,
+    };
+
     const callFetch = () =>
-        globalThis.fetch(input, {
-            signal: AbortSignal.timeout(10000),
-            ...(init || {}),
+        fetch(fetchArgs[0], {
+            // only set the AbortSignal if the timeout is supplied in the config
+            signal: fetchTimeout
+                ? AbortSignal.timeout(Number(fetchTimeout))
+                : null,
+            ...(fetchArgs[1] || {}),
         });
-    return retry(callFetch, retryOptions);
+    // if retry enabled, call retry with the fetch shim, otherwise pass the fetch shim back directly
+    return fetchRetry ? retry(callFetch, retryOptions) : callFetch();
 }
