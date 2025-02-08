@@ -2,22 +2,21 @@ import { Store } from "@willsoto/node-konfig-core";
 import { retry, type RetryOptions } from "jsr:@std/async";
 
 type FetchInputParameter = Parameters<typeof fetch>[0];
-type FetchInitParameter = Parameters<typeof fetch>[1];
 type FetchInitParameterWithClient =
-    | FetchInitParameter
-    | FetchInitParameter & { client: Deno.HttpClient };
-type FetchReturn = ReturnType<typeof fetch>
+    | RequestInit
+    | RequestInit & { client: Deno.HttpClient };
+type FetchReturn = ReturnType<typeof fetch>;
 
 export const getFetchClient = (konfigStore: Store): {
     (
         input: FetchInputParameter,
         init?: FetchInitParameterWithClient,
-    ): FetchReturn
+    ): FetchReturn;
 } => {
     if (Deno.env.get("PROXY") || konfigStore.get("networking.proxy")) {
         return async (
             input: FetchInputParameter,
-            init?: FetchInitParameter,
+            init?: RequestInit,
         ) => {
             const client = Deno.createHttpClient({
                 proxy: {
@@ -44,7 +43,8 @@ export const getFetchClient = (konfigStore: Store): {
 
 function fetchShim(
     konfigStore: Store,
-    ...fetchArgs: [FetchInputParameter, FetchInitParameterWithClient]
+    input: FetchInputParameter,
+    init?: FetchInitParameterWithClient,
 ): FetchReturn {
     const fetchTimeout = konfigStore.get("networking.fetch_timeout");
     const fetchRetry = konfigStore.get("networking.fetch_retry_enable");
@@ -64,12 +64,12 @@ function fetchShim(
     };
 
     const callFetch = () =>
-        fetch(fetchArgs[0], {
+        fetch(input, {
             // only set the AbortSignal if the timeout is supplied in the config
             signal: fetchTimeout
                 ? AbortSignal.timeout(Number(fetchTimeout))
                 : null,
-            ...(fetchArgs[1] || {}),
+            ...(init || {}),
         });
     // if retry enabled, call retry with the fetch shim, otherwise pass the fetch shim back directly
     return fetchRetry ? retry(callFetch, retryOptions) : callFetch();
