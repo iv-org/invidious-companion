@@ -46,9 +46,8 @@ function fetchShim(
     input: FetchInputParameter,
     init?: FetchInitParameterWithClient,
 ): FetchReturn {
-    const fetchTimeout = konfigStore.get("networking.fetch_timeout");
+    const fetchTimeout = konfigStore.get("networking.fetch_timeout_ms");
     const fetchRetry = konfigStore.get("networking.fetch_retry_enable");
-
     const fetchMaxAttempts = konfigStore.get("networking.fetch_retry_times");
     const fetchInitialDebounce = konfigStore.get(
         "networking.fetch_retry_initial_debounce",

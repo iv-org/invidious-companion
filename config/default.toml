@@ -16,7 +16,7 @@ directory = "/var/tmp"
 #proxy = ""
 # Enable YouTube new video format UMP
 ump = false
-# fetch_timeout = 10000
+# fetch_timeout_ms = 10000
 # fetch_retry_enable = true
 # fetch_retry_times = 3
 # fetch_retry_initial_debounce = 500
