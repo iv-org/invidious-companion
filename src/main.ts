@@ -3,6 +3,7 @@ import { routes } from "./routes/index.ts";
 import { Innertube, UniversalCache } from "youtubei.js";
 import { poTokenGenerate } from "./lib/jobs/potoken.ts";
 import { konfigLoader } from "./lib/helpers/konfigLoader.ts";
+import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -35,6 +36,9 @@ if (args?.[0] == "healthcheck") {
 
 const { getFetchClient } = await import(getFetchClientLocation);
 
+declare module 'hono' {
+  interface ContextVariableMap extends HonoVariables {}
+}
 const app = new Hono();
 
 let innertubeClient: Innertube;
@@ -124,9 +128,7 @@ if (!innertubeClientOauthEnabled) {
 }
 
 app.use("*", async (c, next) => {
-    // @ts-ignore Do not understand how to fix this error.
     c.set("innertubeClient", innertubeClient);
-    // @ts-ignore Do not understand how to fix this error.
     c.set("konfigStore", konfigStore);
     await next();
 });

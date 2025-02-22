@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { Store } from "@willsoto/node-konfig-core";
 import { HTTPException } from "hono/http-exception";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
@@ -44,10 +43,7 @@ videoPlaybackProxy.get("/", async (c) => {
         });
     }
 
-    // @ts-ignore Do not understand how to fix this error.
-    const konfigStore = await c.get("konfigStore") as Store<
-        Record<string, unknown>
-    >;
+    const konfigStore = c.get("konfigStore");
 
     // deno-lint-ignore prefer-const
     let queryParams = new URLSearchParams(urlReq.search);

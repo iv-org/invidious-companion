@@ -1,15 +1,12 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { Innertube } from "youtubei.js";
-import { HonoVariables } from "../../lib/types/HonoVariables.ts";
-import { Store } from "@willsoto/node-konfig-core";
 import {
     youtubePlayerParsing,
     youtubeVideoInfo,
 } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 
-const latestVersion = new Hono<{ Variables: HonoVariables }>();
+const latestVersion = new Hono();
 
 latestVersion.get("/", async (c) => {
     const { check, itag, id, local } = c.req.query();
@@ -21,11 +18,8 @@ latestVersion.get("/", async (c) => {
         });
     }
 
-    const innertubeClient = await c.get("innertubeClient") as Innertube;
-    // @ts-ignore Do not understand how to fix this error.
-    const konfigStore = await c.get("konfigStore") as Store<
-        Record<string, unknown>
-    >;
+    const innertubeClient = c.get("innertubeClient");
+    const konfigStore = await c.get("konfigStore");
 
     if (konfigStore.get("server.verify_requests") && check == undefined) {
         throw new HTTPException(400, {
