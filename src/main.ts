@@ -36,8 +36,8 @@ if (args?.[0] == "healthcheck") {
 
 const { getFetchClient } = await import(getFetchClientLocation);
 
-declare module 'hono' {
-  interface ContextVariableMap extends HonoVariables {}
+declare module "hono" {
+    interface ContextVariableMap extends HonoVariables {}
 }
 const app = new Hono();
 
