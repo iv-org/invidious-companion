@@ -45,5 +45,3 @@ WORKDIR /app
 USER appuser
 
 ENTRYPOINT ["/tini", "--", "/app/invidious_companion"]
-
-HEALTHCHECK --interval=5s --timeout=5s --start-period=10s --retries=3 CMD ["/tini", "--", "/app/invidious_companion", "healthcheck"]
