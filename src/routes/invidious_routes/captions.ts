@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import { HonoVariables } from "../../lib/types/HonoVariables.ts";
 import { Store } from "@willsoto/node-konfig-core";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts"
-import { innertube } from "youtubei.js";
-import { youtubePlayerParsing } from "../../lib/helpers/youtubePlayerHandling.ts";
+import { youtubePlayerParsing, youtubeVideoInfo } from "../../lib/helpers/youtubePlayerHandling.ts";
+import { handleTranscripts } from "../../lib/helpers/youtubeTranscriptsHandling.ts";
 import { HTTPException } from "hono/http-exception";
 
 interface AvailableCaption {
@@ -11,7 +11,6 @@ interface AvailableCaption {
     languageCode: string;
     url: string;
 }
-
 
 const captionsHandler = new Hono<{ Variables: HonoVariables }>();
 captionsHandler.get("/:videoId", async (c) => {
@@ -74,12 +73,13 @@ captionsHandler.get("/:videoId", async (c) => {
     }
 
     if (caption.length == 0) {
-        throw new HTTPException(404)
+        throw new HTTPException(404);
     } else {
-        caption = caption[0]
+        caption = caption[0];
     }
 
-    return await c.text()
+    c.header("Content-Type", "text/vtt; charset=UTF-8");
+    return c.body(await handleTranscripts(innertubeClient, videoId, caption));
 })
 
 export default captionsHandler;

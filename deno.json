@@ -23,7 +23,8 @@
   "unstable": [
     "cron",
     "kv",
-    "http"
+    "http",
+    "temporal"
   ],
   "fmt": {
     "indentWidth": 4
