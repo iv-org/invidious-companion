@@ -2,10 +2,7 @@ import { Hono } from "hono";
 import { HonoVariables } from "../../lib/types/HonoVariables.ts";
 import { Store } from "@willsoto/node-konfig-core";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
-import {
-    youtubePlayerParsing,
-    youtubeVideoInfo,
-} from "../../lib/helpers/youtubePlayerHandling.ts";
+import { youtubePlayerParsing } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { handleTranscripts } from "../../lib/helpers/youtubeTranscriptsHandling.ts";
 import { HTTPException } from "hono/http-exception";
 
@@ -24,12 +21,10 @@ captionsHandler.get("/:videoId", async (c) => {
 
     const check = c.req.query("check");
 
-    // @ts-ignore
     if (konfigStore.get("server.verify_requests") && check == undefined) {
         throw new HTTPException(400, {
             res: new Response("No check ID."),
         });
-        // @ts-ignore
     } else if (konfigStore.get("server.verify_requests") && check) {
         if (verifyRequest(check, videoId, konfigStore) === false) {
             throw new HTTPException(400, {
@@ -40,7 +35,7 @@ captionsHandler.get("/:videoId", async (c) => {
 
     const innertubeClient = await c.get("innertubeClient") as Innertube;
 
-    let playerJson = await youtubePlayerParsing(
+    const playerJson = await youtubePlayerParsing(
         innertubeClient,
         videoId,
         konfigStore,
