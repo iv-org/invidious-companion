@@ -1,8 +1,11 @@
 import { Hono } from "hono";
 import { HonoVariables } from "../../lib/types/HonoVariables.ts";
 import { Store } from "@willsoto/node-konfig-core";
-import { verifyRequest } from "../../lib/helpers/verifyRequest.ts"
-import { youtubePlayerParsing, youtubeVideoInfo } from "../../lib/helpers/youtubePlayerHandling.ts";
+import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import {
+    youtubePlayerParsing,
+    youtubeVideoInfo,
+} from "../../lib/helpers/youtubePlayerHandling.ts";
 import { handleTranscripts } from "../../lib/helpers/youtubeTranscriptsHandling.ts";
 import { HTTPException } from "hono/http-exception";
 
@@ -26,7 +29,7 @@ captionsHandler.get("/:videoId", async (c) => {
         throw new HTTPException(400, {
             res: new Response("No check ID."),
         });
-    // @ts-ignore
+        // @ts-ignore
     } else if (konfigStore.get("server.verify_requests") && check) {
         if (verifyRequest(check, videoId, konfigStore) === false) {
             throw new HTTPException(400, {
@@ -41,35 +44,38 @@ captionsHandler.get("/:videoId", async (c) => {
         innertubeClient,
         videoId,
         konfigStore,
-    )
+    );
 
-    const captionsTrackArray = playerJson.captions.playerCaptionsTracklistRenderer.captionTracks
+    const captionsTrackArray =
+        playerJson.captions.playerCaptionsTracklistRenderer.captionTracks;
 
-    const label = c.req.query("label")
-    const lang = c.req.query("lang")
+    const label = c.req.query("label");
+    const lang = c.req.query("lang");
 
     // Show all available captions when a specific one is not selected
     if (label == undefined && lang == undefined) {
-        const invidiousAvailableCaptionsArr: AvailableCaption[] = []
+        const invidiousAvailableCaptionsArr: AvailableCaption[] = [];
 
-        captionsTrackArray.forEach(captions => {
+        captionsTrackArray.forEach((captions) => {
             invidiousAvailableCaptionsArr.push({
                 label: captions.name.simpleText,
                 languageCode: captions.languageCode,
-                url: `/api/v1/captions/${videoId}?label=${encodeURIComponent(captions.name.simpleText)}`
-            })
+                url: `/api/v1/captions/${videoId}?label=${
+                    encodeURIComponent(captions.name.simpleText)
+                }`,
+            });
         });
 
-        return c.json({captions: invidiousAvailableCaptionsArr})
+        return c.json({ captions: invidiousAvailableCaptionsArr });
     }
 
     // Extract selected caption
     let caption;
 
     if (lang) {
-        caption = captionsTrackArray.filter(c => c.languageCode === lang);
+        caption = captionsTrackArray.filter((c) => c.languageCode === lang);
     } else {
-        caption = captionsTrackArray.filter(c => c.name.simpleText === label);
+        caption = captionsTrackArray.filter((c) => c.name.simpleText === label);
     }
 
     if (caption.length == 0) {
@@ -80,6 +86,6 @@ captionsHandler.get("/:videoId", async (c) => {
 
     c.header("Content-Type", "text/vtt; charset=UTF-8");
     return c.body(await handleTranscripts(innertubeClient, videoId, caption));
-})
+});
 
 export default captionsHandler;
