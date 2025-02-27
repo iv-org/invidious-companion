@@ -15,31 +15,13 @@ if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
         ) as string;
     }
 }
-
-const args = Deno.args;
-const konfigStore = await konfigLoader();
-const host = Deno.env.get("HOST") || konfigStore.get("server.host") as string;
-const port = Deno.env.get("PORT") || konfigStore.get("server.port") as string;
-
-if (args?.[0] == "healthcheck") {
-    try {
-        const response = await fetch(`http://${host}:${port}/healthz`);
-        if (response.status === 200) {
-            Deno.exit(0);
-        } else {
-            Deno.exit(1);
-        }
-    } catch (_) {
-        Deno.exit(1);
-    }
-}
-
 const { getFetchClient } = await import(getFetchClientLocation);
 
 declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
 const app = new Hono();
+const konfigStore = await konfigLoader();
 
 let innertubeClient: Innertube;
 let innertubeClientFetchPlayer = true;
@@ -136,6 +118,7 @@ app.use("*", async (c, next) => {
 routes(app, konfigStore);
 
 Deno.serve({
-    port: Number(port),
-    hostname: host,
+    port: Number(Deno.env.get("PORT")) ||
+        konfigStore.get("server.port") as number,
+    hostname: Deno.env.get("HOST") || konfigStore.get("server.host") as string,
 }, app.fetch);
