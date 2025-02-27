@@ -16,9 +16,10 @@ RUN curl -fsSL https://github.com/krallin/tini/releases/download/v${TINI_VERSION
         --output /tini \
     && chmod +x /tini
 
-RUN curl -fsSL https://github.com/dmikusa/tiny-health-checker/releases/download/v0.33.0/thc-x86_64-unknown-linux-musl \
+RUN arch=$(uname -m) && \
+    curl -fsSL https://github.com/dmikusa/tiny-health-checker/releases/download/v0.36.0/thc-${arch}-unknown-linux-musl \
     --output /thc \
-&& chmod +x /thc
+    && chmod +x /thc
 
 RUN deno task compile
 
