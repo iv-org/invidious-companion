@@ -33,6 +33,7 @@ dashManifest.get("/:videoId", async (c) => {
         innertubeClient,
         videoId,
         konfigStore,
+        c.get("tokenMinter"),
     );
     const videoInfo = youtubeVideoInfo(
         innertubeClient,

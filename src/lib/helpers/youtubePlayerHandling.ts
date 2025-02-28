@@ -2,6 +2,7 @@ import { ApiResponse, Innertube, YT } from "youtubei.js";
 import { generateRandomString } from "youtubei.js/Utils";
 import { compress, decompress } from "https://deno.land/x/brotli@0.1.7/mod.ts";
 import { Store } from "@willsoto/node-konfig-core";
+import type { BG } from "bgutils";
 let youtubePlayerReqLocation = "youtubePlayerReq";
 if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -21,6 +22,7 @@ export const youtubePlayerParsing = async (
     innertubeClient: Innertube,
     videoId: string,
     konfigStore: Store,
+    tokenMinter: BG.WebPoMinter,
 ): Promise<object> => {
     const cacheEnabled = konfigStore.get("cache.enabled");
 
@@ -34,6 +36,7 @@ export const youtubePlayerParsing = async (
             innertubeClient,
             videoId,
             konfigStore,
+            tokenMinter,
         );
         const videoData = youtubePlayerResponse.data;
 
@@ -94,6 +97,12 @@ export const youtubePlayerParsing = async (
                         adaptive_format
                             .decipher(
                                 innertubeClient.session.player,
+                            );
+                    videoData.streamingData.adaptiveFormats[index].url =
+                        videoData.streamingData.adaptiveFormats[index].url
+                            .replace(
+                                /pot=[^&]*/,
+                                `pot=${innertubeClient.session.po_token}`,
                             );
                     if (
                         videoData.streamingData.adaptiveFormats[index]

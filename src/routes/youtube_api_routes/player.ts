@@ -13,6 +13,7 @@ player.post("/player", async (c) => {
                 innertubeClient,
                 jsonReq.videoId,
                 konfigStore,
+                c.get("tokenMinter"),
             ),
         );
     }

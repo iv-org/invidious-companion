@@ -1,11 +1,13 @@
 import { ApiResponse, Innertube } from "youtubei.js";
 import { Store } from "@willsoto/node-konfig-core";
 import NavigationEndpoint from "youtubei.js/NavigationEndpoint";
+import type { BG } from "bgutils";
 
 export const youtubePlayerReq = async (
     innertubeClient: Innertube,
     videoId: string,
     konfigStore: Store,
+    tokenMinter: BG.WebPoMinter,
 ): Promise<ApiResponse> => {
     const innertubeClientOauthEnabled = konfigStore.get(
         "youtube_session.oauth_enabled",
@@ -20,7 +22,9 @@ export const youtubePlayerReq = async (
         watchEndpoint: { videoId: videoId },
     });
 
-    return await watch_endpoint.call(innertubeClient.actions, {
+    const contentPoToken = await tokenMinter.mintAsWebsafeString(videoId);
+
+    return watch_endpoint.call(innertubeClient.actions, {
         playbackContext: {
             contentPlaybackContext: {
                 vis: 0,
@@ -30,7 +34,7 @@ export const youtubePlayerReq = async (
             },
         },
         serviceIntegrityDimensions: {
-            poToken: innertubeClient.session.po_token,
+            poToken: contentPoToken,
         },
         client: innertubeClientUsed,
     });
