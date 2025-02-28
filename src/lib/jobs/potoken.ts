@@ -1,5 +1,5 @@
-import { BG } from "bgutils";
-import type { BgConfig } from "bgutils";
+import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils";
+import type { WebPoSignalOutput } from "bgutils";
 import { JSDOM } from "jsdom";
 import { Innertube, UniversalCache } from "youtubei.js";
 import { Store } from "@willsoto/node-konfig-core";
@@ -21,11 +21,12 @@ export const poTokenGenerate = async (
     innertubeClient: Innertube,
     konfigStore: Store<Record<string, unknown>>,
     innertubeClientCache: UniversalCache,
-): Promise<Innertube> => {
-    const requestKey = "O43z0dpjhgX20SCx4KAo";
-
+): Promise<{ innertubeClient: Innertube; tokenMinter: BG.WebPoMinter }> => {
     if (innertubeClient.session.po_token) {
-        innertubeClient = await Innertube.create({ retrieve_player: false });
+        innertubeClient = await Innertube.create({
+            user_agent: USER_AGENT,
+            retrieve_player: false,
+        });
     }
 
     const visitorData = innertubeClient.session.context.client.visitorData;
@@ -34,46 +35,90 @@ export const poTokenGenerate = async (
         throw new Error("Could not get visitor data");
     }
 
-    const dom = new JSDOM();
+    const dom = new JSDOM(
+        '<!DOCTYPE html><html lang="en"><head><title></title></head><body></body></html>',
+        {
+            url: "https://www.youtube.com/",
+            referrer: "https://www.youtube.com/",
+            userAgent: USER_AGENT,
+        },
+    );
 
     Object.assign(globalThis, {
         window: dom.window,
         document: dom.window.document,
+        location: dom.window.location,
+        origin: dom.window.origin,
     });
 
-    const bgConfig: BgConfig = {
-        fetch: getFetchClient(konfigStore),
-        globalObj: globalThis,
-        identifier: visitorData,
-        requestKey,
-    };
+    if (!Reflect.has(globalThis, "navigator")) {
+        Object.defineProperty(globalThis, "navigator", {
+            value: dom.window.navigator,
+        });
+    }
 
-    const bgChallenge = await BG.Challenge.create(bgConfig);
-
-    if (!bgChallenge) {
+    const challengeResponse = await innertubeClient.getAttestationChallenge(
+        "ENGAGEMENT_TYPE_UNBOUND",
+    );
+    if (!challengeResponse.bg_challenge) {
         throw new Error("Could not get challenge");
     }
 
-    const interpreterJavascript = bgChallenge.interpreterJavascript
-        .privateDoNotAccessOrElseSafeScriptWrappedValue;
-
+    const interpreterUrl = challengeResponse.bg_challenge.interpreter_url
+        .private_do_not_access_or_else_trusted_resource_url_wrapped_value;
+    const bgScriptResponse = await getFetchClient(konfigStore)(
+        `http:${interpreterUrl}`,
+    );
+    const interpreterJavascript = await bgScriptResponse.text();
     if (interpreterJavascript) {
         new Function(interpreterJavascript)();
     } else throw new Error("Could not load VM");
 
-    const poTokenResult = await BG.PoToken.generate({
-        program: bgChallenge.program,
-        globalName: bgChallenge.globalName,
-        bgConfig,
+    const botguard = await BG.BotGuardClient.create({
+        program: challengeResponse.bg_challenge.program,
+        globalName: challengeResponse.bg_challenge.global_name,
+        globalObj: globalThis,
     });
 
-    await BG.PoToken.generatePlaceholder(visitorData);
+    const webPoSignalOutput: WebPoSignalOutput = [];
+    const botguardResponse = await botguard.snapshot({ webPoSignalOutput });
+    const requestKey = "O43z0dpjhgX20SCx4KAo";
 
-    return (await Innertube.create({
-        po_token: poTokenResult.poToken,
+    const integrityTokenResponse = await fetch(buildURL("GenerateIT", true), {
+        method: "POST",
+        headers: {
+            "content-type": "application/json+protobuf",
+            "x-goog-api-key": GOOG_API_KEY,
+            "x-user-agent": "grpc-web-javascript/0.1",
+            "user-agent": USER_AGENT,
+        },
+        body: JSON.stringify([requestKey, botguardResponse]),
+    });
+
+    const response = await integrityTokenResponse.json() as unknown[];
+
+    if (typeof response[0] !== "string") {
+        throw new Error("Could not get integrity token");
+    }
+
+    const integrityTokenBasedMinter = await BG.WebPoMinter.create({
+        integrityToken: response[0],
+    }, webPoSignalOutput);
+
+    const sessionPoToken = await integrityTokenBasedMinter.mintAsWebsafeString(
+        visitorData,
+    );
+
+    const instantiatedInnertubeClient = await Innertube.create({
+        po_token: sessionPoToken,
         visitor_data: visitorData,
         fetch: getFetchClient(konfigStore),
         cache: innertubeClientCache,
         generate_session_locally: true,
-    }));
+    });
+
+    return {
+        innertubeClient: instantiatedInnertubeClient,
+        tokenMinter: integrityTokenBasedMinter,
+    };
 };

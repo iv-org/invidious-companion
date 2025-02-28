@@ -2,8 +2,11 @@ import { Hono } from "hono";
 import { routes } from "./routes/index.ts";
 import { Innertube, UniversalCache } from "youtubei.js";
 import { poTokenGenerate } from "./lib/jobs/potoken.ts";
+import { USER_AGENT } from "bgutils";
 import { konfigLoader } from "./lib/helpers/konfigLoader.ts";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
+import type { BG } from "bgutils";
+
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -41,6 +44,7 @@ declare module "hono" {
 }
 const app = new Hono();
 
+let tokenMinter: BG.WebPoMinter;
 let innertubeClient: Innertube;
 let innertubeClientFetchPlayer = true;
 const innertubeClientOauthEnabled = konfigStore.get(
@@ -77,30 +81,32 @@ innertubeClient = await Innertube.create({
     retrieve_player: innertubeClientFetchPlayer,
     fetch: getFetchClient(konfigStore),
     cookie: innertubeClientCookies || undefined,
+    user_agent: USER_AGENT,
 });
 
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
-        innertubeClient = await poTokenGenerate(
+        ({ innertubeClient, tokenMinter } = await poTokenGenerate(
             innertubeClient,
             konfigStore,
             innertubeClientCache as UniversalCache,
-        );
+        ));
     }
     Deno.cron(
         "regenerate youtube session",
         konfigStore.get("jobs.youtube_session.frequency") as string,
         async () => {
             if (innertubeClientJobPoTokenEnabled) {
-                innertubeClient = await poTokenGenerate(
+                ({ innertubeClient, tokenMinter } = await poTokenGenerate(
                     innertubeClient,
                     konfigStore,
                     innertubeClientCache,
-                );
+                ));
             } else {
                 innertubeClient = await Innertube.create({
                     cache: innertubeClientCache,
                     retrieve_player: innertubeClientFetchPlayer,
+                    user_agent: USER_AGENT,
                 });
             }
         },
@@ -129,6 +135,7 @@ if (!innertubeClientOauthEnabled) {
 
 app.use("*", async (c, next) => {
     c.set("innertubeClient", innertubeClient);
+    c.set("tokenMinter", tokenMinter);
     c.set("konfigStore", konfigStore);
     await next();
 });

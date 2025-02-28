@@ -1,9 +1,10 @@
 {
   "tasks": {
-    "dev": "deno run --allow-import=github.com:443,jsr.io:443,raw.githubusercontent.com:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname --allow-read --allow-write=/var/tmp/youtubei.js --watch src/main.ts",
-    "compile": "deno compile --include ./src/lib/helpers/youtubePlayerReq.ts --include ./src/lib/helpers/getFetchClient.ts --output invidious_companion --allow-import=github.com:443,jsr.io:443,raw.githubusercontent.com:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-read --allow-sys=hostname --allow-write=/var/tmp/youtubei.js src/main.ts"
+    "dev": "deno run --allow-import=github.com:443,jsr.io:443,raw.githubusercontent.com:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname --allow-read --allow-ffi --allow-write=/var/tmp/youtubei.js --watch src/main.ts",
+    "compile": "deno compile --include ./src/lib/helpers/youtubePlayerReq.ts --include ./src/lib/helpers/getFetchClient.ts --output invidious_companion --allow-import=github.com:443,jsr.io:443,raw.githubusercontent.com:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-read --allow-ffi --allow-sys=hostname --allow-write=/var/tmp/youtubei.js src/main.ts"
   },
   "imports": {
+    "canvas": "npm:canvas@^3.1.0",
     "hono": "jsr:@hono/hono@^4.7.2",
     "hono/logger": "jsr:@hono/hono@^4.7.2/logger",
     "hono/bearer-auth": "jsr:@hono/hono@^4.7.2/bearer-auth",
@@ -28,5 +29,6 @@
   ],
   "fmt": {
     "indentWidth": 4
-  }
+  },
+  "nodeModulesDir": "auto"
 }
