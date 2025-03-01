@@ -98,12 +98,6 @@ export const youtubePlayerParsing = async (
                             .decipher(
                                 innertubeClient.session.player,
                             );
-                    videoData.streamingData.adaptiveFormats[index].url =
-                        videoData.streamingData.adaptiveFormats[index].url
-                            .replace(
-                                /pot=[^&]*/,
-                                `pot=${innertubeClient.session.po_token}`,
-                            );
                     if (
                         videoData.streamingData.adaptiveFormats[index]
                             .signatureCipher !==
