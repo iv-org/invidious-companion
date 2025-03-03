@@ -59,6 +59,7 @@ if (!innertubeClientOauthEnabled) {
 }
 
 innertubeClient = await Innertube.create({
+    enable_session_cache: false,
     cache: innertubeClientCache,
     retrieve_player: innertubeClientFetchPlayer,
     fetch: getFetchClient(konfigStore),
@@ -86,7 +87,9 @@ if (!innertubeClientOauthEnabled) {
                 ));
             } else {
                 innertubeClient = await Innertube.create({
+                    enable_session_cache: false,
                     cache: innertubeClientCache,
+                    fetch: getFetchClient(konfigStore),
                     retrieve_player: innertubeClientFetchPlayer,
                     user_agent: USER_AGENT,
                 });

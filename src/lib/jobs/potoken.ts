@@ -24,6 +24,7 @@ export const poTokenGenerate = async (
 ): Promise<{ innertubeClient: Innertube; tokenMinter: BG.WebPoMinter }> => {
     if (innertubeClient.session.po_token) {
         innertubeClient = await Innertube.create({
+            enable_session_cache: false,
             user_agent: USER_AGENT,
             retrieve_player: false,
         });
@@ -110,6 +111,7 @@ export const poTokenGenerate = async (
     );
 
     const instantiatedInnertubeClient = await Innertube.create({
+        enable_session_cache: false,
         po_token: sessionPoToken,
         visitor_data: visitorData,
         fetch: getFetchClient(konfigStore),
