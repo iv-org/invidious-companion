@@ -32,7 +32,7 @@ export function getDownloadHandler(app) {
 
         try {
             downloadWidgetData = JSON.parse(body.get("download_widget"));
-        } catch (error) {
+        } catch {
             throw new HTTPException(400, {
                 res: new Response("Invalid download_widget json"),
             });
@@ -52,6 +52,8 @@ export function getDownloadHandler(app) {
         const filename = `${title}-${videoId}.${ext || ""}`;
 
         if (label) {
+            // TODO depends on https://github.com/iv-org/invidious-companion/pull/55
+            // return await app.request(`/api/v1/captions/${videoId}?label=${encodeURIComponent(label)}`)
         } else if (itag) {
             const urlQueriesForLatestVersion = new URLSearchParams();
             urlQueriesForLatestVersion.set("id", videoId);
