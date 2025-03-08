@@ -337,11 +337,11 @@
     "symbol-tree@3.2.4": {
       "integrity": "sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw=="
     },
-    "tldts-core@6.1.79": {
-      "integrity": "sha512-HM+Ud/2oQuHt4I43Nvjc213Zji/z25NSH5OkJskJwHXNtYh9DTRlHMDFhms9dFMP7qyve/yVaXFIxmcJ7TdOjw=="
+    "tldts-core@6.1.82": {
+      "integrity": "sha512-Jabl32m21tt/d/PbDO88R43F8aY98Piiz6BVH9ShUlOAiiAELhEqwrAmBocjAqnCfoUeIsRU+h3IEzZd318F3w=="
     },
-    "tldts@6.1.79": {
-      "integrity": "sha512-wjlYwK8lC/WcywLWf3A7qbK07SexezXjTRVwuPWXHvcjD7MnpPS2RXY5rLO3g12a8CNc7Y7jQRQsV7XyuBZjig==",
+    "tldts@6.1.82": {
+      "integrity": "sha512-KCTjNL9F7j8MzxgfTgjT+v21oYH38OidFty7dH00maWANAI2IsLw2AnThtTJi9HKALHZKQQWnNebYheadacD+g==",
       "dependencies": [
         "tldts-core"
       ]
@@ -349,8 +349,8 @@
     "toml@3.0.0": {
       "integrity": "sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w=="
     },
-    "tough-cookie@5.1.1": {
-      "integrity": "sha512-Ek7HndSVkp10hmHP9V4qZO1u+pn1RU5sI0Fw+jCU3lyvuMZcgqsNgc6CmJJZyByK4Vm/qotGRJlfgAX8q+4JiA==",
+    "tough-cookie@5.1.2": {
+      "integrity": "sha512-FVDYdxtnj0G6Qm/DhNPSb8Ju59ULcup3tuJxkFb5K8Bv2pUXILbf0xZWU8PX8Ov19OXljbUyveOFwRMwkXzO+A==",
       "dependencies": [
         "tldts"
       ]
@@ -397,13 +397,31 @@
     }
   },
   "redirects": {
-    "https://esm.sh/@types/estree@1.0.6": "https://esm.sh/v135/@types/estree@1.0.6/index.d.ts"
+    "https://esm.sh/@types/estree@1.0.6": "https://esm.sh/@types/estree@1.0.6/index.d.ts"
   },
   "remote": {
-    "https://esm.sh/@bufbuild/protobuf@2.0.0/wire": "66a21da06aeea8e11f70e77406abad253fdc5acc75f084f9f418ec5b18eb7ee0",
-    "https://esm.sh/bgutils-js@3.1.0": "a7a150393362ebecd356652158e3adcb4ba594ec5f1677cedc06c7debd10b9f7",
-    "https://esm.sh/v135/@bufbuild/protobuf@2.0.0/denonext/wire.js": "6b8dc119872ecdd4078d46c9a290504190a1b9f58e402033c605ffc2deffc017",
-    "https://esm.sh/v135/bgutils-js@3.1.0/denonext/bgutils-js.mjs": "4e6ad19cfed424a689ad31cdd761a04b9cb60d4b94429fc65e9a19e561906040",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/create.mjs": "d9fcaeb3dfeb517c4d59843d78d7b51b3ad91b911e35bc317dc29e97e4ba9e67",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/descriptors.mjs": "7e5dd304539ba1889dea236a3635983d22038ae19bd4952d1d9323f1622a9aaa",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/from-binary.mjs": "8619f1c113211c1bfde08795f2a8f30faeb6b48fefecf044dd12580bdd77e176",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/is-message.mjs": "b6435ef48053c60211391b011012c25056f8527a4b1a1201c128460adb60db29",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/proto-int64.mjs": "43ff71e1af9d45f2a6ad6170f4e4aa6c20f98d47a0a68be3b3f8363764ce1bd8",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/reflect/error.mjs": "e90d2f17fe9bf940b349915978ff389790b267313eafd016f8c80ed3633e2759",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/reflect/guard.mjs": "b7c13bcf7826d6dd26904e33abdc18e83896b2d9fda783d988257f62849e02cb",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/reflect/reflect-check.mjs": "03168260147a043ccd73d45d2e3c5e1adb37aaac3ba4834c5eca63d0f5c2fd1b",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/reflect/reflect.mjs": "a4daf06c0f06e91c1aac94566e7831006e35da21e2e85afe3f17c77458adc3c8",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/reflect/scalar.mjs": "3d4e9550eb227008f020a2b29cabe6dbf863fa17251a5a966163aec135f0314e",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/reflect/unsafe.mjs": "2e5be946c0a5f2fd57aa0631cd0edea8a8b836e6ca3d1f884175029de13612c1",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/to-binary.mjs": "28a330bdbb17e5d18957d164c9511c199615d9b13a9223d6c67260b0f1fdeab4",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wire/base64-encoding.mjs": "6d5ac314fcfdc2af5529ffa8e319d4fbb5d6f18720a0eed171d012dfce3bb25f",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wire/binary-encoding.mjs": "125088da118dcbcfde7fa3d11b87d8da30fc30418aa046684c348eea0f842251",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wire/text-encoding.mjs": "da32b0e15885c8963c118c907927e8ee60fee57d21e3988bfd3aebf44afb1265",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wire/text-format.mjs": "9c8e39da4c3cbc0618e93219f7def9356774198a005d3da92870aaa41a2eebd3",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wire/varint.mjs": "148131cfbd4bebfa7aed5c4131a3c76c1a72ee95daaf3acb392ddf755e9a8bf5",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wkt/wrappers.mjs": "2fdb6acdda91c53c238b51c5ea6ef8def5b4e9871f93c439ab835c0a9f1e6070",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/wire.mjs": "791ca43f39084f37fabf37bcd77c788861bce7cc3d0d8528dc61ec9559956f46",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/wire": "eb1be07dad5823fc419cc9e6f62077a70962ce42facb1a5240b7d5c3674e852f",
+    "https://esm.sh/bgutils-js@3.1.0": "0527a704a9b97ed3f1b8c9621f73bc7e3f4c8198f8d63e0a0662a29755958de4",
+    "https://esm.sh/bgutils-js@3.1.0/denonext/bgutils-js.mjs": "89a104b72045a1dce0c041d1e3c83a5469db0df634d4f233670e6859f8d5cf89",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno.ts": "f913bfdb3c66b2330fa8b531bd1e291437b836c9fbf002b9ae044bf14e1f397c",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/package.json": "4e1d16c0f95a2b58dc6dba7e0fe969b800794a6040ae02116e14eae2444e4429",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/protos/generated/misc/common.ts": "7d6ca8d7cd7eafe1f8d5ddc11c440566c418aeaf2d8a03a72eced7466a691039",
