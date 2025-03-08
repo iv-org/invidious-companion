@@ -133,10 +133,6 @@ export const youtubePlayerParsing = async (
             streamingData,
             videoDetails,
             microformat,
-            invidiousCompanion: {
-                "baseUrl": Deno.env.get("SERVER_BASE_URL") ||
-                    konfigStore.get("server.base_url") as string,
-            },
         }))(videoData);
 
         if (

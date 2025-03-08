@@ -3,7 +3,6 @@ port = 8282
 host = "127.0.0.1"
 # secret key needs to be 16 characters long or more
 secret_key = "CHANGE_ME"
-base_url = "http://localhost:8282"
 verify_requests = false
 
 [cache]
