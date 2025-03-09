@@ -31,12 +31,12 @@ export const youtubePlayerParsing = async ({
     tokenMinter: BG.WebPoMinter;
     overrideCache?: boolean;
 }): Promise<object> => {
-    const cacheEnabled = konfigStore.get("cache.enabled");
+    const cacheEnabled = konfigStore.get("cache.enabled") && !overrideCache;
 
     const videoCached = (await kv.get(["video_cache", videoId]))
         .value as Uint8Array;
 
-    if (videoCached != null && cacheEnabled && !overrideCache) {
+    if (videoCached != null && cacheEnabled) {
         return JSON.parse(new TextDecoder().decode(decompress(videoCached)));
     } else {
         const youtubePlayerResponse = await youtubePlayerReq(
@@ -145,10 +145,7 @@ export const youtubePlayerParsing = async ({
             microformat,
         }))(videoData);
 
-        if (
-            cacheEnabled && !overrideCache &&
-            videoData.playabilityStatus?.status == "OK"
-        ) {
+        if (cacheEnabled && videoData.playabilityStatus?.status == "OK") {
             (async () => {
                 await kv.set(
                     ["video_cache", videoId],
