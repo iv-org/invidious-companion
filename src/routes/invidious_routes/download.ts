@@ -36,22 +36,21 @@ export default function getDownloadHandler(app) {
         }
 
         if (
-            !(title || videoId ||
-                (downloadWidgetData.itag && downloadWidgetData.ext))
+            !(title || videoId || downloadWidgetData)
         ) {
             throw new HTTPException(400, {
                 res: new Response("Invalid form data"),
             });
         }
-        const itag = Number(downloadWidgetData.itag);
-        const { ext, label } = downloadWidgetData;
 
-        const filename = `${title}-${videoId}.${ext || ""}`;
+        if (downloadWidgetData.label) {
+            return await app.request(`/api/v1/captions/${videoId}?label=${encodeURIComponent(downloadWidgetData.label)}`)
+        } else if (downloadWidgetData.itag) {
 
-        if (label) {
-            // TODO depends on https://github.com/iv-org/invidious-companion/pull/55
-            // return await app.request(`/api/v1/captions/${videoId}?label=${encodeURIComponent(label)}`)
-        } else if (itag) {
+            const itag = Number(downloadWidgetData.itag);
+            const ext = downloadWidgetData.ext;
+            const filename = `${title}-${videoId}.${ext || ""}`;
+
             const urlQueriesForLatestVersion = new URLSearchParams();
             urlQueriesForLatestVersion.set("id", videoId);
             urlQueriesForLatestVersion.set("itag", itag.toString());
