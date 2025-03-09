@@ -1,11 +1,17 @@
+import type { Context, Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 
-export default function getDownloadHandler(app) {
-    async function handler(c) {
+export default function getDownloadHandler(app: Hono) {
+    async function handler(c: Context) {
         const body = await c.req.formData();
 
-        const videoId = body.get("id");
+        const videoId = body.get("id") as string | undefined;
+        if (videoId == undefined) {
+            throw new HTTPException(400, {
+                res: new Response("no video id given"),
+            });
+        }
 
         const config = c.get("config");
 
@@ -28,7 +34,9 @@ export default function getDownloadHandler(app) {
         let downloadWidgetData: { itag: number; ext: string; label: string };
 
         try {
-            downloadWidgetData = JSON.parse(body.get("download_widget"));
+            downloadWidgetData = JSON.parse(
+                (body.get("download_widget") as string || undefined) || "",
+            );
         } catch {
             throw new HTTPException(400, {
                 res: new Response("Invalid download_widget json"),
@@ -44,9 +52,12 @@ export default function getDownloadHandler(app) {
         }
 
         if (downloadWidgetData.label) {
-            return await app.request(`/api/v1/captions/${videoId}?label=${encodeURIComponent(downloadWidgetData.label)}`)
+            return await app.request(
+                `/api/v1/captions/${videoId}?label=${
+                    encodeURIComponent(downloadWidgetData.label)
+                }`,
+            );
         } else if (downloadWidgetData.itag) {
-
             const itag = Number(downloadWidgetData.itag);
             const ext = downloadWidgetData.ext;
             const filename = `${title}-${videoId}.${ext || ""}`;
