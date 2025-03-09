@@ -18,18 +18,25 @@ const { youtubePlayerReq } = await import(youtubePlayerReqLocation);
 
 const kv = await Deno.openKv();
 
-export const youtubePlayerParsing = async (
+export const youtubePlayerParsing = async ({
+    innertubeClient,
+    videoId,
+    konfigStore,
+    tokenMinter,
+    overrideCache = false,
+}: {
     innertubeClient: Innertube,
     videoId: string,
     konfigStore: Store,
     tokenMinter: BG.WebPoMinter,
-): Promise<object> => {
+    overrideCache?: boolean,
+}): Promise<object> => {
     const cacheEnabled = konfigStore.get("cache.enabled");
 
     const videoCached = (await kv.get(["video_cache", videoId]))
         .value as Uint8Array;
 
-    if (videoCached != null && cacheEnabled == true) {
+    if (videoCached != null && cacheEnabled && !overrideCache) {
         return JSON.parse(new TextDecoder().decode(decompress(videoCached)));
     } else {
         const youtubePlayerResponse = await youtubePlayerReq(
@@ -139,7 +146,7 @@ export const youtubePlayerParsing = async (
         }))(videoData);
 
         if (
-            cacheEnabled == true && videoData.playabilityStatus?.status == "OK"
+            cacheEnabled && !overrideCache && videoData.playabilityStatus?.status == "OK"
         ) {
             (async () => {
                 await kv.set(

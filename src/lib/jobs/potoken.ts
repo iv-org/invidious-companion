@@ -149,20 +149,17 @@ export const poTokenGenerate = async (
             throw new Error("no videos with id found in trending");
         }
 
-        const cacheEnabled = konfigStore.get("cache.enabled");
-        // disable cache duing call to youtubePlayerParsing to avoid poisoning cache with a bad PO token
-        konfigStore.set("cache.enabled", false);
-        const youtubePlayerResponseJson = await youtubePlayerParsing(
-            instantiatedInnertubeClient,
-            video.id,
+        const youtubePlayerResponseJson = await youtubePlayerParsing({
+            innertubeClient: instantiatedInnertubeClient,
+            videoId: video.id,
             konfigStore,
-            integrityTokenBasedMinter,
-        );
+            tokenMinter: integrityTokenBasedMinter,
+            overrideCache: true,
+        });
         const videoInfo = youtubeVideoInfo(
             instantiatedInnertubeClient,
             youtubePlayerResponseJson,
         );
-        konfigStore.set("cache.enabled", cacheEnabled);
         const validFormat = videoInfo.streaming_data?.adaptive_formats[0];
         if (!validFormat) {
             throw new Error(

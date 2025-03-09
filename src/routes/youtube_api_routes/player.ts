@@ -9,12 +9,12 @@ player.post("/player", async (c) => {
     const konfigStore = c.get("konfigStore");
     if (jsonReq.videoId) {
         return c.json(
-            await youtubePlayerParsing(
+            await youtubePlayerParsing({
                 innertubeClient,
-                jsonReq.videoId,
+                videoId: jsonReq.videoId,
                 konfigStore,
-                c.get("tokenMinter"),
-            ),
+                tokenMinter: c.get("tokenMinter"),
+            }),
         );
     }
 });

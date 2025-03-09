@@ -33,12 +33,12 @@ latestVersion.get("/", async (c) => {
         }
     }
 
-    const youtubePlayerResponseJson = await youtubePlayerParsing(
+    const youtubePlayerResponseJson = await youtubePlayerParsing({
         innertubeClient,
-        id,
+        videoId: id,
         konfigStore,
-        c.get("tokenMinter"),
-    );
+        tokenMinter: c.get("tokenMinter"),
+    });
     const videoInfo = youtubeVideoInfo(
         innertubeClient,
         youtubePlayerResponseJson,
