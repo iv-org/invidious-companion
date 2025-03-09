@@ -4,6 +4,7 @@ import { Innertube, UniversalCache } from "youtubei.js";
 import { poTokenGenerate } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
 import { konfigLoader } from "./lib/helpers/konfigLoader.ts";
+import { retry } from "jsr:@std/async";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 import type { BG } from "bgutils";
 
@@ -69,15 +70,20 @@ innertubeClient = await Innertube.create({
 
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
-        ({ innertubeClient, tokenMinter } = await poTokenGenerate(
-            innertubeClient,
-            konfigStore,
-            innertubeClientCache as UniversalCache,
+        ({ innertubeClient, tokenMinter } = await retry(
+            poTokenGenerate.bind(
+                poTokenGenerate,
+                innertubeClient,
+                konfigStore,
+                innertubeClientCache as UniversalCache,
+            ),
+            { minTimeout: 1_000, maxTimeout: 60_000, multiplier: 5, jitter: 0 },
         ));
     }
     Deno.cron(
         "regenerate youtube session",
         konfigStore.get("jobs.youtube_session.frequency") as string,
+        { backoffSchedule: [5_000, 15_000, 60_000, 180_000] },
         async () => {
             if (innertubeClientJobPoTokenEnabled) {
                 ({ innertubeClient, tokenMinter } = await poTokenGenerate(

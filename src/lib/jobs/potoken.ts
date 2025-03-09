@@ -135,6 +135,51 @@ export const poTokenGenerate = async (
         generate_session_locally: true,
     });
 
+    try {
+        const feed = await instantiatedInnertubeClient.getTrending();
+        // get all videos and shuffle them randomly to avoid using the same trending video over and over
+        const videos = feed.videos
+            .filter((video) => video.type === "Video")
+            .map((value) => ({ value, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(({ value }) => value);
+
+        const video = videos.find((video) => "id" in video);
+        if (!video) {
+            throw new Error("no videos with id found in trending");
+        }
+
+        const cacheEnabled = konfigStore.get("cache.enabled");
+        // disable cache duing call to youtubePlayerParsing to avoid poisoning cache with a bad PO token
+        konfigStore.set("cache.enabled", false);
+        const youtubePlayerResponseJson = await youtubePlayerParsing(
+            instantiatedInnertubeClient,
+            video.id,
+            konfigStore,
+            integrityTokenBasedMinter,
+        );
+        const videoInfo = youtubeVideoInfo(
+            instantiatedInnertubeClient,
+            youtubePlayerResponseJson,
+        );
+        konfigStore.set("cache.enabled", cacheEnabled);
+        const validFormat = videoInfo.streaming_data?.adaptive_formats[0];
+        if (!validFormat) {
+            throw new Error(
+                "failed to find valid video with adaptive format to check token against",
+            );
+        }
+        const result = await fetchImpl(validFormat?.url, { method: "HEAD" });
+        if (result.status !== 200) {
+            throw new Error(
+                `did not get a 200 when checking video, got ${result.status} instead`,
+            );
+        }
+    } catch (err) {
+        console.log("Failed to get valid PO token, will retry", { err });
+        throw err;
+    }
+
     return {
         innertubeClient: instantiatedInnertubeClient,
         tokenMinter: integrityTokenBasedMinter,
