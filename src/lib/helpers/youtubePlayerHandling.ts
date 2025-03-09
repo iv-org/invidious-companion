@@ -31,7 +31,9 @@ export const youtubePlayerParsing = async ({
     tokenMinter: BG.WebPoMinter;
     overrideCache?: boolean;
 }): Promise<object> => {
-    const cacheEnabled = overrideCache ? false : konfigStore.get("cache.enabled");
+    const cacheEnabled = overrideCache
+        ? false
+        : konfigStore.get("cache.enabled");
 
     const videoCached = (await kv.get(["video_cache", videoId]))
         .value as Uint8Array;
