@@ -2,7 +2,11 @@ import { Hono } from "hono";
 import type { HonoVariables } from "../../lib/types/HonoVariables.ts";
 import { Store } from "@willsoto/node-konfig-core";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
-import { youtubePlayerParsing } from "../../lib/helpers/youtubePlayerHandling.ts";
+import {
+    youtubePlayerParsing,
+    youtubeVideoInfo,
+} from "../../lib/helpers/youtubePlayerHandling.ts";
+import type { CaptionTrackData } from "youtubei.js/PlayerCaptionsTracklist";
 import { handleTranscripts } from "../../lib/helpers/youtubeTranscriptsHandling.ts";
 import { HTTPException } from "hono/http-exception";
 
@@ -35,15 +39,19 @@ captionsHandler.get("/:videoId", async (c) => {
 
     const innertubeClient = await c.get("innertubeClient");
 
-    const playerJson = await youtubePlayerParsing(
+    const youtubePlayerResponseJson = await youtubePlayerParsing(
         innertubeClient,
         videoId,
         konfigStore,
     );
 
-    const captionsTrackArray =
-        // @ts-ignore to be fixed
-        playerJson.captions.playerCaptionsTracklistRenderer.captionTracks;
+    const videoInfo = youtubeVideoInfo(
+        innertubeClient,
+        youtubePlayerResponseJson,
+    );
+
+    const captionsTrackArray = videoInfo.captions?.caption_tracks;
+    if (captionsTrackArray == undefined) throw new HTTPException(404);
 
     const label = c.req.query("label");
     const lang = c.req.query("lang");
@@ -52,46 +60,38 @@ captionsHandler.get("/:videoId", async (c) => {
     if (label == undefined && lang == undefined) {
         const invidiousAvailableCaptionsArr: AvailableCaption[] = [];
 
-        captionsTrackArray.forEach(
-            (
-                captions: {
-                    name: { simpleText: string | number | boolean };
-                    languageCode: any;
-                },
-            ) => {
-                invidiousAvailableCaptionsArr.push({
-                    // @ts-ignore to be fixed
-                    label: captions.name.simpleText,
-                    languageCode: captions.languageCode,
-                    url: `/api/v1/captions/${videoId}?label=${
-                        encodeURIComponent(captions.name.simpleText)
-                    }`,
-                });
-            },
-        );
+        for (const caption_track of captionsTrackArray) {
+            invidiousAvailableCaptionsArr.push({
+                label: caption_track.name.text || "",
+                languageCode: caption_track.language_code,
+                url: `/api/v1/captions/${videoId}?label=${
+                    encodeURIComponent(caption_track.name.text || "")
+                }`,
+            });
+        }
 
         return c.json({ captions: invidiousAvailableCaptionsArr });
     }
 
     // Extract selected caption
-    let caption;
+    let filterSelected: CaptionTrackData[];
 
     if (lang) {
-        // @ts-ignore to be fixed
-        caption = captionsTrackArray.filter((c) => c.languageCode === lang);
+        filterSelected = captionsTrackArray.filter((c: CaptionTrackData) =>
+            c.language_code === lang
+        );
     } else {
-        // @ts-ignore to be fixed
-        caption = captionsTrackArray.filter((c) => c.name.simpleText === label);
+        filterSelected = captionsTrackArray.filter((c: CaptionTrackData) =>
+            c.name.text === label
+        );
     }
 
-    if (caption.length == 0) {
-        throw new HTTPException(404);
-    } else {
-        caption = caption[0];
-    }
+    if (filterSelected.length == 0) throw new HTTPException(404);
 
     c.header("Content-Type", "text/vtt; charset=UTF-8");
-    return c.body(await handleTranscripts(innertubeClient, videoId, caption));
+    return c.body(
+        await handleTranscripts(innertubeClient, videoId, filterSelected[0]),
+    );
 });
 
 export default captionsHandler;

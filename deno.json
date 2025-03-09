@@ -10,6 +10,7 @@
     "youtubei.js": "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno.ts",
     "youtubei.js/Utils": "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/utils/Utils.ts",
     "youtubei.js/NavigationEndpoint": "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/parser/classes/NavigationEndpoint.ts",
+    "youtubei.js/PlayerCaptionsTracklist": "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/parser/classes/PlayerCaptionsTracklist.ts",
     "jsdom": "npm:jsdom@26.0.0",
     "bgutils": "https://esm.sh/bgutils-js@3.1.0",
     "estree": "https://esm.sh/@types/estree@1.0.6",
