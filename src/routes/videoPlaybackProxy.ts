@@ -112,7 +112,7 @@ videoPlaybackProxy.get("/", async (c) => {
     let status = googlevideoResponse.status;
     if (requestBytes) {
         status = 206;
-        headersForResponse["content-range"] = `range ${requestBytes}/*`;
+        headersForResponse["content-range"] = `bytes ${requestBytes}/*`;
     }
 
     return new Response(googlevideoResponse.body, {
