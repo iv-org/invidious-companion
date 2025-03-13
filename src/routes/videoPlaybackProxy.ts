@@ -49,7 +49,6 @@ videoPlaybackProxy.get("/", async (c) => {
     let queryParams = new URLSearchParams(urlReq.search);
     queryParams.delete("host");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
-    const requestBytesArray = requestBytes?.split("-");
     if (rangeHeader && requestBytes) {
         queryParams.append(
             "range",
@@ -111,11 +110,9 @@ videoPlaybackProxy.get("/", async (c) => {
     };
 
     let status = googlevideoResponse.status;
-    if (requestBytesArray?.length == 2) {
+    if (requestBytes) {
         status = 206;
-        headersForResponse["content-range"] = `range ${requestBytesArray[0]}-${
-            requestBytesArray[1]
-        }/*`;
+        headersForResponse["content-range"] = `range ${requestBytes}/*`;
     }
 
     return new Response(googlevideoResponse.body, {
