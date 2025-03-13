@@ -17,7 +17,6 @@ const videoPlaybackProxy = new Hono();
 
 videoPlaybackProxy.get("/", async (c) => {
     const { host, c: client, expire } = c.req.query();
-    const rangeHeader = c.req.header("range") as string | undefined;
     const urlReq = new URL(c.req.url);
 
     if (host == undefined || !/[\w-]+.googlevideo.com/.test(host)) {
@@ -48,8 +47,9 @@ videoPlaybackProxy.get("/", async (c) => {
     // deno-lint-ignore prefer-const
     let queryParams = new URLSearchParams(urlReq.search);
     queryParams.delete("host");
+    const rangeHeader = c.req.header("range");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
-    if (rangeHeader && requestBytes) {
+    if (requestBytes) {
         queryParams.append(
             "range",
             requestBytes,
@@ -109,14 +109,14 @@ videoPlaybackProxy.get("/", async (c) => {
         "last-modified": googlevideoResponse.headers.get("last-modified") || "",
     };
 
-    let status = googlevideoResponse.status;
-    if (requestBytes) {
-        status = 206;
+    let responseStatus = googlevideoResponse.status;
+    if (requestBytes && responseStatus == 200) {
+        responseStatus = 206;
         headersForResponse["content-range"] = `bytes ${requestBytes}/*`;
     }
 
     return new Response(googlevideoResponse.body, {
-        status: status,
+        status: responseStatus,
         statusText: googlevideoResponse.statusText,
         headers: headersForResponse,
     });
