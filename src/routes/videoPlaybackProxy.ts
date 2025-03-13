@@ -48,10 +48,12 @@ videoPlaybackProxy.get("/", async (c) => {
     // deno-lint-ignore prefer-const
     let queryParams = new URLSearchParams(urlReq.search);
     queryParams.delete("host");
-    if (rangeHeader) {
+    const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
+    const requestBytesArray = requestBytes?.split("-");
+    if (rangeHeader && requestBytes) {
         queryParams.append(
             "range",
-            rangeHeader.split("=")[1],
+            requestBytes,
         );
     }
 
@@ -98,7 +100,7 @@ videoPlaybackProxy.get("/", async (c) => {
         );
     }
 
-    const headersForResponse = {
+    const headersForResponse: Record<string, string> = {
         "content-length": googlevideoResponse.headers.get("content-length") ||
             "",
         "access-control-allow-origin": "*",
@@ -108,8 +110,16 @@ videoPlaybackProxy.get("/", async (c) => {
         "last-modified": googlevideoResponse.headers.get("last-modified") || "",
     };
 
+    let status = googlevideoResponse.status;
+    if (requestBytesArray?.length == 2) {
+        status = 206;
+        headersForResponse["content-range"] = `range ${requestBytesArray[0]}-${
+            requestBytesArray[1]
+        }/*`;
+    }
+
     return new Response(googlevideoResponse.body, {
-        status: googlevideoResponse.status,
+        status: status,
         statusText: googlevideoResponse.statusText,
         headers: headersForResponse,
     });
