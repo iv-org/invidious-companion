@@ -3,10 +3,12 @@ import { routes } from "./routes/index.ts";
 import { Innertube, UniversalCache } from "youtubei.js";
 import { poTokenGenerate } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
-import { konfigLoader } from "./lib/helpers/konfigLoader.ts";
 import { retry } from "@std/async";
-import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 import type { BG } from "bgutils";
+import type { HonoVariables } from "./lib/types/HonoVariables.ts";
+
+import { parseConfig } from "./lib/helpers/config.ts";
+const config = await parseConfig();
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
@@ -25,26 +27,20 @@ declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
 const app = new Hono();
-const konfigStore = await konfigLoader();
 
 let tokenMinter: BG.WebPoMinter;
 let innertubeClient: Innertube;
 let innertubeClientFetchPlayer = true;
-const innertubeClientOauthEnabled = konfigStore.get(
-    "youtube_session.oauth_enabled",
-) as boolean;
-const innertubeClientJobPoTokenEnabled = konfigStore.get(
-    "jobs.youtube_session.po_token_enabled",
-) as boolean;
-const innertubeClientCookies = konfigStore.get(
-    "jobs.youtube_session.cookies",
-) as string;
+const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
+const innertubeClientJobPoTokenEnabled =
+    config.jobs.youtube_session.po_token_enabled;
+const innertubeClientCookies = config.youtube_session.cookies;
 let innertubeClientCache = new UniversalCache(
     true,
-    konfigStore.get("cache.directory") as string + "/youtubei.js/",
+    `${config.cache.directory}/youtubei.js/`,
 ) as UniversalCache;
 
-Deno.env.set("TMPDIR", konfigStore.get("cache.directory") as string);
+Deno.env.set("TMPDIR", config.cache.directory);
 
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
@@ -63,7 +59,7 @@ innertubeClient = await Innertube.create({
     enable_session_cache: false,
     cache: innertubeClientCache,
     retrieve_player: innertubeClientFetchPlayer,
-    fetch: getFetchClient(konfigStore),
+    fetch: getFetchClient(config),
     cookie: innertubeClientCookies || undefined,
     user_agent: USER_AGENT,
 });
@@ -74,7 +70,7 @@ if (!innertubeClientOauthEnabled) {
             poTokenGenerate.bind(
                 poTokenGenerate,
                 innertubeClient,
-                konfigStore,
+                config,
                 innertubeClientCache as UniversalCache,
             ),
             { minTimeout: 1_000, maxTimeout: 60_000, multiplier: 5, jitter: 0 },
@@ -82,20 +78,20 @@ if (!innertubeClientOauthEnabled) {
     }
     Deno.cron(
         "regenerate youtube session",
-        konfigStore.get("jobs.youtube_session.frequency") as string,
+        config.jobs.youtube_session.frequency,
         { backoffSchedule: [5_000, 15_000, 60_000, 180_000] },
         async () => {
             if (innertubeClientJobPoTokenEnabled) {
                 ({ innertubeClient, tokenMinter } = await poTokenGenerate(
                     innertubeClient,
-                    konfigStore,
+                    config,
                     innertubeClientCache,
                 ));
             } else {
                 innertubeClient = await Innertube.create({
                     enable_session_cache: false,
                     cache: innertubeClientCache,
-                    fetch: getFetchClient(konfigStore),
+                    fetch: getFetchClient(config),
                     retrieve_player: innertubeClientFetchPlayer,
                     user_agent: USER_AGENT,
                 });
@@ -127,14 +123,13 @@ if (!innertubeClientOauthEnabled) {
 app.use("*", async (c, next) => {
     c.set("innertubeClient", innertubeClient);
     c.set("tokenMinter", tokenMinter);
-    c.set("konfigStore", konfigStore);
+    c.set("config", config);
     await next();
 });
 
-routes(app, konfigStore);
+routes(app, config);
 
 Deno.serve({
-    port: Number(Deno.env.get("PORT")) ||
-        konfigStore.get("server.port") as number,
-    hostname: Deno.env.get("HOST") || konfigStore.get("server.host") as string,
+    port: Number(Deno.env.get("PORT")) || config.server.port,
+    hostname: Deno.env.get("HOST") || config.server.host,
 }, app.fetch);

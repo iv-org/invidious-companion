@@ -1,7 +1,6 @@
 import { ApiResponse, Innertube, YT } from "youtubei.js";
 import { generateRandomString } from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
-import { Store } from "@willsoto/node-konfig-core";
 import type { BG } from "bgutils";
 let youtubePlayerReqLocation = "youtubePlayerReq";
 if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
@@ -16,24 +15,26 @@ if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
 }
 const { youtubePlayerReq } = await import(youtubePlayerReqLocation);
 
+import type { Config } from "./config.ts";
+
 const kv = await Deno.openKv();
 
 export const youtubePlayerParsing = async ({
     innertubeClient,
     videoId,
-    konfigStore,
+    config,
     tokenMinter,
     overrideCache = false,
 }: {
     innertubeClient: Innertube;
     videoId: string;
-    konfigStore: Store;
+    config: Config;
     tokenMinter: BG.WebPoMinter;
     overrideCache?: boolean;
 }): Promise<object> => {
     const cacheEnabled = overrideCache
         ? false
-        : konfigStore.get("cache.enabled");
+        : config.cache.enabled;
 
     const videoCached = (await kv.get(["video_cache", videoId]))
         .value as Uint8Array;
@@ -44,7 +45,7 @@ export const youtubePlayerParsing = async ({
         const youtubePlayerResponse = await youtubePlayerReq(
             innertubeClient,
             videoId,
-            konfigStore,
+            config,
             tokenMinter,
         );
         const videoData = youtubePlayerResponse.data;

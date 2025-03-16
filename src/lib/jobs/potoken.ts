@@ -2,11 +2,11 @@ import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils";
 import type { WebPoSignalOutput } from "bgutils";
 import { JSDOM } from "jsdom";
 import { Innertube, UniversalCache } from "youtubei.js";
-import { Store } from "@willsoto/node-konfig-core";
 import {
     youtubePlayerParsing,
     youtubeVideoInfo,
 } from "../helpers/youtubePlayerHandling.ts";
+import type { Config } from "../helpers/config.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -23,7 +23,7 @@ const { getFetchClient } = await import(getFetchClientLocation);
 // Adapted from https://github.com/LuanRT/BgUtils/blob/main/examples/node/index.ts
 export const poTokenGenerate = async (
     innertubeClient: Innertube,
-    konfigStore: Store<Record<string, unknown>>,
+    config: Config,
     innertubeClientCache: UniversalCache,
 ): Promise<{ innertubeClient: Innertube; tokenMinter: BG.WebPoMinter }> => {
     if (innertubeClient.session.po_token) {
@@ -34,7 +34,7 @@ export const poTokenGenerate = async (
         });
     }
 
-    const fetchImpl = await getFetchClient(konfigStore);
+    const fetchImpl = await getFetchClient(config);
 
     const visitorData = innertubeClient.session.context.client.visitorData;
 
@@ -130,7 +130,7 @@ export const poTokenGenerate = async (
         enable_session_cache: false,
         po_token: sessionPoToken,
         visitor_data: visitorData,
-        fetch: getFetchClient(konfigStore),
+        fetch: getFetchClient(config),
         cache: innertubeClientCache,
         generate_session_locally: true,
     });
@@ -152,7 +152,7 @@ export const poTokenGenerate = async (
         const youtubePlayerResponseJson = await youtubePlayerParsing({
             innertubeClient: instantiatedInnertubeClient,
             videoId: video.id,
-            konfigStore,
+            config,
             tokenMinter: integrityTokenBasedMinter,
             overrideCache: true,
         });

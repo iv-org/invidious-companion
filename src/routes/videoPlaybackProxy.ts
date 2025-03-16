@@ -42,7 +42,7 @@ videoPlaybackProxy.get("/", async (c) => {
         });
     }
 
-    const konfigStore = c.get("konfigStore");
+    const config = c.get("config");
 
     // deno-lint-ignore prefer-const
     let queryParams = new URLSearchParams(urlReq.search);
@@ -75,7 +75,7 @@ videoPlaybackProxy.get("/", async (c) => {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
     }
 
-    const fetchClient = await getFetchClient(konfigStore);
+    const fetchClient = await getFetchClient(config);
 
     let googlevideoResponse = await fetchClient.call(
         undefined,

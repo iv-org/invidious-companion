@@ -1,9 +1,9 @@
 import { Innertube } from "youtubei.js";
 import { BG } from "bgutils";
-import type { konfigLoader } from "../helpers/konfigLoader.ts";
+import type { Config } from "../helpers/config.ts";
 
 export type HonoVariables = {
     innertubeClient: Innertube;
-    konfigStore: Awaited<ReturnType<typeof konfigLoader>>;
+    config: Config;
     tokenMinter: BG.WebPoMinter;
 };

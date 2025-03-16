@@ -19,14 +19,14 @@ latestVersion.get("/", async (c) => {
     }
 
     const innertubeClient = c.get("innertubeClient");
-    const konfigStore = c.get("konfigStore");
+    const config = c.get("config");
 
-    if (konfigStore.get("server.verify_requests") && check == undefined) {
+    if (config.server.verify_requests && check == undefined) {
         throw new HTTPException(400, {
             res: new Response("No check ID."),
         });
-    } else if (konfigStore.get("server.verify_requests") && check) {
-        if (verifyRequest(check, id, konfigStore) === false) {
+    } else if (config.server.verify_requests && check) {
+        if (verifyRequest(check, id, config) === false) {
             throw new HTTPException(400, {
                 res: new Response("ID incorrect."),
             });
@@ -36,7 +36,7 @@ latestVersion.get("/", async (c) => {
     const youtubePlayerResponseJson = await youtubePlayerParsing({
         innertubeClient,
         videoId: id,
-        konfigStore,
+        config,
         tokenMinter: c.get("tokenMinter"),
     });
     const videoInfo = youtubeVideoInfo(

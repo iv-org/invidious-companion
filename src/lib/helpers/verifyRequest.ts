@@ -1,19 +1,18 @@
-import { Store } from "@willsoto/node-konfig-core";
 import { decodeBase64 } from "@std/encoding/base64";
 import { Aes } from "crypto/aes.ts";
 import { Ecb, Padding } from "crypto/block-modes.ts";
+import type { Config } from "./config.ts";
 
 export const verifyRequest = (
     stringToCheck: string,
     videoId: string,
-    konfigStore: Store,
+    config: Config,
 ): boolean => {
     try {
         const decipher = new Ecb(
             Aes,
             new TextEncoder().encode((
-                Deno.env.get("SERVER_SECRET_KEY") ||
-                konfigStore.get("server.secret_key") as string
+                Deno.env.get("SERVER_SECRET_KEY") || config.server.secret_key
             ).substring(0, 16)),
             Padding.PKCS7,
         );

@@ -18,16 +18,16 @@ interface AvailableCaption {
 const captionsHandler = new Hono<{ Variables: HonoVariables }>();
 captionsHandler.get("/:videoId", async (c) => {
     const { videoId } = c.req.param();
-    const konfigStore = c.get("konfigStore");
+    const config = c.get("config");
 
     const check = c.req.query("check");
 
-    if (konfigStore.get("server.verify_requests") && check == undefined) {
+    if (config.server.verify_requests && check == undefined) {
         throw new HTTPException(400, {
             res: new Response("No check ID."),
         });
-    } else if (konfigStore.get("server.verify_requests") && check) {
-        if (verifyRequest(check, videoId, konfigStore) === false) {
+    } else if (config.server.verify_requests && check) {
+        if (verifyRequest(check, videoId, config) === false) {
             throw new HTTPException(400, {
                 res: new Response("ID incorrect."),
             });
@@ -39,7 +39,7 @@ captionsHandler.get("/:videoId", async (c) => {
     const youtubePlayerResponseJson = await youtubePlayerParsing({
         innertubeClient,
         videoId,
-        konfigStore,
+        config,
         tokenMinter: c.get("tokenMinter"),
     });
 

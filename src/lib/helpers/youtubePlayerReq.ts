@@ -1,17 +1,16 @@
 import { ApiResponse, Innertube } from "youtubei.js";
-import { Store } from "@willsoto/node-konfig-core";
 import NavigationEndpoint from "youtubei.js/NavigationEndpoint";
 import type { BG } from "bgutils";
+
+import type { Config } from "./config.ts";
 
 export const youtubePlayerReq = async (
     innertubeClient: Innertube,
     videoId: string,
-    konfigStore: Store,
+    config: Config,
     tokenMinter: BG.WebPoMinter,
 ): Promise<ApiResponse> => {
-    const innertubeClientOauthEnabled = konfigStore.get(
-        "youtube_session.oauth_enabled",
-    ) as boolean;
+    const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
 
     let innertubeClientUsed = "WEB";
     if (innertubeClientOauthEnabled) {

@@ -15,14 +15,14 @@ dashManifest.get("/:videoId", async (c) => {
     c.header("access-control-allow-origin", "*");
 
     const innertubeClient = c.get("innertubeClient");
-    const konfigStore = c.get("konfigStore");
+    const config = c.get("config");
 
-    if (konfigStore.get("server.verify_requests") && check == undefined) {
+    if (config.server.verify_requests && check == undefined) {
         throw new HTTPException(400, {
             res: new Response("No check ID."),
         });
-    } else if (konfigStore.get("server.verify_requests") && check) {
-        if (verifyRequest(check, videoId, konfigStore) === false) {
+    } else if (config.server.verify_requests && check) {
+        if (verifyRequest(check, videoId, config) === false) {
             throw new HTTPException(400, {
                 res: new Response("ID incorrect."),
             });
@@ -32,7 +32,7 @@ dashManifest.get("/:videoId", async (c) => {
     const youtubePlayerResponseJson = await youtubePlayerParsing({
         innertubeClient,
         videoId,
-        konfigStore,
+        config,
         tokenMinter: c.get("tokenMinter"),
     });
     const videoInfo = youtubeVideoInfo(
@@ -87,7 +87,7 @@ dashManifest.get("/:videoId", async (c) => {
                     // Can't create URL type without host part
                     dashUrl = (dashUrl.pathname + dashUrl.search + "&host=" +
                         dashUrl.host) as unknown as URL;
-                    if (konfigStore.get("networking.ump") as boolean) {
+                    if (config.networking.ump) {
                         dashUrl = dashUrl + "&ump=1" as unknown as URL;
                     }
                     return dashUrl;

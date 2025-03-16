@@ -6,13 +6,13 @@ const player = new Hono();
 player.post("/player", async (c) => {
     const jsonReq = await c.req.json();
     const innertubeClient = c.get("innertubeClient");
-    const konfigStore = c.get("konfigStore");
+    const config = c.get("config");
     if (jsonReq.videoId) {
         return c.json(
             await youtubePlayerParsing({
                 innertubeClient,
                 videoId: jsonReq.videoId,
-                konfigStore,
+                config,
                 tokenMinter: c.get("tokenMinter"),
             }),
         );

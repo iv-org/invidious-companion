@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
-import { Store } from "@willsoto/node-konfig-core";
 import { bearerAuth } from "hono/bearer-auth";
 
 import youtubeApiPlayer from "./youtube_api_routes/player.ts";
@@ -9,10 +8,11 @@ import invidiousRouteDashManifest from "./invidious_routes/dashManifest.ts";
 import invidiousCaptionsApi from "./invidious_routes/captions.ts";
 import videoPlaybackProxy from "./videoPlaybackProxy.ts";
 import health from "./health.ts";
+import type { Config } from "../lib/helpers/config.ts";
 
 export const routes = (
     app: Hono,
-    konfigStore: Store<Record<string, unknown>>,
+    config: Config,
 ) => {
     app.use("*", logger());
 
@@ -20,7 +20,7 @@ export const routes = (
         "/youtubei/v1/*",
         bearerAuth({
             token: Deno.env.get("SERVER_SECRET_KEY") ||
-                konfigStore.get("server.secret_key") as string,
+                config.server.secret_key,
         }),
     );
 
