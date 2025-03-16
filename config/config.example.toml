@@ -1,36 +1,55 @@
-[server]
-port = 8282
-host = "127.0.0.1"
-# secret key needs to be 16 characters long or more
-secret_key = "CHANGE_ME"
-verify_requests = false
+#####
+# The configuration options listed below are able to be enabled as needed.
+# The values in this example are the defaults. Some values can alternatively
+# be set using an environment variable.
+#
+# In order to enable an option, make sure you uncomment both the option
+# and the block header for the section it belongs to. Any other commented
+# options will continue to use default values.
+# See https://toml.io/en/ for details on the configuration format.
+#####
 
-[cache]
-enabled = true
-# will get cached in /var/tmp/youtubei.js if you specify /var/tmp
-# you need to change the --allow-write from deno run too
-directory = "/var/tmp"
-
-[networking]
-#proxy = ""
-# Enable YouTube new video format UMP
-ump = false
-
-[networking.fetch]
-timeout_ms = 10000
-
-[networking.fetch.retry]
-enabled = true
-times = 3
-initial_debounce = 500
-debounce_multiplier = 2
-
-[jobs]
-
-[jobs.youtube_session]
-po_token_enabled = true
-frequency = "*/5 * * * *"
-
-[youtube_session]
-oauth_enabled = false
-cookies = ""
+# [server]
+# port = 8282 # env variable: PORT
+# host = "127.0.0.1" # env variable: HOST
+# # secret key needs to be 16 characters long or more
+# secret_key = "CHANGE_ME" # env variable: SERVER_SECRET_KEY
+# verify_requests = true
+ 
+# [cache]
+# enabled = true
+# # will get cached in /var/tmp/youtubei.js if you specify /var/tmp
+# # you need to change the --allow-write from deno run too
+# directory = "/var/tmp"
+ 
+# [networking]
+# #proxy = "" # env variable: PROXY
+# # Enable YouTube new video format UMP
+# ump = false
+ 
+###
+# Network call timeouts when talking to YouTube. 
+# Should only be used when connections are hanging unexpectedly.
+###
+# [networking.fetch]
+# timeout_ms = 
+ 
+###
+# Network call retries when talking to YouTube, using
+# https://docs.deno.com/examples/exponential_backoff/
+###
+# [networking.fetch.retry]
+# enabled = false # enable retries on calls to YouTube
+# times = 1 # max number of times to retry
+# initial_debounce = 0 # minimum wait after first call (ms)
+# debounce_multiplier = 0 # how much to back off after each retry (multiplier of initial_debounce)
+ 
+# [jobs]
+ 
+# [jobs.youtube_session]
+# po_token_enabled = true # whether to generate PO tokens
+# frequency = "*/5 * * * *" # frequency of PO token refresh in cron format 
+ 
+# [youtube_session]
+# oauth_enabled = false
+# cookies = ""

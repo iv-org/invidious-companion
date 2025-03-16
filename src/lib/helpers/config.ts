@@ -6,7 +6,7 @@ const ConfigSchema = z.object({
         port: z.number().default(8282),
         host: z.string().default("127.0.0.1"),
         secret_key: z.string().default("CHANGE_ME"),
-        verify_requests: z.boolean().default(false),
+        verify_requests: z.boolean().default(true),
     }).strict().default({}),
     cache: z.object({
         enabled: z.boolean().default(true),
@@ -41,11 +41,14 @@ export type Config = z.infer<typeof ConfigSchema>;
 
 export async function parseConfig() {
     try {
-        const configFileContents = await Deno.readTextFile("config/config.toml").catch(() => null);
+        const configFileContents = await Deno.readTextFile("config/config.toml")
+            .catch(() => null);
         if (configFileContents) {
-            console.log('[INFO] Using custom settings local file')
+            console.log("[INFO] Using custom settings local file");
         } else {
-            console.log('[INFO] No local config file found, using default config')
+            console.log(
+                "[INFO] No local config file found, using default config",
+            );
         }
         const rawConfig = configFileContents ? parse(configFileContents) : {};
         const validatedConfig = ConfigSchema.parse(rawConfig);
