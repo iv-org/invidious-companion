@@ -77,27 +77,37 @@ videoPlaybackProxy.get("/", async (c) => {
 
     const fetchClient = await getFetchClient(konfigStore);
 
-    let googlevideoResponse = await fetchClient.call(
+    let location = `https://${host}/videoplayback?${queryParams.toString()}`;
+
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-p2-semantics-17#section-7.3
+    // A maximum of 5 redirections is defined in the note of the section 7.3
+    // of this RFC, that's why `i < 5`
+    for (let i = 0; i < 5; i++) {
+        const googlevideoResponse: Response = await fetchClient.call(
+            undefined,
+            location,
+            {
+                method: "HEAD",
+                headers: headersToSend,
+            },
+        );
+        if (googlevideoResponse.headers.has("Location")) {
+            location = googlevideoResponse.headers.get("Location") as string;
+            continue;
+        } else {
+            break;
+        }
+    }
+
+    const googlevideoResponse = await fetchClient.call(
         undefined,
-        `https://${host}/videoplayback?${queryParams.toString()}`,
+        location,
         {
             method: "POST",
             body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
             headers: headersToSend,
         },
     );
-
-    if (googlevideoResponse.headers.has("location")) {
-        googlevideoResponse = await fetchClient.call(
-            undefined,
-            googlevideoResponse.headers.get("location") as string,
-            {
-                method: "POST",
-                body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses)
-                headers: headersToSend,
-            },
-        );
-    }
 
     const headersForResponse: Record<string, string> = {
         "content-length": googlevideoResponse.headers.get("content-length") ||
