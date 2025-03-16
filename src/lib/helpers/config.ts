@@ -41,7 +41,7 @@ export type Config = z.infer<typeof ConfigSchema>;
 
 export async function parseConfig() {
     try {
-        const configFileContents = await Deno.readTextFile("config/local.toml").catch(() => null);
+        const configFileContents = await Deno.readTextFile("config/config.toml").catch(() => null);
         if (configFileContents) {
             console.log('[INFO] Using custom settings local file')
         } else {
