@@ -29,7 +29,7 @@ const ConfigSchema = z.object({
         youtube_session: z.object({
             po_token_enabled: z.boolean().default(true),
             frequency: z.string().default("*/5 * * * *"),
-        }).default({}),
+        }).strict().default({}),
     }).strict().default({}),
     youtube_session: z.object({
         oauth_enabled: z.boolean().default(false),
