@@ -6,7 +6,7 @@ const ConfigSchema = z.object({
         port: z.number().default(8282),
         host: z.string().default("127.0.0.1"),
         secret_key: z.string().default("CHANGE_ME"),
-        verify_requests: z.boolean().default(true),
+        verify_requests: z.boolean().default(false),
     }).strict().default({}),
     cache: z.object({
         enabled: z.boolean().default(true),

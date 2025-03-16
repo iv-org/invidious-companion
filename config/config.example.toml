@@ -14,7 +14,7 @@
 # host = "127.0.0.1" # env variable: HOST
 # # secret key needs to be 16 characters long or more
 # secret_key = "CHANGE_ME" # env variable: SERVER_SECRET_KEY
-# verify_requests = true
+# verify_requests = false
  
 # [cache]
 # enabled = true
