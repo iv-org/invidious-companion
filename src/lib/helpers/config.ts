@@ -1,4 +1,4 @@
-import { z, ZodError } from "https://deno.land/x/zod@v3.24.2/mod.ts";
+import { z, ZodError } from "zod";
 import { parse } from "jsr:@std/toml";
 
 const ConfigSchema = z.object({

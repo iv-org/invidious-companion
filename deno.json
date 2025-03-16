@@ -22,8 +22,8 @@
     "@std/async": "jsr:@std/async@1.0.11",
     "@std/fs": "jsr:@std/fs@1.0.14",
     "@std/path": "jsr:@std/path@1.0.8",
-    "brotli": "https://deno.land/x/brotli@0.1.7/mod.ts"
-
+    "brotli": "https://deno.land/x/brotli@0.1.7/mod.ts",
+    "zod": "https://deno.land/x/zod@v3.24.2/mod.ts"
   },
   "unstable": [
     "cron",
