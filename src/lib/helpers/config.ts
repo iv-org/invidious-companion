@@ -1,4 +1,4 @@
-import { z } from "https://deno.land/x/zod@v3.24.2/mod.ts";
+import { z, ZodError } from "https://deno.land/x/zod@v3.24.2/mod.ts";
 import { parse } from "jsr:@std/toml";
 
 const ConfigSchema = z.object({
@@ -40,11 +40,26 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 export async function parseConfig() {
-    const configFile = await Deno.readTextFile("config/local.toml");
-    const rawConfig = parse(configFile);
+    try {
+        const configFileContents = await Deno.readTextFile("config/local.toml").catch(() => null);
+        if (configFileContents) {
+            console.log('[INFO] Using custom settings local file')
+        } else {
+            console.log('[INFO] No local config file found, using default config')
+        }
+        const rawConfig = configFileContents ? parse(configFileContents) : {};
+        const validatedConfig = ConfigSchema.parse(rawConfig);
 
-    const validatedConfig = ConfigSchema.parse(rawConfig);
-    console.log("Loaded Configuration", validatedConfig);
+        console.log("Loaded Configuration", validatedConfig);
 
-    return validatedConfig;
+        return validatedConfig;
+    } catch (err) {
+        console.log("There is an error in your local.toml config file");
+        if (err instanceof ZodError) {
+            console.log(err.issues);
+            throw new Error("Failed to parse configuration file");
+        }
+        // rethrow error if not Zod
+        throw err;
+    }
 }
