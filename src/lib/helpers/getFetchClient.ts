@@ -29,7 +29,6 @@ export const getFetchClient = (konfigStore: Store): {
                 headers: init?.headers,
                 method: init?.method,
                 body: init?.body,
-                redirect: "manual",
             });
             return new Response(fetchRes.body, {
                 status: fetchRes.status,

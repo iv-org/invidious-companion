@@ -89,6 +89,7 @@ videoPlaybackProxy.get("/", async (c) => {
             {
                 method: "HEAD",
                 headers: headersToSend,
+                redirect: "manual",
             },
         );
         if (googlevideoResponse.headers.has("Location")) {
