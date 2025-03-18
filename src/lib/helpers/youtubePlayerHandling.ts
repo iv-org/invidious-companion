@@ -2,6 +2,7 @@ import { ApiResponse, Innertube, YT } from "youtubei.js";
 import { generateRandomString } from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
 import type { BG } from "bgutils";
+import { metrics } from "../helpers/metrics.ts";
 let youtubePlayerReqLocation = "youtubePlayerReq";
 if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -146,20 +147,25 @@ export const youtubePlayerParsing = async ({
             microformat,
         }))(videoData);
 
-        if (cacheEnabled && videoData.playabilityStatus?.status == "OK") {
-            (async () => {
-                await kv.set(
-                    ["video_cache", videoId],
-                    compress(
-                        new TextEncoder().encode(
-                            JSON.stringify(videoOnlyNecessaryInfo),
+        if (videoData.playabilityStatus?.status == "OK") {
+            metrics?.innertubeSuccessfullRequest.inc();
+            if (cacheEnabled) {
+                (async () => {
+                    await kv.set(
+                        ["video_cache", videoId],
+                        compress(
+                            new TextEncoder().encode(
+                                JSON.stringify(videoOnlyNecessaryInfo),
+                            ),
                         ),
-                    ),
-                    {
-                        expireIn: 1000 * 60 * 60,
-                    },
-                );
-            })();
+                        {
+                            expireIn: 1000 * 60 * 60,
+                        },
+                    );
+                })();
+            }
+        } else {
+            metrics?.checkInnertubeResponse(videoData);
         }
 
         return videoOnlyNecessaryInfo;

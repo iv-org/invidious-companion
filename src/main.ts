@@ -9,6 +9,7 @@ import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
+import { initMetrics, metrics } from "./lib/helpers/metrics.ts"
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
@@ -27,6 +28,7 @@ declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
 const app = new Hono();
+initMetrics(config);
 
 let tokenMinter: BG.WebPoMinter;
 let innertubeClient: Innertube;
@@ -71,10 +73,14 @@ if (!innertubeClientOauthEnabled) {
         { backoffSchedule: [5_000, 15_000, 60_000, 180_000] },
         async () => {
             if (innertubeClientJobPoTokenEnabled) {
-                ({ innertubeClient, tokenMinter } = await poTokenGenerate(
-                    innertubeClient,
-                    config,
-                ));
+                try {
+                    ({ innertubeClient, tokenMinter } = await poTokenGenerate(
+                        innertubeClient,
+                        config,
+                    ));
+                } catch (_) {
+                    metrics?.potokenGenerationFailure.inc();
+                }
             } else {
                 innertubeClient = await Innertube.create({
                     enable_session_cache: false,
