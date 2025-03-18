@@ -13,17 +13,5 @@ Companion for Invidious which handle all the video stream retrieval from YouTube
 ## Run Locally (development)
 
 ```
-deno task dev
+SERVER_SECRET_KEY=CHANGEME deno task dev
 ```
-
-## Running a public instance
-When running a public instance, the `verify_requests` config option should be set the `true` and the server secret key should be set.
-
-config/config.toml:
-```toml
-[server]
-secret_key = "some-16-character-random-string"
-verify_requests = true
-```
-
-This prevents requests being made to Companion that should only originate from an authorised Invidious instance.
