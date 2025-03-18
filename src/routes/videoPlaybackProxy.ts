@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { decryptQuery } from "../lib/helpers/encryptQuery.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -16,8 +17,27 @@ const { getFetchClient } = await import(getFetchClientLocation);
 const videoPlaybackProxy = new Hono();
 
 videoPlaybackProxy.get("/", async (c) => {
-    const { host, c: client, expire } = c.req.query();
-    const urlReq = new URL(c.req.url);
+    const konfigStore = c.get("konfigStore");
+    let host: string | null,
+        client: string | null,
+        expire: string | null,
+        queryParams: URLSearchParams;
+
+    if (c.req.query("enc") === "yes") {
+        const { data: encryptedQuery } = c.req.query();
+        const unencryptedQueryParams = decryptQuery(
+            encryptedQuery,
+            konfigStore,
+        );
+        queryParams = new URLSearchParams(unencryptedQueryParams);
+        host = queryParams.get("host");
+        client = queryParams.get("c");
+        expire = queryParams.get("expire");
+    } else {
+        const urlReq = new URL(c.req.url);
+        queryParams = new URLSearchParams(urlReq.search);
+        ({ host, c: client, expire } = c.req.query());
+    }
 
     if (host == undefined || !/[\w-]+.googlevideo.com/.test(host)) {
         throw new HTTPException(400, {

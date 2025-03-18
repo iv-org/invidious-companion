@@ -6,6 +6,7 @@ import {
 } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 import { HTTPException } from "hono/http-exception";
+import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 
 const dashManifest = new Hono();
 
@@ -83,13 +84,30 @@ dashManifest.get("/:videoId", async (c) => {
             videoInfo.page[0].video_details?.is_post_live_dvr,
             (url: URL) => {
                 let dashUrl = url;
+                // Can't create URL type without host part
+                let queryParams = dashUrl.search.substring(1) + "&host=" +
+                    dashUrl.host;
+
                 if (local) {
-                    // Can't create URL type without host part
-                    dashUrl = (dashUrl.pathname + dashUrl.search + "&host=" +
-                        dashUrl.host) as unknown as URL;
                     if (config.networking.ump) {
-                        dashUrl = dashUrl + "&ump=1" as unknown as URL;
+                        queryParams = queryParams + "&ump=1";
                     }
+                    if (
+                        config.server.encrypt_query_params
+                    ) {
+                        queryParams = "enc=yes&data=" + encryptQuery(
+                            queryParams,
+                            config,
+                        );
+                    }
+                    dashUrl = (
+                        Deno.env.get("EXTERNAL_VIDEOPLAYBACK_PROXY") ||
+                        (konfigStore.get(
+                            "networking.external_videoplayback_proxy",
+                        ) as string ?? "")
+                    ) +
+                        (dashUrl.pathname + "?" +
+                            queryParams) as unknown as URL;
                     return dashUrl;
                 } else {
                     return dashUrl;
