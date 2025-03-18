@@ -11,7 +11,7 @@ export const verifyRequest = (
     try {
         const decipher = new Ecb(
             Aes,
-            new TextEncoder().encode(config.server.secret_key).substring(0, 16),
+            new TextEncoder().encode(config.server.secret_key),
             Padding.PKCS7,
         );
 

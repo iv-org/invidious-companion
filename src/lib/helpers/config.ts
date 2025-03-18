@@ -4,8 +4,10 @@ import { parse } from "jsr:@std/toml";
 const ConfigSchema = z.object({
     server: z.object({
         port: z.number().default(Number(Deno.env.get("PORT")) || 8282),
-        host: z.string().default(Deno.env.get("HOST") || '127.0.0.1'),
-        secret_key: z.string().length(16).default(Deno.env.get("SERVER_SECRET_KEY") || ''),
+        host: z.string().default(Deno.env.get("HOST") || "127.0.0.1"),
+        secret_key: z.string().length(16).default(
+            Deno.env.get("SERVER_SECRET_KEY") || "",
+        ),
         verify_requests: z.boolean().default(false),
     }).strict().default({}),
     cache: z.object({
