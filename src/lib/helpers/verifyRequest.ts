@@ -1,10 +1,10 @@
 import { Store } from "@willsoto/node-konfig-core";
-import { decodeBase64 } from "jsr:@std/encoding/base64";
-import { Aes } from "https://deno.land/x/crypto@v0.10.1/aes.ts";
+import { decodeBase64 } from "@std/encoding/base64";
+import { Aes } from "crypto/aes.ts";
 import {
     Ecb,
     Padding,
-} from "https://deno.land/x/crypto@v0.10.1/block-modes.ts";
+} from "crypto/block-modes.ts";
 
 export const verifyRequest = (
     stringToCheck: string,

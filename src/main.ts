@@ -4,7 +4,7 @@ import { Innertube, UniversalCache } from "youtubei.js";
 import { poTokenGenerate } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
 import { konfigLoader } from "./lib/helpers/konfigLoader.ts";
-import { retry } from "jsr:@std/async";
+import { retry } from "@std/async";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 import type { BG } from "bgutils";
 

@@ -1,8 +1,8 @@
 import { Store } from "@willsoto/node-konfig-core";
 import { FileLoader as KonfigFileLoader } from "@willsoto/node-konfig-file";
 import { TOMLParser } from "@willsoto/node-konfig-toml-parser";
-import { join as pathJoin } from "jsr:@std/path";
-import { existsSync } from "jsr:@std/fs";
+import { join as pathJoin } from "@std/path";
+import { existsSync } from "@std/fs";
 
 export const konfigLoader = async (): Promise<
     Store<Record<string, unknown>>

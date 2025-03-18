@@ -1,5 +1,5 @@
 import { Store } from "@willsoto/node-konfig-core";
-import { retry, type RetryOptions } from "jsr:@std/async";
+import { retry, type RetryOptions } from "@std/async";
 
 type FetchInputParameter = Parameters<typeof fetch>[0];
 type FetchInitParameterWithClient =

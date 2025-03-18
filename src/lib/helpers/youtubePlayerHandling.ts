@@ -1,6 +1,6 @@
 import { ApiResponse, Innertube, YT } from "youtubei.js";
 import { generateRandomString } from "youtubei.js/Utils";
-import { compress, decompress } from "https://deno.land/x/brotli@0.1.7/mod.ts";
+import { compress, decompress } from "brotli";
 import { Store } from "@willsoto/node-konfig-core";
 import type { BG } from "bgutils";
 let youtubePlayerReqLocation = "youtubePlayerReq";

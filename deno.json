@@ -4,23 +4,28 @@
     "compile": "deno compile --include ./src/lib/helpers/youtubePlayerReq.ts --include ./src/lib/helpers/getFetchClient.ts --output invidious_companion --allow-import=github.com:443,jsr.io:443,raw.githubusercontent.com:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-read --allow-sys=hostname --allow-write=/var/tmp/youtubei.js src/main.ts"
   },
   "imports": {
-    "hono": "jsr:@hono/hono@^4.7.2",
-    "hono/logger": "jsr:@hono/hono@^4.7.2/logger",
-    "hono/bearer-auth": "jsr:@hono/hono@^4.7.2/bearer-auth",
+    "hono": "jsr:@hono/hono@4.7.4",
     "youtubei.js": "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno.ts",
     "youtubei.js/Utils": "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/utils/Utils.ts",
     "youtubei.js/NavigationEndpoint": "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/parser/classes/NavigationEndpoint.ts",
     "youtubei.js/PlayerCaptionsTracklist": "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/parser/classes/PlayerCaptionsTracklist.ts",
     "jsdom": "npm:jsdom@26.0.0",
-    "bgutils": "https://esm.sh/bgutils-js@3.1.0",
+    "bgutils": "https://esm.sh/bgutils-js@3.2.0",
     "estree": "https://esm.sh/@types/estree@1.0.6",
     "@willsoto/node-konfig-core": "npm:@willsoto/node-konfig-core@5.0.0",
     "@willsoto/node-konfig-file": "npm:@willsoto/node-konfig-file@3.0.0",
     "@willsoto/node-konfig-toml-parser": "npm:@willsoto/node-konfig-toml-parser@3.0.0",
     "youtubePlayerReq": "./src/lib/helpers/youtubePlayerReq.ts",
     "getFetchClient": "./src/lib/helpers/getFetchClient.ts",
-    "googlevideo": "jsr:@luanrt/googlevideo@^2.0.0",
-    "jsr:@luanrt/jintr": "jsr:@luanrt/jintr@^3.2.1"
+    "googlevideo": "jsr:@luanrt/googlevideo@2.0.0",
+    "jsr:@luanrt/jintr": "jsr:@luanrt/jintr@3.2.1",
+    "crypto/": "https://deno.land/x/crypto@v0.11.0/",
+    "@std/encoding/base64": "jsr:@std/encoding@1.0.7/base64",
+    "@std/async": "jsr:@std/async@1.0.11",
+    "@std/fs": "jsr:@std/fs@1.0.14",
+    "@std/path": "jsr:@std/path@1.0.8",
+    "brotli": "https://deno.land/x/brotli@0.1.7/mod.ts"
+
   },
   "unstable": [
     "cron",

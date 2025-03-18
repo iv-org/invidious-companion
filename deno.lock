@@ -1,47 +1,37 @@
 {
   "version": "4",
   "specifiers": {
-    "jsr:@hono/hono@^4.7.2": "4.7.2",
-    "jsr:@luanrt/googlevideo@2": "2.0.0",
-    "jsr:@luanrt/jintr@^3.2.1": "3.2.1",
-    "jsr:@std/async@*": "1.0.10",
-    "jsr:@std/encoding@*": "1.0.7",
-    "jsr:@std/fs@*": "1.0.13",
-    "jsr:@std/path@*": "1.0.8",
+    "jsr:@hono/hono@4.7.4": "4.7.4",
+    "jsr:@luanrt/jintr@3.2.1": "3.2.1",
+    "jsr:@std/async@1.0.11": "1.0.11",
+    "jsr:@std/encoding@1.0.7": "1.0.7",
+    "jsr:@std/fs@1.0.14": "1.0.14",
+    "jsr:@std/path@1.0.8": "1.0.8",
     "jsr:@std/path@^1.0.8": "1.0.8",
-    "npm:@bufbuild/protobuf@2": "2.2.3",
-    "npm:@types/estree@^1.0.6": "1.0.6",
     "npm:@willsoto/node-konfig-core@5.0.0": "5.0.0",
     "npm:@willsoto/node-konfig-file@3.0.0": "3.0.0_@willsoto+node-konfig-core@5.0.0",
     "npm:@willsoto/node-konfig-toml-parser@3.0.0": "3.0.0_@willsoto+node-konfig-core@5.0.0",
-    "npm:acorn@^8.8.0": "8.14.0",
+    "npm:acorn@^8.8.0": "8.14.1",
     "npm:jsdom@26.0.0": "26.0.0"
   },
   "jsr": {
-    "@hono/hono@4.7.2": {
-      "integrity": "73466a24bd6eb3b527cde18e59ca5543890ddacb4312fc0bc7504d28a7e57a38"
-    },
-    "@luanrt/googlevideo@2.0.0": {
-      "integrity": "f4089289544d7f76f570ae5d2eadfcfaafae498713737cd0782f519b628ef276",
-      "dependencies": [
-        "npm:@bufbuild/protobuf"
-      ]
+    "@hono/hono@4.7.4": {
+      "integrity": "c03c9cbe0fbfc4e51f3fee6502a7903aa4f9ef7c2c98635607b15eee14258825"
     },
     "@luanrt/jintr@3.2.1": {
       "integrity": "78acef6eb1c0e54303c14f77233a610dcc8e9da386f5e59c6167a2c5d8fdbe87",
       "dependencies": [
-        "npm:@types/estree",
         "npm:acorn"
       ]
     },
-    "@std/async@1.0.10": {
-      "integrity": "2ff1b1c7d33d1416159989b0f69e59ec7ee8cb58510df01e454def2108b3dbec"
+    "@std/async@1.0.11": {
+      "integrity": "eee0d3405275506638a9c8efaa849cf0d35873120c69b7caa1309c9a9e5b6f85"
     },
     "@std/encoding@1.0.7": {
       "integrity": "f631247c1698fef289f2de9e2a33d571e46133b38d042905e3eac3715030a82d"
     },
-    "@std/fs@1.0.13": {
-      "integrity": "756d3ff0ade91c9e72b228e8012b6ff00c3d4a4ac9c642c4dac083536bf6c605",
+    "@std/fs@1.0.14": {
+      "integrity": "1e84bf0b95fe08f41f1f4aea9717bbf29f45408a56ce073b0114474ce1c9fccf",
       "dependencies": [
         "jsr:@std/path@^1.0.8"
       ]
@@ -51,8 +41,8 @@
     }
   },
   "npm": {
-    "@asamuzakjp/css-color@2.8.3_@csstools+css-parser-algorithms@3.0.4__@csstools+css-tokenizer@3.0.3_@csstools+css-tokenizer@3.0.3": {
-      "integrity": "sha512-GIc76d9UI1hCvOATjZPyHFmE5qhRccp3/zGfMPapK3jBi+yocEzp6BBB0UnfRYP9NP4FANqUZYb0hnfs3TM3hw==",
+    "@asamuzakjp/css-color@3.1.1_@csstools+css-parser-algorithms@3.0.4__@csstools+css-tokenizer@3.0.3_@csstools+css-tokenizer@3.0.3": {
+      "integrity": "sha512-hpRD68SV2OMcZCsrbdkccTw5FXjNDLo5OuqSHyHZfwweGsDWZwDJ2+gONyNAbazZclobMirACLw0lk8WVxIqxA==",
       "dependencies": [
         "@csstools/css-calc",
         "@csstools/css-color-parser",
@@ -60,9 +50,6 @@
         "@csstools/css-tokenizer",
         "lru-cache"
       ]
-    },
-    "@bufbuild/protobuf@2.2.3": {
-      "integrity": "sha512-tFQoXHJdkEOSwj5tRIZSPNUuXK3RaR7T1nUrPgbYX1pUbvqqaaZAsfo+NXBPsz5rZMSKVFrgK1WL8Q/MSLvprg=="
     },
     "@csstools/color-helpers@5.0.2": {
       "integrity": "sha512-JqWH1vsgdGcw2RR6VliXXdA0/59LttzlU8UlRT/iUUsEeWfYq8I+K0yhihEUTTHLRm1EXvpsCx3083EU15ecsA=="
@@ -92,9 +79,6 @@
     "@csstools/css-tokenizer@3.0.3": {
       "integrity": "sha512-UJnjoFsmxfKUdNYdWgOB0mWUypuLvAfQPH1+pyvRJs6euowbFkFC6P13w1l8mJyi3vxYMxc9kld5jZEGRQs6bw=="
     },
-    "@types/estree@1.0.6": {
-      "integrity": "sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw=="
-    },
     "@willsoto/node-konfig-core@5.0.0": {
       "integrity": "sha512-1AevWxJw/9oGz53YpabBSYhNTY1fsSIxiWd6ehSLCPnlgZ1ciJy6ZcwMpAb5L86dMjFHYwTa4Z8HiOP6iHyi+Q==",
       "dependencies": [
@@ -115,8 +99,8 @@
         "toml"
       ]
     },
-    "acorn@8.14.0": {
-      "integrity": "sha512-cl669nCJTZBsL97OF4kUQm5g5hC2uihk0NxY3WENAC0TYdILVkAyHymAntgxGkl7K+t0cXIrH5siy5S4XkFycA=="
+    "acorn@8.14.1": {
+      "integrity": "sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg=="
     },
     "agent-base@7.1.3": {
       "integrity": "sha512-jRR5wdylq8CkOe6hei19GGZnxM6rBGwFl3Bg0YItGDimvjGtAvdZk4Pu6Cl4u4Igsws4a1fd1Vq3ezrhn4KmFw=="
@@ -140,8 +124,8 @@
         "delayed-stream"
       ]
     },
-    "cssstyle@4.2.1": {
-      "integrity": "sha512-9+vem03dMXG7gDmZ62uqmRiMRNtinIZ9ZyuF6BdxzfOD+FdN5hretzynkn0ReS2DO2GSw76RWHs0UmJPI2zUjw==",
+    "cssstyle@4.3.0": {
+      "integrity": "sha512-6r0NiY0xizYqfBvWp1G7WXJ06/bZyrk7Dc6PHql82C/pKGUTKu4yAX4Y8JPamb1ob9nBKuxWzCGTRuGwU3yxJQ==",
       "dependencies": [
         "@asamuzakjp/css-color",
         "rrweb-cssom"
@@ -326,8 +310,8 @@
     "ms@2.1.3": {
       "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
     },
-    "nwsapi@2.2.16": {
-      "integrity": "sha512-F1I/bimDpj3ncaNDhfyMWuFqmQDBwDB0Fogc2qpL3BWvkQteFD/8BzWuIRl83rq0DXfm8SGt/HFhLXZyljTXcQ=="
+    "nwsapi@2.2.19": {
+      "integrity": "sha512-94bcyI3RsqiZufXjkr3ltkI86iEl+I7uiHVDtcq9wJUTwYQJ5odHDeSzkkrRzi80jJ8MaeZgqKjH1bAWAFw9bA=="
     },
     "parse5@7.2.1": {
       "integrity": "sha512-BuBYQYlv1ckiPdQi/ohiivi9Sagc9JG+Ozs0r7b/0iK3sKmrb0b9FdWdBbOdx6hBCM/F9Ir82ofnBhtZOjCRPQ==",
@@ -353,11 +337,11 @@
     "symbol-tree@3.2.4": {
       "integrity": "sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw=="
     },
-    "tldts-core@6.1.82": {
-      "integrity": "sha512-Jabl32m21tt/d/PbDO88R43F8aY98Piiz6BVH9ShUlOAiiAELhEqwrAmBocjAqnCfoUeIsRU+h3IEzZd318F3w=="
+    "tldts-core@6.1.84": {
+      "integrity": "sha512-NaQa1W76W2aCGjXybvnMYzGSM4x8fvG2AN/pla7qxcg0ZHbooOPhA8kctmOZUDfZyhDL27OGNbwAeig8P4p1vg=="
     },
-    "tldts@6.1.82": {
-      "integrity": "sha512-KCTjNL9F7j8MzxgfTgjT+v21oYH38OidFty7dH00maWANAI2IsLw2AnThtTJi9HKALHZKQQWnNebYheadacD+g==",
+    "tldts@6.1.84": {
+      "integrity": "sha512-aRGIbCIF3teodtUFAYSdQONVmDRy21REM3o6JnqWn5ZkQBJJ4gHxhw6OfwQ+WkSAi3ASamrS4N4nyazWx6uTYg==",
       "dependencies": [
         "tldts-core"
       ]
@@ -371,8 +355,8 @@
         "tldts"
       ]
     },
-    "tr46@5.0.0": {
-      "integrity": "sha512-tk2G5R2KRwBd+ZN0zaEXpmzdKyOYksXwywulIX95MBODjSzMIuQnQ3m8JxgbhnL1LeVo7lqQKsYa1O3Htl7K5g==",
+    "tr46@5.1.0": {
+      "integrity": "sha512-IUWnUK7ADYR5Sl1fZlO1INDUhVhatWl7BtJWsIhwJ0UAK7ilzzIa8uIqOO/aYVWHZPJkKbEL+362wrzoeRF7bw==",
       "dependencies": [
         "punycode"
       ]
@@ -395,8 +379,8 @@
     "whatwg-mimetype@4.0.0": {
       "integrity": "sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg=="
     },
-    "whatwg-url@14.1.1": {
-      "integrity": "sha512-mDGf9diDad/giZ/Sm9Xi2YcyzaFpbdLpJPr+E9fSkyQ7KpQD4SdFcugkRQYzhmfI4KeV4Qpnn2sKPdo+kmsgRQ==",
+    "whatwg-url@14.2.0": {
+      "integrity": "sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw==",
       "dependencies": [
         "tr46",
         "webidl-conversions"
@@ -411,9 +395,6 @@
     "xmlchars@2.2.0": {
       "integrity": "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw=="
     }
-  },
-  "redirects": {
-    "https://esm.sh/@types/estree@1.0.6": "https://esm.sh/@types/estree@1.0.6/index.d.ts"
   },
   "remote": {
     "https://deno.land/std@0.159.0/encoding/ascii85.ts": "f2b9cb8da1a55b3f120d3de2e78ac993183a4fd00dfa9cb03b51cf3a75bc0baa",
@@ -432,6 +413,20 @@
     "https://deno.land/x/crypto@v0.10.1/src/block-modes/ofb.ts": "0f77075505853b4ba1a55b4edecb17323f8a1489456a3d3b74717565cccbf2ef",
     "https://deno.land/x/crypto@v0.10.1/src/utils/bytes.ts": "7ccf6cb2d747d9b9de04c9a2494999957c1e86fd4e14bc228aad25283323f5a0",
     "https://deno.land/x/crypto@v0.10.1/src/utils/padding.ts": "544c51a471a413b15940bf08b285bc6a5db27796ff3cf240564f42701aba01dc",
+    "https://deno.land/x/crypto@v0.11.0/aes.ts": "0f4e5af07514a07d56ec01b2186c0153f13d6e00c26fc4e70692996af6280e48",
+    "https://deno.land/x/crypto@v0.11.0/block-modes.ts": "6919d89616753727b87308c8829d885257534329e0976cc1940873bb95e25508",
+    "https://deno.land/x/crypto@v0.11.0/src/aes/consts.ts": "582aeed7afda2fe3deac4a60c4a9f29c60a7fb66f56645f95fa0ddab49bde994",
+    "https://deno.land/x/crypto@v0.11.0/src/aes/mod.ts": "883d1e48d033dc4491f3a336c07235c5c4cb0371972476b8cdeea5e94ad2efbe",
+    "https://deno.land/x/crypto@v0.11.0/src/block-modes/base.ts": "9006474c676782602ede9ea16aa49e8d084fd5670f6050641715a3d3085e1ba5",
+    "https://deno.land/x/crypto@v0.11.0/src/block-modes/cbc.ts": "c12036ea98e694a283396bab8608320ae99250940b28cd25e7a4a263b0611db0",
+    "https://deno.land/x/crypto@v0.11.0/src/block-modes/cfb.ts": "6668b84874bceea1c33ceffa9a37f378952c3766dc500054d434ce2cfba0efff",
+    "https://deno.land/x/crypto@v0.11.0/src/block-modes/ctr.ts": "06fd8e338dbda0a6a7fa49718a0fd247830759820e61646a6cf611ad69a9d464",
+    "https://deno.land/x/crypto@v0.11.0/src/block-modes/ecb.ts": "c346d692f16f8efbcc041c25dd761ca223ef92e03bb05457908953bf261ba325",
+    "https://deno.land/x/crypto@v0.11.0/src/block-modes/ige.ts": "4ce89fd3995b2b562b9036e857ee8a99d283421c45660b2c0c9f4d33b93d95ec",
+    "https://deno.land/x/crypto@v0.11.0/src/block-modes/mod.ts": "6a64cfd5dc627f161176bbf97959fe3d2dacd0a35f54184e226bf1ee4714434a",
+    "https://deno.land/x/crypto@v0.11.0/src/block-modes/ofb.ts": "0f77075505853b4ba1a55b4edecb17323f8a1489456a3d3b74717565cccbf2ef",
+    "https://deno.land/x/crypto@v0.11.0/src/utils/bytes.ts": "7ccf6cb2d747d9b9de04c9a2494999957c1e86fd4e14bc228aad25283323f5a0",
+    "https://deno.land/x/crypto@v0.11.0/src/utils/padding.ts": "544c51a471a413b15940bf08b285bc6a5db27796ff3cf240564f42701aba01dc",
     "https://deno.land/x/lz4@v0.1.2/mod.ts": "4decfc1a3569d03fd1813bd39128b71c8f082850fe98ecfdde20025772916582",
     "https://deno.land/x/lz4@v0.1.2/wasm.js": "b9c65605327ba273f0c76a6dc596ec534d4cda0f0225d7a94ebc606782319e46",
     "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/create.mjs": "d9fcaeb3dfeb517c4d59843d78d7b51b3ad91b911e35bc317dc29e97e4ba9e67",
@@ -456,6 +451,8 @@
     "https://esm.sh/@bufbuild/protobuf@2.0.0/wire": "eb1be07dad5823fc419cc9e6f62077a70962ce42facb1a5240b7d5c3674e852f",
     "https://esm.sh/bgutils-js@3.1.0": "0527a704a9b97ed3f1b8c9621f73bc7e3f4c8198f8d63e0a0662a29755958de4",
     "https://esm.sh/bgutils-js@3.1.0/denonext/bgutils-js.mjs": "89a104b72045a1dce0c041d1e3c83a5469db0df634d4f233670e6859f8d5cf89",
+    "https://esm.sh/bgutils-js@3.2.0": "9691c575e7f81d8c2652260f59356b5de97a242fc8b464dbba880a543f6ce075",
+    "https://esm.sh/bgutils-js@3.2.0/denonext/bgutils-js.mjs": "9acd0267c5bf7273ba122a295f97795cb81d0f6d001db708c92548ac82977f93",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno.ts": "f913bfdb3c66b2330fa8b531bd1e291437b836c9fbf002b9ae044bf14e1f397c",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/package.json": "4e1d16c0f95a2b58dc6dba7e0fe969b800794a6040ae02116e14eae2444e4429",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/protos/generated/misc/common.ts": "7d6ca8d7cd7eafe1f8d5ddc11c440566c418aeaf2d8a03a72eced7466a691039",
@@ -1074,11 +1071,9 @@
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/platform/lib.ts": "fdac76db7d9f1c13039036f590270fe7860396a8afb24eac078122d91b4d6742",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/platform/polyfills/web-crypto.ts": "ae20ed00dea9eafca9ba590f4fa440299cbd57288add788c59cb19f3455ae6d1",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/types/Cache.ts": "06cd238bce7c9657055151587e36ee445e8236d54d27272124ced10ea7be0da4",
-    "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/types/DashOptions.ts": "cf694c112ab97d778b3df735ddc76fd16fd5ae0d49943e2cc580f1f986f63da6",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/types/FormatUtils.ts": "8962fc5f7d02fd19fb2bce937692f9aae4fb15379a40d4ad4edd2634197e7abc",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/types/Misc.ts": "205df5b124cb1e17cffccbc7cd920257af4744aea67308d18c05e7e4d12e9827",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/types/PlatformShim.ts": "06f656f0d2bc20980ef77148455b662af10fe4b0e48d41566bf28e471eea4be1",
-    "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/types/StreamingInfoOptions.ts": "cd404a388a8d36bc28b60053851cd92495b666938552898c430c661ac4f7ad0b",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/types/index.ts": "a28448751e5567b91cc60528a82999885630ed099c19318f265c4360537cff4e",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/utils/Cache.ts": "fd90c88da32e9283adf065475a5cb4e680b5152a6bc06dd8a3dc9349358cab35",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/src/utils/Constants.ts": "148e86c63bf222845ccf24508be7d93b599543cf14e73a78a870ffe92c834857",
@@ -1097,9 +1092,13 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@hono/hono@^4.7.2",
-      "jsr:@luanrt/googlevideo@2",
-      "jsr:@luanrt/jintr@^3.2.1",
+      "jsr:@hono/hono@4.7.4",
+      "jsr:@luanrt/googlevideo@2.0.0",
+      "jsr:@luanrt/jintr@3.2.1",
+      "jsr:@std/async@1.0.11",
+      "jsr:@std/encoding@1.0.7",
+      "jsr:@std/fs@1.0.14",
+      "jsr:@std/path@1.0.8",
       "npm:@willsoto/node-konfig-core@5.0.0",
       "npm:@willsoto/node-konfig-file@3.0.0",
       "npm:@willsoto/node-konfig-toml-parser@3.0.0",
