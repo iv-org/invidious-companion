@@ -5,6 +5,7 @@ import {
     youtubeVideoInfo,
 } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 
 const latestVersion = new Hono();
 
@@ -63,9 +64,21 @@ latestVersion.get("/", async (c) => {
         const itagUrl = selectedItagFormat[0].url as string;
         const itagUrlParsed = new URL(itagUrl);
         let urlToRedirect = itagUrlParsed.toString();
+        let queryParams = itagUrlParsed.search.substring(1) + "&host=" +
+            itagUrlParsed.host;
         if (local) {
-            urlToRedirect = itagUrlParsed.pathname + itagUrlParsed.search +
-                "&host=" + itagUrlParsed.host;
+            if (config.server.encrypt_query_params) {
+                queryParams = "enc=yes&data=" + encryptQuery(
+                    queryParams,
+                    config,
+                );
+            }
+            urlToRedirect = (
+                Deno.env.get("EXTERNAL_VIDEOPLAYBACK_PROXY") ||
+                (konfigStore.get(
+                    "networking.external_videoplayback_proxy",
+                ) as string ?? "")
+            ) + (itagUrlParsed.pathname + "?" + queryParams) as string;
         }
 
         if (title) urlToRedirect += `&title=${encodeURIComponent(title)}`;
