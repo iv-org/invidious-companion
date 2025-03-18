@@ -17,26 +17,22 @@ const { getFetchClient } = await import(getFetchClientLocation);
 const videoPlaybackProxy = new Hono();
 
 videoPlaybackProxy.get("/", async (c) => {
-    const konfigStore = c.get("konfigStore");
-    let host: string | null,
-        client: string | null,
-        expire: string | null,
-        queryParams: URLSearchParams;
+    const config = c.get("config");
+    const { host, c: client, expire } = c.req.query();
+    const urlReq = new URL(c.req.url);
+    const queryParams = new URLSearchParams(urlReq.search);
 
     if (c.req.query("enc") === "yes") {
         const { data: encryptedQuery } = c.req.query();
-        const unencryptedQueryParams = decryptQuery(
+        const unencryptedQueryParams = new URLSearchParams(decryptQuery(
             encryptedQuery,
-            konfigStore,
-        );
-        queryParams = new URLSearchParams(unencryptedQueryParams);
-        host = queryParams.get("host");
-        client = queryParams.get("c");
-        expire = queryParams.get("expire");
-    } else {
-        const urlReq = new URL(c.req.url);
-        queryParams = new URLSearchParams(urlReq.search);
-        ({ host, c: client, expire } = c.req.query());
+            config,
+        ));
+        unencryptedQueryParams.forEach((k, v) => {
+            queryParams.set(v, k);
+        });
+        queryParams.delete("enc");
+        queryParams.delete("data");
     }
 
     if (host == undefined || !/[\w-]+.googlevideo.com/.test(host)) {
@@ -62,10 +58,7 @@ videoPlaybackProxy.get("/", async (c) => {
         });
     }
 
-    const config = c.get("config");
 
-    // deno-lint-ignore prefer-const
-    let queryParams = new URLSearchParams(urlReq.search);
     queryParams.delete("host");
     const rangeHeader = c.req.header("range");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;

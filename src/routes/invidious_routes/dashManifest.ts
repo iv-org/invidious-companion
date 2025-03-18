@@ -85,20 +85,29 @@ dashManifest.get("/:videoId", async (c) => {
             (url: URL) => {
                 let dashUrl = url;
                 // Can't create URL type without host part
-                let queryParams = dashUrl.search.substring(1) + "&host=" +
-                    dashUrl.host;
+                const queryParams = new URLSearchParams(
+                    dashUrl.search.substring(1) + "&host=" +
+                        dashUrl.host,
+                );
+                let encryptedParams: string = "";
 
                 if (local) {
                     if (config.networking.ump) {
-                        queryParams = queryParams + "&ump=1";
+                        queryParams.set("ump", "yes");
                     }
                     if (
                         config.server.encrypt_query_params
                     ) {
-                        queryParams = "enc=yes&data=" + encryptQuery(
-                            queryParams,
-                            config,
-                        );
+                        const privateParams = "&pot=" +
+                            dashUrl.searchParams.get("pot") +
+                            "&ip=" + dashUrl.searchParams.get("ip");
+                        queryParams.delete("pot");
+                        queryParams.delete("ip");
+                        encryptedParams = "&enc=yes&data=" +
+                            encryptQuery(
+                                privateParams,
+                                config,
+                            );
                     }
                     dashUrl = (
                         Deno.env.get("EXTERNAL_VIDEOPLAYBACK_PROXY") ||
@@ -107,7 +116,8 @@ dashManifest.get("/:videoId", async (c) => {
                         ) as string ?? "")
                     ) +
                         (dashUrl.pathname + "?" +
-                            queryParams) as unknown as URL;
+                            queryParams.toString() +
+                            encryptedParams) as unknown as URL;
                     return dashUrl;
                 } else {
                     return dashUrl;
