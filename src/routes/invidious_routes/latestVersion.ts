@@ -64,21 +64,33 @@ latestVersion.get("/", async (c) => {
         const itagUrl = selectedItagFormat[0].url as string;
         const itagUrlParsed = new URL(itagUrl);
         let urlToRedirect = itagUrlParsed.toString();
-        let queryParams = itagUrlParsed.search.substring(1) + "&host=" +
-            itagUrlParsed.host;
+        const queryParams = new URLSearchParams(
+            itagUrlParsed.search.substring(1) + "&host=" +
+                itagUrlParsed.host,
+        );
+        let encryptedParams: string = "";
+
         if (local) {
             if (config.server.encrypt_query_params) {
-                queryParams = "enc=yes&data=" + encryptQuery(
-                    queryParams,
-                    config,
-                );
+                const privateParams = "&pot=" +
+                    itagUrlParsed.searchParams.get("pot") + "&ip=" +
+                    itagUrlParsed.searchParams.get("ip");
+                queryParams.delete("pot");
+                queryParams.delete("ip");
+                encryptedParams = "&enc=yes&data=" +
+                    encryptQuery(
+                        privateParams,
+                        config,
+                    );
             }
             urlToRedirect = (
                 Deno.env.get("EXTERNAL_VIDEOPLAYBACK_PROXY") ||
                 (konfigStore.get(
                     "networking.external_videoplayback_proxy",
                 ) as string ?? "")
-            ) + (itagUrlParsed.pathname + "?" + queryParams) as string;
+            ) +
+                (itagUrlParsed.pathname + "?" + queryParams.toString() +
+                    encryptedParams) as string;
         }
 
         if (title) urlToRedirect += `&title=${encodeURIComponent(title)}`;
