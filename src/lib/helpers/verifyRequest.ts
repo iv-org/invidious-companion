@@ -1,10 +1,7 @@
 import { Store } from "@willsoto/node-konfig-core";
 import { decodeBase64 } from "@std/encoding/base64";
 import { Aes } from "crypto/aes.ts";
-import {
-    Ecb,
-    Padding,
-} from "crypto/block-modes.ts";
+import { Ecb, Padding } from "crypto/block-modes.ts";
 
 export const verifyRequest = (
     stringToCheck: string,
