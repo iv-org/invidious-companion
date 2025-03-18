@@ -16,6 +16,7 @@
 # secret_key = "CHANGE_ME" # env variable: SERVER_SECRET_KEY
 # verify_requests = false
 # encrypt_query_params = false # env variable: SERVER_ENCRYPT_QUERY_PARAMS
+# enable_metrics = false # env variable: ENABLE_METRICS
  
 # [cache]
 # enabled = true
