@@ -13,7 +13,7 @@ export const getFetchClient = (config: Config): {
         init?: FetchInitParameterWithClient,
     ): FetchReturn;
 } => {
-    const proxyAddress = Deno.env.get("PROXY") || config.networking.proxy;
+    const proxyAddress = config.networking.proxy;
     if (proxyAddress) {
         return async (
             input: FetchInputParameter,

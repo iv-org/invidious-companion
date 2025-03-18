@@ -19,8 +19,7 @@ export const routes = (
     app.use(
         "/youtubei/v1/*",
         bearerAuth({
-            token: Deno.env.get("SERVER_SECRET_KEY") ||
-                config.server.secret_key,
+            token: config.server.secret_key,
         }),
     );
 

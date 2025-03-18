@@ -10,13 +10,6 @@ import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
 
-if (
-    config.server.verify_requests === true &&
-    config.server.secret_key.length !== 16
-) {
-    throw new Error("Server secret key must be exactly 16 characters long");
-}
-
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -137,6 +130,6 @@ app.use("*", async (c, next) => {
 routes(app, config);
 
 Deno.serve({
-    port: Number(Deno.env.get("PORT")) || config.server.port,
-    hostname: Deno.env.get("HOST") || config.server.host,
+    port: config.server.port,
+    hostname: config.server.host,
 }, app.fetch);

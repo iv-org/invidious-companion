@@ -3,9 +3,9 @@ import { parse } from "jsr:@std/toml";
 
 const ConfigSchema = z.object({
     server: z.object({
-        port: z.number().default(8282),
-        host: z.string().default("127.0.0.1"),
-        secret_key: z.string().default("CHANGE_ME"),
+        port: z.number().default(Number(Deno.env.get("PORT")) || 8282),
+        host: z.string().default(Deno.env.get("HOST") || '127.0.0.1'),
+        secret_key: z.string().length(16).default(Deno.env.get("SERVER_SECRET_KEY") || ''),
         verify_requests: z.boolean().default(false),
     }).strict().default({}),
     cache: z.object({
@@ -14,7 +14,7 @@ const ConfigSchema = z.object({
     }).strict().default({}),
     networking: z.object({
         ump: z.boolean().default(false),
-        proxy: z.string().optional(),
+        proxy: z.string().nullable().default(Deno.env.get("PROXY") || null),
         fetch: z.object({
             timeout_ms: z.number().optional(),
             retry: z.object({
@@ -52,6 +52,10 @@ export async function parseConfig() {
         }
         const rawConfig = configFileContents ? parse(configFileContents) : {};
         const validatedConfig = ConfigSchema.parse(rawConfig);
+
+        if (validatedConfig.server.verify_requests === true && validatedConfig.server.secret_key === null) {
+            throw new Error("Server secret key must be exactly 16 characters long");
+        }
 
         console.log("Loaded Configuration", validatedConfig);
 
