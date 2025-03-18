@@ -53,10 +53,6 @@ export async function parseConfig() {
         const rawConfig = configFileContents ? parse(configFileContents) : {};
         const validatedConfig = ConfigSchema.parse(rawConfig);
 
-        if (validatedConfig.server.verify_requests === true && validatedConfig.server.secret_key === null) {
-            throw new Error("Server secret key must be exactly 16 characters long");
-        }
-
         console.log("Loaded Configuration", validatedConfig);
 
         return validatedConfig;
