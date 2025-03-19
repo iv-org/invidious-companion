@@ -49,6 +49,8 @@ videoPlaybackProxy.get("/", async (c) => {
     // deno-lint-ignore prefer-const
     let queryParams = new URLSearchParams(urlReq.search);
     queryParams.delete("host");
+    queryParams.delete("title");
+
     const rangeHeader = c.req.header("range");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
     if (requestBytes) {
@@ -112,10 +114,9 @@ videoPlaybackProxy.get("/", async (c) => {
     };
 
     if (title) {
-        headersForResponse["content-disposition"] =
-            `attachment; filename="${title}" filename*=UTF-8''${
-                encodeRFC5987ValueChars(title)
-            }`;
+        headersForResponse["content-disposition"] = `attachment; filename="${
+            encodeURIComponent(title)
+        }"; filename*=UTF-8''${encodeRFC5987ValueChars(title)}`;
     }
 
     let responseStatus = googlevideoResponse.status;

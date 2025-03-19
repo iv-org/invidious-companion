@@ -68,7 +68,7 @@ latestVersion.get("/", async (c) => {
                 "&host=" + itagUrlParsed.host;
         }
 
-        if (title) urlToRedirect += `&title=${title}`;
+        if (title) urlToRedirect += `&title=${encodeURIComponent(title)}`;
 
         return c.redirect(urlToRedirect);
     }
