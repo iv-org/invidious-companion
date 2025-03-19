@@ -115,22 +115,24 @@ videoPlaybackProxy.get("/", async (c) => {
         // "bytes=0-" get full length from start
         // "bytes=500-" get full length from 500 bytes in
         // "bytes=500-1000" get 500 bytes starting from 500
-        const [firstByte, lastByte] = requestBytes.split('-');
+        const [firstByte, lastByte] = requestBytes.split("-");
         if (lastByte) {
             responseStatus = 206;
             headersForResponse["content-range"] = `bytes ${requestBytes}/*`;
         } else {
             // i.e. "bytes=0-", "bytes=600-"
             // full size of content is able to be calculated, so a full Content-Range header can be constructed
-            const bytesReceived = headersForResponse['content-length'];
+            const bytesReceived = headersForResponse["content-length"];
             // last byte should always be one less than the length
-            const totalContentLength = Number(firstByte) + Number(bytesReceived);
+            const totalContentLength = Number(firstByte) +
+                Number(bytesReceived);
             const lastByte = totalContentLength - 1;
-            if (firstByte !== '0') {
+            if (firstByte !== "0") {
                 // only part of the total content returned, 206
                 responseStatus = 206;
             }
-            headersForResponse["content-range"] = `bytes ${firstByte}-${lastByte}/${totalContentLength}`;
+            headersForResponse["content-range"] =
+                `bytes ${firstByte}-${lastByte}/${totalContentLength}`;
         }
     }
 
