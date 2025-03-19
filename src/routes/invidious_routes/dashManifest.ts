@@ -109,15 +109,9 @@ dashManifest.get("/:videoId", async (c) => {
                                 config,
                             );
                     }
-                    dashUrl = (
-                        Deno.env.get("EXTERNAL_VIDEOPLAYBACK_PROXY") ||
-                        (konfigStore.get(
-                            "networking.external_videoplayback_proxy",
-                        ) as string ?? "")
-                    ) +
-                        (dashUrl.pathname + "?" +
-                            queryParams.toString() +
-                            encryptedParams) as unknown as URL;
+                    dashUrl = (dashUrl.pathname + "?" +
+                        queryParams.toString() +
+                        encryptedParams) as unknown as URL;
                     return dashUrl;
                 } else {
                     return dashUrl;
