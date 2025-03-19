@@ -9,7 +9,9 @@ const ConfigSchema = z.object({
             Deno.env.get("SERVER_SECRET_KEY") || "",
         ),
         verify_requests: z.boolean().default(false),
-        enable_metrics : z.boolean().default(Deno.env.get("ENABLE_METRICS") === "true" || false)
+        enable_metrics: z.boolean().default(
+            Deno.env.get("ENABLE_METRICS") === "true" || false,
+        ),
     }).strict().default({}),
     cache: z.object({
         enabled: z.boolean().default(true),
