@@ -9,7 +9,7 @@ import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
-import { initMetrics, metrics } from "./lib/helpers/metrics.ts"
+import { initMetrics, metrics } from "./lib/helpers/metrics.ts";
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
