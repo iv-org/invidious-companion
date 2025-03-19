@@ -9,7 +9,7 @@ import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 const latestVersion = new Hono();
 
 latestVersion.get("/", async (c) => {
-    const { check, itag, id, local } = c.req.query();
+    const { check, itag, id, local, title } = c.req.query();
     c.header("access-control-allow-origin", "*");
 
     if (!id || !itag) {
@@ -67,6 +67,9 @@ latestVersion.get("/", async (c) => {
             urlToRedirect = itagUrlParsed.pathname + itagUrlParsed.search +
                 "&host=" + itagUrlParsed.host;
         }
+
+        if (title) urlToRedirect += `&title=${title}`;
+
         return c.redirect(urlToRedirect);
     }
 });
