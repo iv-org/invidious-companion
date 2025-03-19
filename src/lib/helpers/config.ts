@@ -1,5 +1,5 @@
 import { z, ZodError } from "zod";
-import { parse } from "jsr:@std/toml";
+import { parse } from "@std/toml";
 
 const ConfigSchema = z.object({
     server: z.object({
