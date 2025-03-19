@@ -9,7 +9,7 @@ export default function getDownloadHandler(app: Hono) {
         const videoId = body.get("id") as string | undefined;
         if (videoId == undefined) {
             throw new HTTPException(400, {
-                res: new Response("no video id given"),
+                res: new Response("Please specify the video ID"),
             });
         }
 
@@ -47,7 +47,7 @@ export default function getDownloadHandler(app: Hono) {
             !(title || videoId || downloadWidgetData)
         ) {
             throw new HTTPException(400, {
-                res: new Response("Invalid form data"),
+                res: new Response("Missing form data required for download"),
             });
         }
 
