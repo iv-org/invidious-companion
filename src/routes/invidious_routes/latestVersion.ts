@@ -83,14 +83,9 @@ latestVersion.get("/", async (c) => {
                         config,
                     );
             }
-            urlToRedirect = (
-                Deno.env.get("EXTERNAL_VIDEOPLAYBACK_PROXY") ||
-                (konfigStore.get(
-                    "networking.external_videoplayback_proxy",
-                ) as string ?? "")
-            ) +
-                (itagUrlParsed.pathname + "?" + queryParams.toString() +
-                    encryptedParams) as string;
+            urlToRedirect = itagUrlParsed.pathname + "?" +
+                queryParams.toString() +
+                encryptedParams;
         }
 
         if (title) urlToRedirect += `&title=${encodeURIComponent(title)}`;
