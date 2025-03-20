@@ -1,12 +1,11 @@
 import { Hono } from "hono";
-import { metrics } from "../lib/helpers/metrics.ts";
 
-const metrics_ = new Hono();
+const metrics = new Hono();
 
-metrics_.get("/", async () => {
-    return new Response(await metrics?.register.metrics(), {
+metrics.get("/", async (c) => {
+    return new Response(await c.get("metrics")?.register.metrics(), {
         headers: { "Content-Type": "text/plain" },
     });
 });
 
-export default metrics_;
+export default metrics;
