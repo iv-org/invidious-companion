@@ -6,7 +6,7 @@ export default function getDownloadHandler(app: Hono) {
     async function handler(c: Context) {
         const body = await c.req.formData();
 
-        const videoId = body.get("id") as string | undefined;
+        const videoId = body.get("id")?.toString();
         if (videoId == undefined) {
             throw new HTTPException(400, {
                 res: new Response("Please specify the video ID"),
@@ -35,7 +35,7 @@ export default function getDownloadHandler(app: Hono) {
 
         try {
             downloadWidgetData = JSON.parse(
-                (body.get("download_widget") as string || undefined) || "",
+                body.get("download_widget")?.toString() || "",
             );
         } catch {
             throw new HTTPException(400, {
