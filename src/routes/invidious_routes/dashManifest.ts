@@ -6,6 +6,7 @@ import {
 } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 import { HTTPException } from "hono/http-exception";
+import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 
 const dashManifest = new Hono();
 
@@ -83,13 +84,30 @@ dashManifest.get("/:videoId", async (c) => {
             videoInfo.page[0].video_details?.is_post_live_dvr,
             (url: URL) => {
                 let dashUrl = url;
+                const queryParams = new URLSearchParams(dashUrl.search);
+                queryParams.set("host", dashUrl.host);
+
                 if (local) {
-                    // Can't create URL type without host part
-                    dashUrl = (dashUrl.pathname + dashUrl.search + "&host=" +
-                        dashUrl.host) as unknown as URL;
                     if (config.networking.ump) {
-                        dashUrl = dashUrl + "&ump=1" as unknown as URL;
+                        queryParams.set("ump", "yes");
                     }
+                    if (
+                        config.server.encrypt_query_params
+                    ) {
+                        const privateParams = "&pot=" +
+                            queryParams.get("pot") +
+                            "&ip=" + queryParams.get("ip");
+                        const encryptedParams = encryptQuery(
+                            privateParams,
+                            config,
+                        );
+                        queryParams.delete("pot");
+                        queryParams.delete("ip");
+                        queryParams.set("enc", "true");
+                        queryParams.set("data", encryptedParams);
+                    }
+                    dashUrl = (dashUrl.pathname + "?" +
+                        queryParams.toString()) as unknown as URL;
                     return dashUrl;
                 } else {
                     return dashUrl;

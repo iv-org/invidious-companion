@@ -5,6 +5,7 @@ import {
     youtubeVideoInfo,
 } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 
 const latestVersion = new Hono();
 
@@ -62,10 +63,26 @@ latestVersion.get("/", async (c) => {
     } else if (selectedItagFormat) {
         const itagUrl = selectedItagFormat[0].url as string;
         const itagUrlParsed = new URL(itagUrl);
+        const queryParams = new URLSearchParams(itagUrlParsed.search);
         let urlToRedirect = itagUrlParsed.toString();
+
         if (local) {
-            urlToRedirect = itagUrlParsed.pathname + itagUrlParsed.search +
-                "&host=" + itagUrlParsed.host;
+            queryParams.set("host", itagUrlParsed.host);
+            if (config.server.encrypt_query_params) {
+                const privateParams = "&pot=" +
+                    queryParams.get("pot") +
+                    "&ip=" + queryParams.get("ip");
+                const encryptedParams = encryptQuery(
+                    privateParams,
+                    config,
+                );
+                queryParams.delete("pot");
+                queryParams.delete("ip");
+                queryParams.set("enc", "true");
+                queryParams.set("data", encryptedParams);
+            }
+            urlToRedirect = itagUrlParsed.pathname + "?" +
+                queryParams.toString();
         }
         return c.redirect(urlToRedirect);
     }

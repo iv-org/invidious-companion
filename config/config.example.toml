@@ -15,6 +15,7 @@
 # # secret key needs to be 16 characters long or more
 # secret_key = "CHANGE_ME" # env variable: SERVER_SECRET_KEY
 # verify_requests = false
+# encrypt_query_params = false # env variable: ENCRYPT_QUERY_PARAMS
  
 # [cache]
 # enabled = true

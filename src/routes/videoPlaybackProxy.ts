@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { decryptQuery } from "../lib/helpers/encryptQuery.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -16,8 +17,23 @@ const { getFetchClient } = await import(getFetchClientLocation);
 const videoPlaybackProxy = new Hono();
 
 videoPlaybackProxy.get("/", async (c) => {
+    const config = c.get("config");
     const { host, c: client, expire } = c.req.query();
     const urlReq = new URL(c.req.url);
+    const queryParams = new URLSearchParams(urlReq.search);
+
+    if (c.req.query("enc") === "true") {
+        const { data: encryptedQuery } = c.req.query();
+        const decryptedQueryParams = decryptQuery(encryptedQuery, config);
+        const parsedDecryptedQueryParams = new URLSearchParams(
+            decryptedQueryParams,
+        );
+        parsedDecryptedQueryParams.forEach((k, v) => {
+            queryParams.set(v, k);
+        });
+        queryParams.delete("enc");
+        queryParams.delete("data");
+    }
 
     if (host == undefined || !/[\w-]+.googlevideo.com/.test(host)) {
         throw new HTTPException(400, {
@@ -42,10 +58,6 @@ videoPlaybackProxy.get("/", async (c) => {
         });
     }
 
-    const config = c.get("config");
-
-    // deno-lint-ignore prefer-const
-    let queryParams = new URLSearchParams(urlReq.search);
     queryParams.delete("host");
     const rangeHeader = c.req.header("range");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
