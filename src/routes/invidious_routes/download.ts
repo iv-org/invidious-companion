@@ -70,9 +70,9 @@ export default function getDownloadHandler(app: Hono) {
                 }`,
             );
         } else {
-            const itag = Number(downloadWidgetData.itag);
+            const itag = downloadWidgetData.itag;
             const ext = downloadWidgetData.ext;
-            const filename = `${title}-${videoId}.${ext || ""}`;
+            const filename = `${title}-${videoId}.${ext}`;
 
             const urlQueriesForLatestVersion = new URLSearchParams();
             urlQueriesForLatestVersion.set("id", videoId);
@@ -81,7 +81,7 @@ export default function getDownloadHandler(app: Hono) {
             // in /videoplayback and /latest_version
             urlQueriesForLatestVersion.set(
                 "title",
-                encodeURIComponent(filename),
+                filename,
             );
             urlQueriesForLatestVersion.set("local", "true");
 
