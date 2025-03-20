@@ -1,7 +1,4 @@
-import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils";
-import type { WebPoSignalOutput } from "bgutils";
-import { JSDOM } from "jsdom";
-import { Innertube } from "youtubei.js";
+import { Innertube, UniversalCache } from "youtubei.js";
 import {
     youtubePlayerParsing,
     youtubeVideoInfo,
@@ -20,118 +17,129 @@ if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
 }
 const { getFetchClient } = await import(getFetchClientLocation);
 
+import { InputMessage, OutputMessageSchema } from "./worker.ts";
+
+interface TokenGeneratorWorker extends Omit<Worker, "postMessage"> {
+    postMessage(message: InputMessage): void;
+}
+
+const workers: TokenGeneratorWorker[] = [];
+
+function createMinter(worker: TokenGeneratorWorker) {
+    return (videoId: string): Promise<string> => {
+        const { promise, resolve } = Promise.withResolvers<string>();
+        // generate a UUID to identify the request as many minter calls
+        // may be made within a timespan, and this function will be
+        // informed about all of them until it's got its own
+        const requestId = crypto.randomUUID();
+        const listener = (message: MessageEvent) => {
+            const parsedMessage = OutputMessageSchema.parse(message.data);
+            if (
+                parsedMessage.type === "content-token" &&
+                parsedMessage.requestId === requestId
+            ) {
+                worker.removeEventListener("message", listener);
+                resolve(parsedMessage.contentToken);
+            }
+        };
+        worker.addEventListener("message", listener);
+        worker.postMessage({
+            type: "content-token-request",
+            videoId,
+            requestId,
+        });
+
+        return promise;
+    };
+}
+
+export type TokenMinter = ReturnType<typeof createMinter>;
+
 // Adapted from https://github.com/LuanRT/BgUtils/blob/main/examples/node/index.ts
-export const poTokenGenerate = async (
-    innertubeClient: Innertube,
+export const poTokenGenerate = (
     config: Config,
-): Promise<{ innertubeClient: Innertube; tokenMinter: BG.WebPoMinter }> => {
-    if (innertubeClient.session.po_token) {
-        innertubeClient = await Innertube.create({
-            enable_session_cache: false,
-            user_agent: USER_AGENT,
-            retrieve_player: false,
-        });
-    }
+): Promise<{ innertubeClient: Innertube; tokenMinter: TokenMinter }> => {
+    const { promise, resolve, reject } = Promise.withResolvers<
+        Awaited<ReturnType<typeof poTokenGenerate>>
+    >();
 
-    const fetchImpl = await getFetchClient(config);
-
-    const visitorData = innertubeClient.session.context.client.visitorData;
-
-    if (!visitorData) {
-        throw new Error("Could not get visitor data");
-    }
-
-    const dom = new JSDOM(
-        '<!DOCTYPE html><html lang="en"><head><title></title></head><body></body></html>',
+    const worker: TokenGeneratorWorker = new Worker(
+        new URL("./worker.ts", import.meta.url).href,
         {
-            url: "https://www.youtube.com/",
-            referrer: "https://www.youtube.com/",
-            userAgent: USER_AGENT,
+            type: "module",
+            name: "PO Token Generator",
         },
     );
+    // take note of the worker so we can kill it once a new one takes its place
+    workers.push(worker);
+    worker.addEventListener("message", async (event) => {
+        const parsedMessage = OutputMessageSchema.parse(event.data);
 
-    Object.assign(globalThis, {
-        window: dom.window,
-        document: dom.window.document,
-        location: dom.window.location,
-        origin: dom.window.origin,
+        // worker is listening for messages
+        if (parsedMessage.type === "ready") {
+            const untypedPostMessage = worker.postMessage.bind(worker);
+            worker.postMessage = (message: InputMessage) =>
+                untypedPostMessage(message);
+            worker.postMessage({ type: "initialise", config });
+        }
+
+        if (parsedMessage.type === "error") {
+            worker.terminate();
+            reject(parsedMessage.error);
+        }
+
+        // worker is initialised and has passed back a session token and visitor data
+        if (parsedMessage.type === "initialised") {
+            try {
+                const instantiatedInnertubeClient = await Innertube.create({
+                    enable_session_cache: false,
+                    po_token: parsedMessage.sessionPoToken,
+                    visitor_data: parsedMessage.visitorData,
+                    fetch: getFetchClient(config),
+                    generate_session_locally: true,
+                });
+                const minter = createMinter(worker);
+                // check token from minter
+                await checkToken({
+                    instantiatedInnertubeClient,
+                    config,
+                    integrityTokenBasedMinter: minter,
+                });
+                console.log("Successfully generated PO token");
+                const numberToKill = workers.length - 1;
+                for (let i = 0; i < numberToKill; i++) {
+                    const workerToKill = workers.shift();
+                    console.log("KILLING:", { workerToKill });
+                    workerToKill?.terminate();
+                }
+                console.log("Remaining workers", workers);
+                return resolve({
+                    innertubeClient: instantiatedInnertubeClient,
+                    tokenMinter: minter,
+                });
+            } catch (err) {
+                console.log("Failed to get valid PO token, will retry", {
+                    err,
+                });
+                worker.terminate();
+                reject(err);
+            }
+        }
     });
 
-    if (!Reflect.has(globalThis, "navigator")) {
-        Object.defineProperty(globalThis, "navigator", {
-            value: dom.window.navigator,
-        });
-    }
+    return promise;
+};
 
-    const challengeResponse = await innertubeClient.getAttestationChallenge(
-        "ENGAGEMENT_TYPE_UNBOUND",
-    );
-    if (!challengeResponse.bg_challenge) {
-        throw new Error("Could not get challenge");
-    }
-
-    const interpreterUrl = challengeResponse.bg_challenge.interpreter_url
-        .private_do_not_access_or_else_trusted_resource_url_wrapped_value;
-    const bgScriptResponse = await fetchImpl(
-        `http:${interpreterUrl}`,
-    );
-    const interpreterJavascript = await bgScriptResponse.text();
-
-    if (interpreterJavascript) {
-        new Function(interpreterJavascript)();
-    } else throw new Error("Could not load VM");
-
-    // Botguard currently surfaces a "Not implemented" error here, due to the environment
-    // not having a valid Canvas API in JSDOM. At the time of writing, this doesn't cause
-    // any issues as the Canvas check doesn't appear to be an enforced element of the checks
-    console.log(
-        '[INFO] the "Not implemented: HTMLCanvasElement.prototype.getContext" error is normal. Please do not open a bug report about it.',
-    );
-    const botguard = await BG.BotGuardClient.create({
-        program: challengeResponse.bg_challenge.program,
-        globalName: challengeResponse.bg_challenge.global_name,
-        globalObj: globalThis,
-    });
-
-    const webPoSignalOutput: WebPoSignalOutput = [];
-    const botguardResponse = await botguard.snapshot({ webPoSignalOutput });
-    const requestKey = "O43z0dpjhgX20SCx4KAo";
-
-    const integrityTokenResponse = await fetchImpl(
-        buildURL("GenerateIT", true),
-        {
-            method: "POST",
-            headers: {
-                "content-type": "application/json+protobuf",
-                "x-goog-api-key": GOOG_API_KEY,
-                "x-user-agent": "grpc-web-javascript/0.1",
-                "user-agent": USER_AGENT,
-            },
-            body: JSON.stringify([requestKey, botguardResponse]),
-        },
-    );
-
-    const response = await integrityTokenResponse.json() as unknown[];
-
-    if (typeof response[0] !== "string") {
-        throw new Error("Could not get integrity token");
-    }
-
-    const integrityTokenBasedMinter = await BG.WebPoMinter.create({
-        integrityToken: response[0],
-    }, webPoSignalOutput);
-
-    const sessionPoToken = await integrityTokenBasedMinter.mintAsWebsafeString(
-        visitorData,
-    );
-
-    const instantiatedInnertubeClient = await Innertube.create({
-        enable_session_cache: false,
-        po_token: sessionPoToken,
-        visitor_data: visitorData,
-        fetch: getFetchClient(config),
-        generate_session_locally: true,
-    });
+async function checkToken({
+    instantiatedInnertubeClient,
+    config,
+    integrityTokenBasedMinter,
+}: {
+    instantiatedInnertubeClient: Innertube;
+    config: Config;
+    integrityTokenBasedMinter: TokenMinter;
+}) {
+    const fetchImpl = getFetchClient(config);
 
     try {
         const feed = await instantiatedInnertubeClient.getTrending();
@@ -174,9 +182,4 @@ export const poTokenGenerate = async (
         console.log("Failed to get valid PO token, will retry", { err });
         throw err;
     }
-
-    return {
-        innertubeClient: instantiatedInnertubeClient,
-        tokenMinter: integrityTokenBasedMinter,
-    };
-};
+}
