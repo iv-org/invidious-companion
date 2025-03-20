@@ -42,18 +42,17 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 export async function parseConfig() {
+    const configFileName = Deno.env.get("CONFIG_FILE") || "config/config.toml";
+    const configFileContents = await Deno.readTextFile(configFileName).catch(() => null);
+    if (configFileContents) {
+        console.log("[INFO] Using custom settings local file");
+    } else {
+        console.log(
+            "[INFO] No local config file found, using default config",
+        );
+    }
+
     try {
-        const configFileContents = await Deno.readTextFile(
-            Deno.env.get("CONFIG_FILE") || "config/config.toml",
-        )
-            .catch(() => null);
-        if (configFileContents) {
-            console.log("[INFO] Using custom settings local file");
-        } else {
-            console.log(
-                "[INFO] No local config file found, using default config",
-            );
-        }
         const rawConfig = configFileContents ? parse(configFileContents) : {};
         const validatedConfig = ConfigSchema.parse(rawConfig);
 
@@ -61,7 +60,11 @@ export async function parseConfig() {
 
         return validatedConfig;
     } catch (err) {
-        console.log("There is an error in your configuration");
+        let errorMessage = "There is an error in your configuration, check your environment variables";
+        if (configFileContents) {
+            errorMessage += ` or in your configuration file located at ${configFileName}`;
+        }
+        console.log(errorMessage);
         if (err instanceof ZodError) {
             console.log(err.issues);
             throw new Error("Failed to parse configuration file");
