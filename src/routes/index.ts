@@ -33,5 +33,7 @@ export const routes = (
     app.route("/api/v1/captions", invidiousCaptionsApi);
     app.route("/videoplayback", videoPlaybackProxy);
     app.route("/healthz", health);
-    app.route("/metrics", metrics_);
+    if (config.server.enable_metrics) {
+        app.route("/metrics", metrics_);
+    }
 };

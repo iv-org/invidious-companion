@@ -36,9 +36,9 @@ export class Metrics {
         "Number of times that an unknown error has been returned by the Innertube API",
     );
 
-    public innertubeSuccessfullRequest = this.createCounter(
-        "innertube_successfull_request",
-        "Number successfull requests made to the Innertube API",
+    public innertubeSuccessfulRequest = this.createCounter(
+        "innertube_successful_request",
+        "Number successful requests made to the Innertube API",
     );
 
     private innertubeFailedRequest = this.createCounter(
@@ -69,7 +69,6 @@ export class Metrics {
         if (hit == false) {
             this.innertubeErrorUnknown.inc();
         }
-        return;
     }
 }
 
