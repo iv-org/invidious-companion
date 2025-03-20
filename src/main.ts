@@ -84,8 +84,9 @@ if (!innertubeClientOauthEnabled) {
                         config,
                         innertubeClientCache,
                     ));
-                } catch (_) {
+                } catch (err) {
                     metrics?.potokenGenerationFailure.inc();
+                    throw err
                 }
             } else {
                 innertubeClient = await Innertube.create({
@@ -124,6 +125,7 @@ app.use("*", async (c, next) => {
     c.set("innertubeClient", innertubeClient);
     c.set("tokenMinter", tokenMinter);
     c.set("config", config);
+    c.set("metrics", metrics);
     await next();
 });
 

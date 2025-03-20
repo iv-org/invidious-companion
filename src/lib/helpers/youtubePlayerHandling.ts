@@ -148,7 +148,7 @@ export const youtubePlayerParsing = async ({
         }))(videoData);
 
         if (videoData.playabilityStatus?.status == "OK") {
-            metrics?.innertubeSuccessfullRequest.inc();
+            metrics?.innertubeSuccessfulRequest.inc();
             if (cacheEnabled) {
                 (async () => {
                     await kv.set(
