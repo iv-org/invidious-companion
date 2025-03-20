@@ -43,7 +43,9 @@ export type Config = z.infer<typeof ConfigSchema>;
 
 export async function parseConfig() {
     const configFileName = Deno.env.get("CONFIG_FILE") || "config/config.toml";
-    const configFileContents = await Deno.readTextFile(configFileName).catch(() => null);
+    const configFileContents = await Deno.readTextFile(configFileName).catch(
+        () => null,
+    );
     if (configFileContents) {
         console.log("[INFO] Using custom settings local file");
     } else {
@@ -60,9 +62,11 @@ export async function parseConfig() {
 
         return validatedConfig;
     } catch (err) {
-        let errorMessage = "There is an error in your configuration, check your environment variables";
+        let errorMessage =
+            "There is an error in your configuration, check your environment variables";
         if (configFileContents) {
-            errorMessage += ` or in your configuration file located at ${configFileName}`;
+            errorMessage +=
+                ` or in your configuration file located at ${configFileName}`;
         }
         console.log(errorMessage);
         if (err instanceof ZodError) {
