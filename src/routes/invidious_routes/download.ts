@@ -3,12 +3,9 @@ import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 
-const DownloadWidgetSchema = z.discriminatedUnion("ext", [
+const DownloadWidgetSchema = z.union([
     z.object({ label: z.string(), ext: z.string() }).strict(),
-    z.object({
-        itag: z.number(),
-        ext: z.string(),
-    }).strict(),
+    z.object({ itag: z.number(), ext: z.string() }).strict(),
 ]);
 
 type DownloadWidget = z.infer<typeof DownloadWidgetSchema>;
