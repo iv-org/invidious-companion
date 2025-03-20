@@ -92,7 +92,7 @@ if (!innertubeClientOauthEnabled) {
                     ));
                 } catch (err) {
                     metrics?.potokenGenerationFailure.inc();
-                    throw err
+                    throw err;
                 }
             } else {
                 innertubeClient = await Innertube.create({
