@@ -63,29 +63,26 @@ latestVersion.get("/", async (c) => {
     } else if (selectedItagFormat) {
         const itagUrl = selectedItagFormat[0].url as string;
         const itagUrlParsed = new URL(itagUrl);
+        const queryParams = new URLSearchParams(itagUrlParsed.search);
         let urlToRedirect = itagUrlParsed.toString();
-        const queryParams = new URLSearchParams(
-            itagUrlParsed.search.substring(1) + "&host=" +
-                itagUrlParsed.host,
-        );
-        let encryptedParams: string = "";
 
         if (local) {
+            queryParams.set("host", itagUrlParsed.host);
             if (config.server.encrypt_query_params) {
                 const privateParams = "&pot=" +
-                    itagUrlParsed.searchParams.get("pot") + "&ip=" +
-                    itagUrlParsed.searchParams.get("ip");
+                    queryParams.get("pot") +
+                    "&ip=" + queryParams.get("ip");
+                const encryptedParams = encryptQuery(
+                    privateParams,
+                    config,
+                );
                 queryParams.delete("pot");
                 queryParams.delete("ip");
-                encryptedParams = "&enc=yes&data=" +
-                    encryptQuery(
-                        privateParams,
-                        config,
-                    );
+                queryParams.set("enc", "true");
+                queryParams.set("data", encryptedParams);
             }
             urlToRedirect = itagUrlParsed.pathname + "?" +
-                queryParams.toString() +
-                encryptedParams;
+                queryParams.toString();
         }
 
         if (title) urlToRedirect += `&title=${encodeURIComponent(title)}`;

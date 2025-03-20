@@ -84,12 +84,8 @@ dashManifest.get("/:videoId", async (c) => {
             videoInfo.page[0].video_details?.is_post_live_dvr,
             (url: URL) => {
                 let dashUrl = url;
-                // Can't create URL type without host part
-                const queryParams = new URLSearchParams(
-                    dashUrl.search.substring(1) + "&host=" +
-                        dashUrl.host,
-                );
-                let encryptedParams: string = "";
+                const queryParams = new URLSearchParams(dashUrl.search);
+                queryParams.set("host", dashUrl.host);
 
                 if (local) {
                     if (config.networking.ump) {
@@ -99,19 +95,19 @@ dashManifest.get("/:videoId", async (c) => {
                         config.server.encrypt_query_params
                     ) {
                         const privateParams = "&pot=" +
-                            dashUrl.searchParams.get("pot") +
-                            "&ip=" + dashUrl.searchParams.get("ip");
+                            queryParams.get("pot") +
+                            "&ip=" + queryParams.get("ip");
+                        const encryptedParams = encryptQuery(
+                            privateParams,
+                            config,
+                        );
                         queryParams.delete("pot");
                         queryParams.delete("ip");
-                        encryptedParams = "&enc=yes&data=" +
-                            encryptQuery(
-                                privateParams,
-                                config,
-                            );
+                        queryParams.set("enc", "true");
+                        queryParams.set("data", encryptedParams);
                     }
                     dashUrl = (dashUrl.pathname + "?" +
-                        queryParams.toString() +
-                        encryptedParams) as unknown as URL;
+                        queryParams.toString()) as unknown as URL;
                     return dashUrl;
                 } else {
                     return dashUrl;

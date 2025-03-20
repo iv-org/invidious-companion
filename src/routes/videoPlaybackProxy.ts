@@ -24,13 +24,13 @@ videoPlaybackProxy.get("/", async (c) => {
     const urlReq = new URL(c.req.url);
     const queryParams = new URLSearchParams(urlReq.search);
 
-    if (c.req.query("enc") === "yes") {
+    if (c.req.query("enc") === "true") {
         const { data: encryptedQuery } = c.req.query();
-        const unencryptedQueryParams = new URLSearchParams(decryptQuery(
-            encryptedQuery,
-            config,
-        ));
-        unencryptedQueryParams.forEach((k, v) => {
+        const decryptedQueryParams = decryptQuery(encryptedQuery, config);
+        const parsedDecryptedQueryParams = new URLSearchParams(
+            decryptedQueryParams,
+        );
+        parsedDecryptedQueryParams.forEach((k, v) => {
             queryParams.set(v, k);
         });
         queryParams.delete("enc");
@@ -59,7 +59,6 @@ videoPlaybackProxy.get("/", async (c) => {
             res: new Response("'c' query string undefined."),
         });
     }
-
 
     queryParams.delete("host");
     queryParams.delete("title");
