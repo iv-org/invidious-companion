@@ -1,6 +1,17 @@
 import type { Context, Hono } from "hono";
+import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+
+const DownloadWidgetSchema = z.union([
+    z.object({ label: z.string() }).strict(),
+    z.object({
+        itag: z.number(),
+        ext: z.string(),
+    }).strict(),
+]);
+
+type DownloadWidget = z.infer<typeof DownloadWidgetSchema>;
 
 export default function getDownloadHandler(app: Hono) {
     async function handler(c: Context) {
@@ -31,7 +42,7 @@ export default function getDownloadHandler(app: Hono) {
 
         const title = body.get("title");
 
-        let downloadWidgetData: { itag: number; ext: string; label: string };
+        let downloadWidgetData: DownloadWidget;
 
         try {
             downloadWidgetData = JSON.parse(
@@ -44,20 +55,21 @@ export default function getDownloadHandler(app: Hono) {
         }
 
         if (
-            !(title && videoId && downloadWidgetData)
+            !(title && videoId &&
+                DownloadWidgetSchema.safeParse(downloadWidgetData).success)
         ) {
             throw new HTTPException(400, {
-                res: new Response("Missing form data required for download"),
+                res: new Response("Invalid form data required for download"),
             });
         }
 
-        if (downloadWidgetData.label) {
+        if ("label" in downloadWidgetData) {
             return await app.request(
                 `/api/v1/captions/${videoId}?label=${
                     encodeURIComponent(downloadWidgetData.label)
                 }`,
             );
-        } else if (downloadWidgetData.itag) {
+        } else {
             const itag = Number(downloadWidgetData.itag);
             const ext = downloadWidgetData.ext;
             const filename = `${title}-${videoId}.${ext || ""}`;
@@ -76,10 +88,6 @@ export default function getDownloadHandler(app: Hono) {
             return await app.request(
                 `/latest_version?${urlQueriesForLatestVersion.toString()}`,
             );
-        } else {
-            throw new HTTPException(400, {
-                res: new Response("Invalid label or itag"),
-            });
         }
     }
 
