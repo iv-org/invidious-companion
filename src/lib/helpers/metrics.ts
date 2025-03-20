@@ -21,19 +21,29 @@ export class Metrics {
         "Number of times that the PoToken generation job has failed for whatever reason",
     );
 
-    private innertubeErrorSubreasonProtectCommunity = this.createCounter(
-        "innertube_subreason_ProtectCommunity",
-        'Number of times that the message "This helps protect our community." has been returned by Innertube API',
+    private innertubeErrorStatusUnknown = this.createCounter(
+        "innertube_error_status_unknown",
+        "Number of times that an unknown status has been returned by Innertube API",
     );
 
     private innertubeErrorReasonSignIn = this.createCounter(
-        "innertube_reason_SignIn",
+        "innertube_error_reason_SignIn",
         'Number of times that the message "Sign in to confirm you’re not a bot." has been returned by Innertube API',
     );
 
-    private innertubeErrorUnknown = this.createCounter(
-        "innertube_error_unknown",
-        "Number of times that an unknown error has been returned by the Innertube API",
+    private innertubeErrorSubreasonProtectCommunity = this.createCounter(
+        "innertube_error_subreason_ProtectCommunity",
+        'Number of times that the message "This helps protect our community." has been returned by Innertube API',
+    );
+
+    private innertubeErrorReasonUnknown = this.createCounter(
+        "innertube_error_reason_unknown",
+        "Number of times that an unknown reason has been returned by the Innertube API",
+    );
+
+    private innertubeErrorSubreasonUnknown = this.createCounter(
+        "innertube_error_subreason_unknown",
+        "Number of times that an unknown subreason has been returned by the Innertube API",
     );
 
     public innertubeSuccessfulRequest = this.createCounter(
@@ -48,26 +58,56 @@ export class Metrics {
 
     public checkInnertubeResponse(videoData: IRawResponse) {
         this.innertubeFailedRequest.inc();
-        let hit: boolean = false;
-        if (
-            videoData.playabilityStatus?.errorScreen?.playerErrorMessageRenderer
-                ?.subreason?.runs?.[0]?.text?.includes(
-                    "This helps protect our community",
-                )
-        ) {
-            this.innertubeErrorSubreasonProtectCommunity.inc();
-            hit = true;
-        }
-        if (
-            videoData.playabilityStatus?.reason?.includes(
-                "Sign in to confirm you’re not a bot",
-            )
-        ) {
-            this.innertubeErrorReasonSignIn.inc();
-            hit = true;
-        }
-        if (hit == false) {
-            this.innertubeErrorUnknown.inc();
+
+        switch (true) {
+            // CONTENT_CHECK_REQUIRED: Sensitive content videos.
+            case (videoData.playabilityStatus?.status ===
+                "CONTENT_CHECK_REQUIRED"): {
+                break;
+            }
+            case (videoData.playabilityStatus?.status === "LOGIN_REQUIRED"): {
+                switch (true) {
+                    // Age restricted videos, we don't need to track those.
+                    case videoData.playabilityStatus?.reason?.includes(
+                        "Sign in to confirm your age",
+                    ): {
+                        break;
+                    }
+
+                    case videoData.playabilityStatus?.reason?.includes(
+                        "Sign in to confirm you’re not a bot",
+                    ): {
+                        this.innertubeErrorReasonSignIn.inc();
+
+                        switch (true) {
+                            case videoData.playabilityStatus?.errorScreen
+                                ?.playerErrorMessageRenderer
+                                ?.subreason?.runs?.[0]?.text?.includes(
+                                    "This helps protect our community",
+                                ): {
+                                this.innertubeErrorSubreasonProtectCommunity
+                                    .inc();
+                                break;
+                            }
+                            default: {
+                                this.innertubeErrorSubreasonUnknown.inc();
+                                break;
+                            }
+                        }
+
+                        break;
+                    }
+
+                    default: {
+                        this.innertubeErrorReasonUnknown.inc();
+                        break;
+                    }
+                }
+                break;
+            }
+            default:
+                this.innertubeErrorStatusUnknown.inc();
+                break;
         }
     }
 }
