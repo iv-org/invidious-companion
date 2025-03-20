@@ -61,7 +61,7 @@ export async function parseConfig() {
 
         return validatedConfig;
     } catch (err) {
-        console.log("There is an error in your local.toml config file");
+        console.log("There is an error in your configuration");
         if (err instanceof ZodError) {
             console.log(err.issues);
             throw new Error("Failed to parse configuration file");
