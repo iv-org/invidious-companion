@@ -44,7 +44,7 @@ export default function getDownloadHandler(app: Hono) {
         }
 
         if (
-            !(title || videoId || downloadWidgetData)
+            !(title && videoId && downloadWidgetData)
         ) {
             throw new HTTPException(400, {
                 res: new Response("Missing form data required for download"),
