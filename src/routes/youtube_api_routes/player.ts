@@ -7,6 +7,7 @@ player.post("/player", async (c) => {
     const jsonReq = await c.req.json();
     const innertubeClient = c.get("innertubeClient");
     const config = c.get("config");
+    const metrics = c.get("metrics");
     if (jsonReq.videoId) {
         return c.json(
             await youtubePlayerParsing({
@@ -14,6 +15,7 @@ player.post("/player", async (c) => {
                 videoId: jsonReq.videoId,
                 config,
                 tokenMinter: c.get("tokenMinter"),
+                metrics,
             }),
         );
     }
