@@ -10,7 +10,7 @@ import getDownloadHandler from "./invidious_routes/download.ts";
 import videoPlaybackProxy from "./videoPlaybackProxy.ts";
 import health from "./health.ts";
 import type { Config } from "../lib/helpers/config.ts";
-import metrics_ from "./metrics.ts";
+import metrics from "./metrics.ts";
 
 export const routes = (
     app: Hono,
@@ -34,6 +34,6 @@ export const routes = (
     app.route("/videoplayback", videoPlaybackProxy);
     app.route("/healthz", health);
     if (config.server.enable_metrics) {
-        app.route("/metrics", metrics_);
+        app.route("/metrics", metrics);
     }
 };
