@@ -1,8 +1,5 @@
 import { IRawResponse } from "youtubei.js";
 import { Counter, Registry } from "prom-client";
-import { Config } from "../helpers/config.ts";
-
-export let metrics: Metrics | undefined;
 
 export class Metrics {
     private METRICS_PREFIX = "invidious_companion_";
@@ -109,11 +106,5 @@ export class Metrics {
                 this.innertubeErrorStatusUnknown.inc();
                 break;
         }
-    }
-}
-
-export function initMetrics(config: Config): void {
-    if (config.server.enable_metrics) {
-        metrics = new Metrics();
     }
 }
