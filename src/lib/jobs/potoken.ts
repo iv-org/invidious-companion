@@ -7,6 +7,7 @@ import {
     youtubeVideoInfo,
 } from "../helpers/youtubePlayerHandling.ts";
 import type { Config } from "../helpers/config.ts";
+import { Metrics } from "../helpers/metrics.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -24,6 +25,7 @@ const { getFetchClient } = await import(getFetchClientLocation);
 export const poTokenGenerate = async (
     innertubeClient: Innertube,
     config: Config,
+    metrics: Metrics | undefined,
 ): Promise<{ innertubeClient: Innertube; tokenMinter: BG.WebPoMinter }> => {
     if (innertubeClient.session.po_token) {
         innertubeClient = await Innertube.create({
@@ -152,6 +154,7 @@ export const poTokenGenerate = async (
             videoId: video.id,
             config,
             tokenMinter: integrityTokenBasedMinter,
+            metrics,
             overrideCache: true,
         });
         const videoInfo = youtubeVideoInfo(

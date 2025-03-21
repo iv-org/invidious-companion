@@ -21,6 +21,7 @@ latestVersion.get("/", async (c) => {
 
     const innertubeClient = c.get("innertubeClient");
     const config = c.get("config");
+    const metrics = c.get("metrics");
 
     if (config.server.verify_requests && check == undefined) {
         throw new HTTPException(400, {
@@ -39,6 +40,7 @@ latestVersion.get("/", async (c) => {
         videoId: id,
         config,
         tokenMinter: c.get("tokenMinter"),
+        metrics,
     });
     const videoInfo = youtubeVideoInfo(
         innertubeClient,

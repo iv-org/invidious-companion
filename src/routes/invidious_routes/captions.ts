@@ -19,6 +19,7 @@ const captionsHandler = new Hono<{ Variables: HonoVariables }>();
 captionsHandler.get("/:videoId", async (c) => {
     const { videoId } = c.req.param();
     const config = c.get("config");
+    const metrics = c.get("metrics");
 
     const check = c.req.query("check");
 
@@ -40,6 +41,7 @@ captionsHandler.get("/:videoId", async (c) => {
         innertubeClient,
         videoId,
         config,
+        metrics,
         tokenMinter: c.get("tokenMinter"),
     });
 
