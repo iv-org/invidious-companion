@@ -32,7 +32,10 @@ const InputContentTokenSchema = z.object({
 }).strict();
 export type InputInitialise = z.infer<typeof InputInitialiseSchema>;
 export type InputContentToken = z.infer<typeof InputContentTokenSchema>;
-const InputMessageSchema = InputInitialiseSchema.or(InputContentTokenSchema);
+const InputMessageSchema = z.union([
+    InputInitialiseSchema,
+    InputContentTokenSchema
+]);
 export type InputMessage = z.infer<typeof InputMessageSchema>;
 
 // ---- Messages that the webworker sends to the parent ----
@@ -56,8 +59,12 @@ const OutputErrorSchema = z.object({
     type: z.literal("error"),
     error: z.any(),
 }).strict();
-export const OutputMessageSchema = OutputReadySchema.or(OutputInitialiseSchema)
-    .or(OutputContentTokenSchema).or(OutputErrorSchema);
+export const OutputMessageSchema = z.union([
+    OutputReadySchema,
+    OutputInitialiseSchema,
+    OutputContentTokenSchema,
+    OutputErrorSchema,
+]);
 type OutputMessage = z.infer<typeof OutputMessageSchema>;
 
 const isWorker = typeof WorkerGlobalScope !== "undefined" &&
