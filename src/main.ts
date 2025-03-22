@@ -9,6 +9,7 @@ import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
+import { Metrics } from "./lib/helpers/metrics.ts";
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
@@ -27,6 +28,7 @@ declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
 const app = new Hono();
+const metrics = config.server.enable_metrics ? new Metrics() : undefined;
 
 let tokenMinter: BG.WebPoMinter;
 let innertubeClient: Innertube;
@@ -72,6 +74,7 @@ if (!innertubeClientOauthEnabled) {
                 innertubeClient,
                 config,
                 innertubeClientCache as UniversalCache,
+                metrics,
             ),
             { minTimeout: 1_000, maxTimeout: 60_000, multiplier: 5, jitter: 0 },
         ));
@@ -82,11 +85,17 @@ if (!innertubeClientOauthEnabled) {
         { backoffSchedule: [5_000, 15_000, 60_000, 180_000] },
         async () => {
             if (innertubeClientJobPoTokenEnabled) {
-                ({ innertubeClient, tokenMinter } = await poTokenGenerate(
-                    innertubeClient,
-                    config,
-                    innertubeClientCache,
-                ));
+                try {
+                    ({ innertubeClient, tokenMinter } = await poTokenGenerate(
+                        innertubeClient,
+                        config,
+                        innertubeClientCache,
+                        metrics,
+                    ));
+                } catch (err) {
+                    metrics?.potokenGenerationFailure.inc();
+                    throw err;
+                }
             } else {
                 innertubeClient = await Innertube.create({
                     enable_session_cache: false,
@@ -124,6 +133,7 @@ app.use("*", async (c, next) => {
     c.set("innertubeClient", innertubeClient);
     c.set("tokenMinter", tokenMinter);
     c.set("config", config);
+    c.set("metrics", metrics);
     await next();
 });
 
