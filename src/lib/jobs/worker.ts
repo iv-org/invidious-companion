@@ -34,7 +34,7 @@ export type InputInitialise = z.infer<typeof InputInitialiseSchema>;
 export type InputContentToken = z.infer<typeof InputContentTokenSchema>;
 const InputMessageSchema = z.union([
     InputInitialiseSchema,
-    InputContentTokenSchema
+    InputContentTokenSchema,
 ]);
 export type InputMessage = z.infer<typeof InputMessageSchema>;
 
