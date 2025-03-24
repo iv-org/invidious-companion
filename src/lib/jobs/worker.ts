@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { z } from "zod";
-import { ConfigSchema, Config } from "../helpers/config.ts";
+import { Config, ConfigSchema } from "../helpers/config.ts";
 import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils";
 import type { WebPoSignalOutput } from "bgutils";
 import { JSDOM } from "jsdom";
@@ -19,7 +19,9 @@ if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
 }
 
 type FetchFunction = typeof fetch;
-const { getFetchClient }: { getFetchClient: (config: Config) => Promise<FetchFunction> } = await import(getFetchClientLocation);
+const { getFetchClient }: {
+    getFetchClient: (config: Config) => Promise<FetchFunction>;
+} = await import(getFetchClientLocation);
 
 // ---- Messages to send to the webworker ----
 const InputInitialiseSchema = z.object({
@@ -69,7 +71,7 @@ export const OutputMessageSchema = z.union([
 ]);
 type OutputMessage = z.infer<typeof OutputMessageSchema>;
 
-const IntegrityTokenResponse = z.tuple([ z.string() ]).rest(z.any());
+const IntegrityTokenResponse = z.tuple([z.string()]).rest(z.any());
 
 const isWorker = typeof WorkerGlobalScope !== "undefined" &&
     self instanceof WorkerGlobalScope;
@@ -85,7 +87,9 @@ if (isWorker) {
     onmessage = async (event) => {
         const message = InputMessageSchema.parse(event.data);
         if (message.type === "initialise") {
-            const fetchImpl: typeof fetch = await getFetchClient(message.config);
+            const fetchImpl: typeof fetch = await getFetchClient(
+                message.config,
+            );
             try {
                 const {
                     sessionPoToken,
@@ -226,7 +230,9 @@ async function setup(
             body: JSON.stringify([requestKey, botguardResponse]),
         },
     );
-    const integrityTokenBody = IntegrityTokenResponse.parse(await integrityTokenResponse.json());
+    const integrityTokenBody = IntegrityTokenResponse.parse(
+        await integrityTokenResponse.json(),
+    );
 
     const integrityTokenBasedMinter = await BG.WebPoMinter.create({
         integrityToken: integrityTokenBody[0],
