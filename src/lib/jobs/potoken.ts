@@ -84,6 +84,7 @@ export const poTokenGenerate = (
         }
 
         if (parsedMessage.type === "error") {
+            console.log({ errorFromWorker: parsedMessage.error });
             worker.terminate();
             reject(parsedMessage.error);
         }
