@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { z } from "zod";
-import { ConfigSchema } from "../helpers/config.ts";
+import { ConfigSchema, Config } from "../helpers/config.ts";
 import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils";
 import type { WebPoSignalOutput } from "bgutils";
 import { JSDOM } from "jsdom";
@@ -17,7 +17,9 @@ if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
         ) as string;
     }
 }
-const { getFetchClient } = await import(getFetchClientLocation);
+
+type FetchFunction = typeof fetch;
+const { getFetchClient }: { getFetchClient: (config: Config) => Promise<FetchFunction> } = await import(getFetchClientLocation);
 
 // ---- Messages to send to the webworker ----
 const InputInitialiseSchema = z.object({
@@ -67,6 +69,8 @@ export const OutputMessageSchema = z.union([
 ]);
 type OutputMessage = z.infer<typeof OutputMessageSchema>;
 
+const IntegrityTokenResponse = z.tuple([ z.string() ]).rest(z.any());
+
 const isWorker = typeof WorkerGlobalScope !== "undefined" &&
     self instanceof WorkerGlobalScope;
 if (isWorker) {
@@ -81,7 +85,7 @@ if (isWorker) {
     onmessage = async (event) => {
         const message = InputMessageSchema.parse(event.data);
         if (message.type === "initialise") {
-            const fetchImpl = await getFetchClient(message.config);
+            const fetchImpl: typeof fetch = await getFetchClient(message.config);
             try {
                 const {
                     sessionPoToken,
@@ -139,7 +143,7 @@ rss: ${
 }
 
 async function setup(
-    { fetchImpl }: { fetchImpl: ReturnType<typeof getFetchClient> },
+    { fetchImpl }: { fetchImpl: FetchFunction },
 ) {
     const innertubeClient = await Innertube.create({
         enable_session_cache: false,
@@ -185,7 +189,7 @@ async function setup(
     const interpreterUrl = challengeResponse.bg_challenge.interpreter_url
         .private_do_not_access_or_else_trusted_resource_url_wrapped_value;
     const bgScriptResponse = await fetchImpl(
-        `http:${interpreterUrl}`,
+        `https:${interpreterUrl}`,
     );
     const interpreterJavascript = await bgScriptResponse.text();
 
@@ -222,14 +226,10 @@ async function setup(
             body: JSON.stringify([requestKey, botguardResponse]),
         },
     );
-    const response = await integrityTokenResponse.json() as unknown[];
-
-    if (typeof response[0] !== "string") {
-        throw new Error("Could not get integrity token");
-    }
+    const integrityTokenBody = IntegrityTokenResponse.parse(await integrityTokenResponse.json());
 
     const integrityTokenBasedMinter = await BG.WebPoMinter.create({
-        integrityToken: response[0],
+        integrityToken: integrityTokenBody[0],
     }, webPoSignalOutput);
 
     const sessionPoToken = await integrityTokenBasedMinter.mintAsWebsafeString(
