@@ -3,7 +3,7 @@
   "specifiers": {
     "jsr:@hono/hono@4.7.4": "4.7.4",
     "jsr:@luanrt/googlevideo@2.0.0": "2.0.0",
-    "jsr:@luanrt/jintr@3.2.1": "3.2.1",
+    "jsr:@luanrt/jintr@3.3.0": "3.3.0",
     "jsr:@std/async@1.0.11": "1.0.11",
     "jsr:@std/collections@^1.0.9": "1.0.10",
     "jsr:@std/encoding@1.0.7": "1.0.7",
@@ -13,7 +13,7 @@
     "jsr:@std/toml@*": "1.0.2",
     "jsr:@std/toml@1.0.2": "1.0.2",
     "npm:@bufbuild/protobuf@2": "2.2.4",
-    "npm:@types/estree@^1.0.6": "1.0.6",
+    "npm:@types/estree@^1.0.6": "1.0.7",
     "npm:acorn@^8.8.0": "8.14.1",
     "npm:jsdom@26.0.0": "26.0.0"
   },
@@ -27,8 +27,8 @@
         "npm:@bufbuild/protobuf"
       ]
     },
-    "@luanrt/jintr@3.2.1": {
-      "integrity": "78acef6eb1c0e54303c14f77233a610dcc8e9da386f5e59c6167a2c5d8fdbe87",
+    "@luanrt/jintr@3.3.0": {
+      "integrity": "5530130d7966bdb85504e1482dcc633bab435f5f428cc8b65f63edaf74ef8a16",
       "dependencies": [
         "npm:@types/estree",
         "npm:acorn"
@@ -101,8 +101,8 @@
     "@csstools/css-tokenizer@3.0.3": {
       "integrity": "sha512-UJnjoFsmxfKUdNYdWgOB0mWUypuLvAfQPH1+pyvRJs6euowbFkFC6P13w1l8mJyi3vxYMxc9kld5jZEGRQs6bw=="
     },
-    "@types/estree@1.0.6": {
-      "integrity": "sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw=="
+    "@types/estree@1.0.7": {
+      "integrity": "sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ=="
     },
     "acorn@8.14.1": {
       "integrity": "sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg=="
@@ -3017,7 +3017,7 @@
     "dependencies": [
       "jsr:@hono/hono@4.7.4",
       "jsr:@luanrt/googlevideo@2.0.0",
-      "jsr:@luanrt/jintr@3.2.1",
+      "jsr:@luanrt/jintr@3.3.0",
       "jsr:@std/async@1.0.11",
       "jsr:@std/encoding@1.0.7",
       "jsr:@std/fs@1.0.14",

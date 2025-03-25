@@ -16,7 +16,7 @@
     "youtubePlayerReq": "./src/lib/helpers/youtubePlayerReq.ts",
     "getFetchClient": "./src/lib/helpers/getFetchClient.ts",
     "googlevideo": "jsr:@luanrt/googlevideo@2.0.0",
-    "jsr:@luanrt/jintr": "jsr:@luanrt/jintr@3.2.1",
+    "jsr:@luanrt/jintr": "jsr:@luanrt/jintr@3.3.0",
     "crypto/": "https://deno.land/x/crypto@v0.11.0/",
     "@std/encoding/base64": "jsr:@std/encoding@1.0.7/base64",
     "@std/async": "jsr:@std/async@1.0.11",
