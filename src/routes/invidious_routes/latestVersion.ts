@@ -63,21 +63,23 @@ latestVersion.get("/", async (c) => {
     } else if (selectedItagFormat) {
         const itagUrl = selectedItagFormat[0].url as string;
         const itagUrlParsed = new URL(itagUrl);
-        const queryParams = new URLSearchParams(itagUrlParsed.search);
+        let queryParams = new URLSearchParams(itagUrlParsed.search);
         let urlToRedirect = itagUrlParsed.toString();
 
         if (local) {
             queryParams.set("host", itagUrlParsed.host);
             if (config.server.encrypt_query_params) {
-                const privateParams = "&pot=" +
-                    queryParams.get("pot") +
-                    "&ip=" + queryParams.get("ip");
+                const publicParams = [...queryParams].filter(([key]) =>
+                    ["pot", "ip"].includes(key) === false
+                );
+                const privateParams = [...queryParams].filter(([key]) =>
+                    ["pot", "ip"].includes(key) === true
+                );
                 const encryptedParams = encryptQuery(
-                    privateParams,
+                    JSON.stringify(privateParams),
                     config,
                 );
-                queryParams.delete("pot");
-                queryParams.delete("ip");
+                queryParams = new URLSearchParams(publicParams);
                 queryParams.set("enc", "true");
                 queryParams.set("data", encryptedParams);
             }
