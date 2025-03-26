@@ -110,10 +110,8 @@ export const poTokenGenerate = (
                 const numberToKill = workers.length - 1;
                 for (let i = 0; i < numberToKill; i++) {
                     const workerToKill = workers.shift();
-                    console.log("KILLING:", { workerToKill });
                     workerToKill?.terminate();
                 }
-                console.log("Remaining workers", workers);
                 return resolve({
                     innertubeClient: instantiatedInnertubeClient,
                     tokenMinter: minter,
