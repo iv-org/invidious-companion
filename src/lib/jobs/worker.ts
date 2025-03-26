@@ -125,25 +125,6 @@ if (isWorker) {
     };
 
     postMessage({ type: "ready" });
-
-    setInterval(() => {
-        Deno.memoryUsage();
-        console.log(`[WORKER] \
-heapUsed: ${
-            (Deno.memoryUsage().heapUsed / 1_000_000).toFixed(0).toString()
-                .padStart(4, " ")
-        }MB, \
-external: ${
-            (Deno.memoryUsage().external / 1_000_000).toFixed(0).toString()
-                .padStart(4, " ")
-        }MB, \
-rss: ${
-            (Deno.memoryUsage().rss / 1_000_000).toFixed(0).toString().padStart(
-                4,
-                " ",
-            )
-        }MB`);
-    }, 1_000);
 }
 
 async function setup(

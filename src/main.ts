@@ -22,25 +22,6 @@ if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
 }
 const { getFetchClient } = await import(getFetchClientLocation);
 
-setInterval(() => {
-    Deno.memoryUsage();
-    console.log(`[__MAIN] \
-heapUsed: ${
-        (Deno.memoryUsage().heapUsed / 1_000_000).toFixed(0).toString()
-            .padStart(4, " ")
-    }MB, \
-external: ${
-        (Deno.memoryUsage().external / 1_000_000).toFixed(0).toString()
-            .padStart(4, " ")
-    }MB, \
-rss: ${
-        (Deno.memoryUsage().rss / 1_000_000).toFixed(0).toString().padStart(
-            4,
-            " ",
-        )
-    }MB`);
-}, 1_000);
-
 declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
