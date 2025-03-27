@@ -55,6 +55,8 @@ export class Metrics {
 
     private checkStatus(videoData: IRawResponse) {
         return {
+            unplayable: videoData.playabilityStatus?.status ===
+                "UNPLAYABLE",
             contentCheckRequired: videoData.playabilityStatus?.status ===
                 "CONTENT_CHECK_REQUIRED",
             loginRequired:
@@ -86,7 +88,7 @@ export class Metrics {
         this.innertubeFailedRequest.inc();
         const status = this.checkStatus(videoData);
 
-        if (status.contentCheckRequired) {
+        if (status.contentCheckRequired || status.unplayable) {
             return;
         }
 
