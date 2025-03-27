@@ -65,7 +65,7 @@ if (!innertubeClientOauthEnabled) {
                 poTokenGenerate,
                 innertubeClient,
                 config,
-                innertubeClientCache as UniversalCache,
+                innertubeClientCache,
             ),
             { minTimeout: 1_000, maxTimeout: 60_000, multiplier: 5, jitter: 0 },
         ));
