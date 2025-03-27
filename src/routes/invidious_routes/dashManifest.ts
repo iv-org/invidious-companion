@@ -85,6 +85,7 @@ dashManifest.get("/:videoId", async (c) => {
             (url: URL) => {
                 let dashUrl = url;
                 let queryParams = new URLSearchParams(dashUrl.search);
+                // Can't create URL type without host part
                 queryParams.set("host", dashUrl.host);
 
                 if (local) {
