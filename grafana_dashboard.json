@@ -314,7 +314,7 @@
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 142
+            "y": 2
           },
           "id": 15,
           "options": {
@@ -349,6 +349,110 @@
             }
           ],
           "title": "Unknown Status Rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bdy7ccu1ntm2oa"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 2
+          },
+          "id": 22,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.5.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "bdy7ccu1ntm2oa"
+              },
+              "disableTextWrap": false,
+              "editorMode": "code",
+              "expr": "rate(invidious_companion_innertube_error_status_loginRequired_total[$__rate_interval])",
+              "fullMetaSearch": false,
+              "includeNullMetadata": false,
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A",
+              "useBackend": false
+            }
+          ],
+          "title": "\"LOGIN_REQUIRED\" Rate",
           "type": "timeseries"
         }
       ],
@@ -432,7 +536,7 @@
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 3
+            "y": 23
           },
           "id": 14,
           "options": {
@@ -536,7 +640,7 @@
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 3
+            "y": 23
           },
           "id": 4,
           "options": {
@@ -651,7 +755,7 @@
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 14
+            "y": 34
           },
           "id": 21,
           "options": {
@@ -752,7 +856,7 @@
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 14
+            "y": 34
           },
           "id": 6,
           "options": {
@@ -870,7 +974,7 @@
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 165
+            "y": 185
           },
           "id": 16,
           "options": {
@@ -927,6 +1031,6 @@
   "timezone": "browser",
   "title": "Invidious Companion",
   "uid": "1-0-0",
-  "version": 18,
+  "version": 20,
   "weekStart": ""
 }
