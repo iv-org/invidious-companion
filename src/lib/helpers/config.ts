@@ -13,7 +13,7 @@ const ConfigSchema = z.object({
             Deno.env.get("SERVER_ENCRYPT_QUERY_PARAMS") === "true" || false,
         ),
         enable_metrics: z.boolean().default(
-            Deno.env.get("ENABLE_METRICS") === "true" || false,
+            Deno.env.get("SERVER_ENABLE_METRICS") === "true" || false,
         ),
     }).strict().default({}),
     cache: z.object({
