@@ -59,33 +59,39 @@ export class Metrics {
     );
 
     private checkStatus(videoData: IRawResponse) {
+        const status = videoData.playabilityStatus?.status;
+
         return {
-            unplayable: videoData.playabilityStatus?.status ===
+            unplayable: status ===
                 "UNPLAYABLE",
-            contentCheckRequired: videoData.playabilityStatus?.status ===
+            contentCheckRequired: status ===
                 "CONTENT_CHECK_REQUIRED",
-            loginRequired:
-                videoData.playabilityStatus?.status === "LOGIN_REQUIRED",
+            loginRequired: status === "LOGIN_REQUIRED",
         };
     }
 
     private checkReason(videoData: IRawResponse) {
+        const reason = videoData.playabilityStatus?.reason;
+
         return {
-            signInToConfirmAge: videoData.playabilityStatus?.reason?.includes(
+            signInToConfirmAge: reason?.includes(
                 "Sign in to confirm your age",
             ),
-            SignInToConfirmBot: videoData.playabilityStatus?.reason?.includes(
+            SignInToConfirmBot: reason?.includes(
                 "Sign in to confirm you’re not a bot",
             ),
         };
     }
 
     private checkSubreason(videoData: IRawResponse) {
+        const subReason = videoData.playabilityStatus?.errorScreen
+            ?.playerErrorMessageRenderer
+            ?.subreason?.runs?.[0]?.text;
+
         return {
-            thisHelpsProtectCommunity: videoData.playabilityStatus?.errorScreen
-                ?.playerErrorMessageRenderer
-                ?.subreason?.runs?.[0]?.text
-                ?.includes("This helps protect our community"),
+            thisHelpsProtectCommunity: subReason?.includes(
+                "This helps protect our community",
+            ),
         };
     }
 
