@@ -22,10 +22,7 @@ export const encryptQuery = (
 
         const encryptedData = cipher.encrypt(encodedData);
 
-        return encodeBase64(encryptedData).replace(/\+/g, "-").replace(
-            /\//g,
-            "_",
-        );
+        return encodeBase64(encryptedData)
     } catch (err) {
         console.error("[ERROR] Failed to encrypt query parameters:", err);
         return "";
@@ -46,7 +43,7 @@ export const decryptQuery = (
         const decryptedData = new TextDecoder().decode(
             decipher.decrypt(
                 decodeBase64(
-                    queryParams.replace(/-/g, "+").replace(/_/g, "/"),
+                    queryParams,
                 ),
             ),
         );
