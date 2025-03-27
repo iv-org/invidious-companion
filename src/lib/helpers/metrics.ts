@@ -14,42 +14,42 @@ export class Metrics {
     }
 
     public potokenGenerationFailure = this.createCounter(
-        "potoken_generation_failure",
+        "potoken_generation_failure_total",
         "Number of times that the PoToken generation job has failed for whatever reason",
     );
 
     private innertubeErrorStatusUnknown = this.createCounter(
-        "innertube_error_status_unknown",
+        "innertube_error_status_unknown_total",
         "Number of times that an unknown status has been returned by Innertube API",
     );
 
     private innertubeErrorReasonSignIn = this.createCounter(
-        "innertube_error_reason_SignIn",
+        "innertube_error_reason_SignIn_total",
         'Number of times that the message "Sign in to confirm you’re not a bot." has been returned by Innertube API',
     );
 
     private innertubeErrorSubreasonProtectCommunity = this.createCounter(
-        "innertube_error_subreason_ProtectCommunity",
+        "innertube_error_subreason_ProtectCommunity_total",
         'Number of times that the message "This helps protect our community." has been returned by Innertube API',
     );
 
     private innertubeErrorReasonUnknown = this.createCounter(
-        "innertube_error_reason_unknown",
+        "innertube_error_reason_unknown_total",
         "Number of times that an unknown reason has been returned by the Innertube API",
     );
 
     private innertubeErrorSubreasonUnknown = this.createCounter(
-        "innertube_error_subreason_unknown",
+        "innertube_error_subreason_unknown_total",
         "Number of times that an unknown subreason has been returned by the Innertube API",
     );
 
     public innertubeSuccessfulRequest = this.createCounter(
-        "innertube_successful_request",
+        "innertube_successful_request_total",
         "Number successful requests made to the Innertube API",
     );
 
     private innertubeFailedRequest = this.createCounter(
-        "innertube_failed_request",
+        "innertube_failed_request_total",
         "Number failed requests made to the Innertube API for whatever reason",
     );
 
