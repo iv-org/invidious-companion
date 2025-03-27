@@ -35,10 +35,7 @@ const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
 const innertubeClientJobPoTokenEnabled =
     config.jobs.youtube_session.po_token_enabled;
 const innertubeClientCookies = config.youtube_session.cookies;
-let innertubeClientCache = new UniversalCache(
-    true,
-    `${config.cache.directory}/youtubei.js/`,
-) as UniversalCache;
+let innertubeClientCache = new UniversalCache(false);
 
 Deno.env.set("TMPDIR", config.cache.directory);
 
