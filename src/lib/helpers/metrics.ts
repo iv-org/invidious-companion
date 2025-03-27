@@ -18,6 +18,11 @@ export class Metrics {
         "Number of times that the PoToken generation job has failed for whatever reason",
     );
 
+    private innertubeErrorStatusLoginRequired = this.createCounter(
+        "innertube_error_status_loginRequired_total",
+        'Number of times that the status "LOGIN_REQUIRED" has been returned by Innertube API',
+    );
+
     private innertubeErrorStatusUnknown = this.createCounter(
         "innertube_error_status_unknown_total",
         "Number of times that an unknown status has been returned by Innertube API",
@@ -88,18 +93,15 @@ export class Metrics {
         this.innertubeFailedRequest.inc();
         const status = this.checkStatus(videoData);
 
-        if (status.contentCheckRequired || status.unplayable) {
-            return;
-        }
+        if (status.contentCheckRequired || status.unplayable) return;
 
         if (status.loginRequired) {
+            this.innertubeErrorStatusLoginRequired.inc();
             const reason = this.checkReason(videoData);
 
-            if (reason.signInToConfirmAge) {
-                return;
-            }
+            if (reason.signInToConfirmAge) return;
 
-            if (status.contentCheckRequired) {
+            if (reason.SignInToConfirmBot) {
                 this.innertubeErrorReasonSignIn.inc();
                 const subReason = this.checkSubreason(videoData);
 
