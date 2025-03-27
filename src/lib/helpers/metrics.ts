@@ -53,58 +53,64 @@ export class Metrics {
         "Number failed requests made to the Innertube API for whatever reason",
     );
 
+    private checkStatus(videoData: IRawResponse) {
+        return {
+            contentCheckRequired: videoData.playabilityStatus?.status ===
+                "CONTENT_CHECK_REQUIRED",
+            loginRequired:
+                videoData.playabilityStatus?.status === "LOGIN_REQUIRED",
+        };
+    }
+
+    private checkReason(videoData: IRawResponse) {
+        return {
+            signInToConfirmAge: videoData.playabilityStatus?.reason?.includes(
+                "Sign in to confirm your age",
+            ),
+            SignInToConfirmBot: videoData.playabilityStatus?.reason?.includes(
+                "Sign in to confirm you’re not a bot",
+            ),
+        };
+    }
+
+    private checkSubreason(videoData: IRawResponse) {
+        return {
+            thisHelpsProtectCommunity: videoData.playabilityStatus?.errorScreen
+                ?.playerErrorMessageRenderer
+                ?.subreason?.runs?.[0]?.text
+                ?.includes("This helps protect our community"),
+        };
+    }
+
     public checkInnertubeResponse(videoData: IRawResponse) {
         this.innertubeFailedRequest.inc();
+        const status = this.checkStatus(videoData);
 
-        switch (true) {
-            // CONTENT_CHECK_REQUIRED: Sensitive content videos.
-            case (videoData.playabilityStatus?.status ===
-                "CONTENT_CHECK_REQUIRED"): {
-                break;
+        if (status.contentCheckRequired) {
+            return;
+        }
+
+        if (status.loginRequired) {
+            const reason = this.checkReason(videoData);
+
+            if (reason.signInToConfirmAge) {
+                return;
             }
-            case (videoData.playabilityStatus?.status === "LOGIN_REQUIRED"): {
-                switch (true) {
-                    // Age restricted videos, we don't need to track those.
-                    case videoData.playabilityStatus?.reason?.includes(
-                        "Sign in to confirm your age",
-                    ): {
-                        break;
-                    }
 
-                    case videoData.playabilityStatus?.reason?.includes(
-                        "Sign in to confirm you’re not a bot",
-                    ): {
-                        this.innertubeErrorReasonSignIn.inc();
+            if (status.contentCheckRequired) {
+                this.innertubeErrorReasonSignIn.inc();
+                const subReason = this.checkSubreason(videoData);
 
-                        switch (true) {
-                            case videoData.playabilityStatus?.errorScreen
-                                ?.playerErrorMessageRenderer
-                                ?.subreason?.runs?.[0]?.text?.includes(
-                                    "This helps protect our community",
-                                ): {
-                                this.innertubeErrorSubreasonProtectCommunity
-                                    .inc();
-                                break;
-                            }
-                            default: {
-                                this.innertubeErrorSubreasonUnknown.inc();
-                                break;
-                            }
-                        }
-
-                        break;
-                    }
-
-                    default: {
-                        this.innertubeErrorReasonUnknown.inc();
-                        break;
-                    }
+                if (subReason.thisHelpsProtectCommunity) {
+                    this.innertubeErrorSubreasonProtectCommunity.inc();
+                } else {
+                    this.innertubeErrorSubreasonUnknown.inc();
                 }
-                break;
+            } else {
+                this.innertubeErrorReasonUnknown.inc();
             }
-            default:
-                this.innertubeErrorStatusUnknown.inc();
-                break;
+        } else {
+            this.innertubeErrorStatusUnknown.inc();
         }
     }
 }
