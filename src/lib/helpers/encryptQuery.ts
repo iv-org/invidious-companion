@@ -22,7 +22,7 @@ export const encryptQuery = (
 
         const encryptedData = cipher.encrypt(encodedData);
 
-        return encodeBase64(encryptedData)
+        return encodeBase64(encryptedData);
     } catch (err) {
         console.error("[ERROR] Failed to encrypt query parameters:", err);
         return "";
