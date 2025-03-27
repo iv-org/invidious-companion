@@ -10,7 +10,7 @@ const ConfigSchema = z.object({
         ),
         verify_requests: z.boolean().default(false),
         encrypt_query_params: z.boolean().default(
-            Deno.env.get("ENCRYPT_QUERY_PARAMS") === "true" || false,
+            Deno.env.get("SERVER_ENCRYPT_QUERY_PARAMS") === "true" || false,
         ),
     }).strict().default({}),
     cache: z.object({
