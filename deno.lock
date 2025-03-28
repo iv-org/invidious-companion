@@ -393,7 +393,9 @@
     }
   },
   "redirects": {
-    "https://esm.sh/@types/estree@1.0.6": "https://esm.sh/@types/estree@1.0.6/index.d.ts"
+    "https://esm.sh/@opentelemetry/api@^1.4.0?target=denonext": "https://esm.sh/@opentelemetry/api@1.9.0?target=denonext",
+    "https://esm.sh/@types/estree@1.0.6": "https://esm.sh/@types/estree@1.0.6/index.d.ts",
+    "https://esm.sh/tdigest@^0.1.1?target=denonext": "https://esm.sh/tdigest@0.1.2?target=denonext"
   },
   "remote": {
     "https://deno.land/std@0.159.0/encoding/ascii85.ts": "f2b9cb8da1a55b3f120d3de2e78ac993183a4fd00dfa9cb03b51cf3a75bc0baa",
@@ -449,8 +451,15 @@
     "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wkt/wrappers.mjs": "2fdb6acdda91c53c238b51c5ea6ef8def5b4e9871f93c439ab835c0a9f1e6070",
     "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/wire.mjs": "791ca43f39084f37fabf37bcd77c788861bce7cc3d0d8528dc61ec9559956f46",
     "https://esm.sh/@bufbuild/protobuf@2.0.0/wire": "eb1be07dad5823fc419cc9e6f62077a70962ce42facb1a5240b7d5c3674e852f",
+    "https://esm.sh/@opentelemetry/api@1.9.0/denonext/api.mjs": "d9ede8bd549446ae09ea5af32de6b8b7d4ca13bcbd90eb39ae890c0fea78f618",
+    "https://esm.sh/@opentelemetry/api@1.9.0?target=denonext": "6969eed0eafa68f1c525555a674daaa3143bb7f41f531bf7c1c9967e32419038",
     "https://esm.sh/bgutils-js@3.2.0": "9691c575e7f81d8c2652260f59356b5de97a242fc8b464dbba880a543f6ce075",
     "https://esm.sh/bgutils-js@3.2.0/denonext/bgutils-js.mjs": "9acd0267c5bf7273ba122a295f97795cb81d0f6d001db708c92548ac82977f93",
+    "https://esm.sh/bintrees@1.0.2/denonext/bintrees.mjs": "a60dece304ed0119eeb04d32fcc783ef3adcdce64ef64c7f6d07af54ca078bac",
+    "https://esm.sh/prom-client@15.1.3": "8dfdb71d7bce0684fcdc43210c6ea05a645b0a6c50e142d122aed6f341e1ebf7",
+    "https://esm.sh/prom-client@15.1.3/denonext/prom-client.mjs": "64d877f1354ec54fabbdaf22973de781d640726a456805f6cbccc8ba60ecc153",
+    "https://esm.sh/tdigest@0.1.2/denonext/tdigest.mjs": "379f502069e3a3efb26dcc3e72a117e2f9c78e4ce3bf6abd6944b4bf8598cb0a",
+    "https://esm.sh/tdigest@0.1.2?target=denonext": "53806e3c28da0241f722b9d6d921cb4f4fcb628bd5af56d0315acf4865675c6c",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno.ts": "f913bfdb3c66b2330fa8b531bd1e291437b836c9fbf002b9ae044bf14e1f397c",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/package.json": "4e1d16c0f95a2b58dc6dba7e0fe969b800794a6040ae02116e14eae2444e4429",
     "https://raw.githubusercontent.com/LuanRT/YouTube.js/refs/tags/v13.1.0-deno/deno/protos/generated/misc/common.ts": "7d6ca8d7cd7eafe1f8d5ddc11c440566c418aeaf2d8a03a72eced7466a691039",
