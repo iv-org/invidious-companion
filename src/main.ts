@@ -1,10 +1,9 @@
 import { Hono } from "hono";
 import { routes } from "./routes/index.ts";
 import { Innertube, UniversalCache } from "youtubei.js";
-import { poTokenGenerate } from "./lib/jobs/potoken.ts";
+import { poTokenGenerate, type TokenMinter } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
 import { retry } from "@std/async";
-import type { BG } from "bgutils";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 
 import { parseConfig } from "./lib/helpers/config.ts";
@@ -28,7 +27,7 @@ declare module "hono" {
 }
 const app = new Hono();
 
-let tokenMinter: BG.WebPoMinter;
+let tokenMinter: TokenMinter;
 let innertubeClient: Innertube;
 let innertubeClientFetchPlayer = true;
 const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
@@ -63,7 +62,6 @@ if (!innertubeClientOauthEnabled) {
         ({ innertubeClient, tokenMinter } = await retry(
             poTokenGenerate.bind(
                 poTokenGenerate,
-                innertubeClient,
                 config,
                 innertubeClientCache,
             ),
@@ -77,7 +75,6 @@ if (!innertubeClientOauthEnabled) {
         async () => {
             if (innertubeClientJobPoTokenEnabled) {
                 ({ innertubeClient, tokenMinter } = await poTokenGenerate(
-                    innertubeClient,
                     config,
                     innertubeClientCache,
                 ));

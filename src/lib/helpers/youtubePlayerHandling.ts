@@ -1,7 +1,7 @@
 import { ApiResponse, Innertube, YT } from "youtubei.js";
 import { generateRandomString } from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
-import type { BG } from "bgutils";
+import type { TokenMinter } from "../jobs/potoken.ts";
 let youtubePlayerReqLocation = "youtubePlayerReq";
 if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -29,7 +29,7 @@ export const youtubePlayerParsing = async ({
     innertubeClient: Innertube;
     videoId: string;
     config: Config;
-    tokenMinter: BG.WebPoMinter;
+    tokenMinter: TokenMinter;
     overrideCache?: boolean;
 }): Promise<object> => {
     const cacheEnabled = overrideCache ? false : config.cache.enabled;
