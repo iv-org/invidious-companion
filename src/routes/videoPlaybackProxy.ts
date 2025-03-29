@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { encodeRFC5987ValueChars } from "../lib/helpers/encodeRFC5987ValueChars.ts";
 import { decryptQuery } from "../lib/helpers/encryptQuery.ts";
+import { StreamingApi } from "hono/utils/stream";
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
@@ -76,6 +77,7 @@ videoPlaybackProxy.get("/", async (c) => {
 
     const rangeHeader = c.req.header("range");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
+    const [firstByte, lastByte] = requestBytes?.split("-") || [];
     if (requestBytes) {
         queryParams.append(
             "range",
@@ -104,47 +106,88 @@ videoPlaybackProxy.get("/", async (c) => {
 
     const fetchClient = await getFetchClient(config);
 
+    let headResponse: Response | undefined;
     let location = `https://${host}/videoplayback?${queryParams.toString()}`;
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-p2-semantics-17#section-7.3
     // A maximum of 5 redirections is defined in the note of the section 7.3
     // of this RFC, that's why `i < 5`
     for (let i = 0; i < 5; i++) {
-        const googlevideoResponse: Response = await fetchClient.call(
-            undefined,
-            location,
-            {
-                method: "HEAD",
-                headers: headersToSend,
-                redirect: "manual",
-            },
-        );
+        const googlevideoResponse: Response = await fetchClient(location, {
+            method: "HEAD",
+            headers: headersToSend,
+            redirect: "manual",
+        });
         if (googlevideoResponse.headers.has("Location")) {
             location = googlevideoResponse.headers.get("Location") as string;
             continue;
         } else {
+            headResponse = googlevideoResponse;
             break;
         }
     }
+    if (headResponse === undefined) {
+        throw new HTTPException(502, {
+            res: new Response(
+                "Google headResponse redirected too many times",
+            ),
+        });
+    }
 
-    const googlevideoResponse = await fetchClient.call(
-        undefined,
-        location,
-        {
+    // =================== REQUEST CHUNKING =======================
+    // if the requested response is larger than the chunkSize, break up the response
+    // into chunks and stream the response back to the client to avoid rate limiting
+    const { readable, writable } = new TransformStream();
+    const stream = new StreamingApi(writable, readable);
+    const googleVideoUrl = new URL(location);
+    const getChunk = async (start: number, end: number) => {
+        googleVideoUrl.searchParams.set(
+            "range",
+            `${start}-${end}`,
+        );
+        const postResponse = await fetchClient(googleVideoUrl, {
             method: "POST",
             body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
             headers: headersToSend,
-        },
+        });
+        await stream.pipe(postResponse.body);
+    };
+
+    const chunkSize = 5_000_000;
+    const totalBytes = Number(
+        headResponse.headers.get("Content-Length") || "0",
     );
 
+    // if no range sent, the client wants thw whole file, i.e. for downloads
+    const wholeRequestStartByte = Number(firstByte || "0");
+    const wholeRequestEndByte = wholeRequestStartByte + Number(totalBytes) - 1;
+
+    let chunk = Promise.resolve();
+    for (
+        let startByte = wholeRequestStartByte;
+        startByte < wholeRequestEndByte;
+        startByte += chunkSize
+    ) {
+        // i.e.
+        // 0 - 4_999_999, then
+        // 5_000_000 - 9_999_999, then
+        // 10_000_000 - 14_999_999
+        let endByte = startByte + chunkSize - 1;
+        if (endByte > wholeRequestEndByte) {
+            endByte = wholeRequestEndByte;
+        }
+        chunk = chunk.then(() => getChunk(startByte, endByte));
+    }
+    chunk.catch((err) => console.log({ err }));
+    // =================== REQUEST CHUNKING =======================
+
     const headersForResponse: Record<string, string> = {
-        "content-length": googlevideoResponse.headers.get("content-length") ||
-            "",
+        "content-length": headResponse.headers.get("content-length") || "",
         "access-control-allow-origin": "*",
-        "accept-ranges": googlevideoResponse.headers.get("accept-ranges") || "",
-        "content-type": googlevideoResponse.headers.get("content-type") || "",
-        "expires": googlevideoResponse.headers.get("expires") || "",
-        "last-modified": googlevideoResponse.headers.get("last-modified") || "",
+        "accept-ranges": headResponse.headers.get("accept-ranges") || "",
+        "content-type": headResponse.headers.get("content-type") || "",
+        "expires": headResponse.headers.get("expires") || "",
+        "last-modified": headResponse.headers.get("last-modified") || "",
     };
 
     if (title) {
@@ -153,13 +196,12 @@ videoPlaybackProxy.get("/", async (c) => {
         }"; filename*=UTF-8''${encodeRFC5987ValueChars(title)}`;
     }
 
-    let responseStatus = googlevideoResponse.status;
+    let responseStatus = headResponse.status;
     if (requestBytes && responseStatus == 200) {
         // check for range headers in the forms:
         // "bytes=0-" get full length from start
         // "bytes=500-" get full length from 500 bytes in
         // "bytes=500-1000" get 500 bytes starting from 500
-        const [firstByte, lastByte] = requestBytes.split("-");
         if (lastByte) {
             responseStatus = 206;
             headersForResponse["content-range"] = `bytes ${requestBytes}/${
@@ -182,9 +224,9 @@ videoPlaybackProxy.get("/", async (c) => {
         }
     }
 
-    return new Response(googlevideoResponse.body, {
+    return new Response(stream.responseReadable, {
         status: responseStatus,
-        statusText: googlevideoResponse.statusText,
+        statusText: headResponse.statusText,
         headers: headersForResponse,
     });
 });
