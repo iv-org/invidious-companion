@@ -22,7 +22,7 @@ export const ConfigSchema = z.object({
     }).strict().default({}),
     networking: z.object({
         ump: z.boolean().default(false),
-        video_fetch_chunk_size: z.number().default(5_000_000),
+        video_fetch_chunk_size_mb: z.number().default(5),
         proxy: z.string().nullable().default(Deno.env.get("PROXY") || null),
         fetch: z.object({
             timeout_ms: z.number().optional(),
