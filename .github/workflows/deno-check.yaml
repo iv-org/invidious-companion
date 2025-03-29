@@ -1,11 +1,11 @@
-name: Linter
+name: Testing
 
 on:
   pull_request:
     branches: [master]
 
 jobs:
-  lint:
+  testing:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,3 +25,20 @@ jobs:
       
       - name: Run linter
         run: deno lint
+
+      - name: Install and run tor
+        uses: tor-actions/setup-tor@main
+        with:
+          daemon: true
+          port: 9150
+
+      - name: Run tests x4 times (IP may be banned)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 4
+          command: |
+            pkill -HUP tor
+            curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo 
+            rm -rf /var/tmp/youtubei.js
+            PROXY=socks5://127.0.0.1:9150 deno task test

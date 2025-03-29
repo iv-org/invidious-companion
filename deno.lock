@@ -4,16 +4,19 @@
     "jsr:@hono/hono@4.7.4": "4.7.4",
     "jsr:@luanrt/googlevideo@2.0.0": "2.0.0",
     "jsr:@luanrt/jintr@3.3.0": "3.3.0",
+    "jsr:@std/assert@1.0.12": "1.0.12",
     "jsr:@std/async@1.0.11": "1.0.11",
     "jsr:@std/collections@^1.0.9": "1.0.10",
     "jsr:@std/encoding@1.0.7": "1.0.7",
     "jsr:@std/fs@1.0.14": "1.0.14",
+    "jsr:@std/internal@^1.0.6": "1.0.6",
     "jsr:@std/path@1.0.8": "1.0.8",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/toml@*": "1.0.2",
     "jsr:@std/toml@1.0.2": "1.0.2",
     "npm:@bufbuild/protobuf@2": "2.2.4",
     "npm:@types/estree@^1.0.6": "1.0.7",
+    "npm:@types/node@*": "22.12.0",
     "npm:acorn@^8.8.0": "8.14.1",
     "npm:jsdom@26.0.0": "26.0.0"
   },
@@ -34,6 +37,12 @@
         "npm:acorn"
       ]
     },
+    "@std/assert@1.0.12": {
+      "integrity": "08009f0926dda9cbd8bef3a35d3b6a4b964b0ab5c3e140a4e0351fbf34af5b9a",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
     "@std/async@1.0.11": {
       "integrity": "eee0d3405275506638a9c8efaa849cf0d35873120c69b7caa1309c9a9e5b6f85"
     },
@@ -48,6 +57,9 @@
       "dependencies": [
         "jsr:@std/path@^1.0.8"
       ]
+    },
+    "@std/internal@1.0.6": {
+      "integrity": "9533b128f230f73bd209408bb07a4b12f8d4255ab2a4d22a1fd6d87304aca9a4"
     },
     "@std/path@1.0.8": {
       "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
@@ -103,6 +115,12 @@
     },
     "@types/estree@1.0.7": {
       "integrity": "sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ=="
+    },
+    "@types/node@22.12.0": {
+      "integrity": "sha512-Fll2FZ1riMjNmlmJOdAyY5pUbkftXslB5DgEzlIuNaiWhXd00FhWxVC/r4yV/4wBb9JfImTu+jiSvXTkJ7F/gA==",
+      "dependencies": [
+        "undici-types"
+      ]
     },
     "acorn@8.14.1": {
       "integrity": "sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg=="
@@ -356,6 +374,9 @@
       "dependencies": [
         "punycode"
       ]
+    },
+    "undici-types@6.20.0": {
+      "integrity": "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="
     },
     "w3c-xmlserializer@5.0.0": {
       "integrity": "sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==",
