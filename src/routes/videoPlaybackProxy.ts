@@ -18,7 +18,7 @@ const { getFetchClient } = await import(getFetchClientLocation);
 
 const videoPlaybackProxy = new Hono();
 
-videoPlaybackProxy.options("/", async () => {
+videoPlaybackProxy.options("/", () => {
     const headersForResponse: Record<string, string> = {
         "access-control-allow-origin": "*",
         "access-control-allow-methods": "GET, OPTIONS",
