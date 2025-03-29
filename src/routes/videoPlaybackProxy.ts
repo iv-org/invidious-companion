@@ -18,6 +18,18 @@ const { getFetchClient } = await import(getFetchClientLocation);
 
 const videoPlaybackProxy = new Hono();
 
+videoPlaybackProxy.options("/", async () => {
+    const headersForResponse: Record<string, string> = {
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-headers": "Content-Type, Range",
+    };
+    return new Response("OK", {
+        status: 200,
+        headers: headersForResponse,
+    });
+});
+
 videoPlaybackProxy.get("/", async (c) => {
     const { host, c: client, expire, title } = c.req.query();
     const urlReq = new URL(c.req.url);
