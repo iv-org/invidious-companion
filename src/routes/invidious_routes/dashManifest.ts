@@ -52,7 +52,9 @@ dashManifest.get("/:videoId", async (c) => {
         // video.js only support MP4 not WEBM
         videoInfo.streaming_data.adaptive_formats = videoInfo
             .streaming_data.adaptive_formats
-            .filter((i) => i.has_video === false || i.mime_type.includes('mp4'));
+            .filter((i) =>
+                i.has_video === false || i.mime_type.includes("mp4")
+            );
 
         const player_response = videoInfo.page[0];
         // TODO: fix include storyboards in DASH manifest file
