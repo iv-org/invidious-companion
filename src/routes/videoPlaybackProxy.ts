@@ -151,7 +151,7 @@ videoPlaybackProxy.get("/", async (c) => {
             headers: headersToSend,
         });
         if (postResponse.status !== 200) {
-            throw new Error('Non-200 response from google servers');
+            throw new Error("Non-200 response from google servers");
         }
         await stream.pipe(postResponse.body);
     };
