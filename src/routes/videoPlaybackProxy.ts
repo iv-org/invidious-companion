@@ -178,7 +178,9 @@ videoPlaybackProxy.get("/", async (c) => {
         }
         chunk = chunk.then(() => getChunk(startByte, endByte));
     }
-    chunk.catch((err) => console.log({ err }));
+    chunk.catch(() => {
+        stream.abort();
+    });
     // =================== REQUEST CHUNKING =======================
 
     const headersForResponse: Record<string, string> = {
