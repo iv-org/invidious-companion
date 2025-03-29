@@ -150,6 +150,9 @@ videoPlaybackProxy.get("/", async (c) => {
             body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
             headers: headersToSend,
         });
+        if (postResponse.status !== 200) {
+            throw new Error('Non-200 response from google servers');
+        }
         await stream.pipe(postResponse.body);
     };
 
