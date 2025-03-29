@@ -73,7 +73,7 @@ export default function getDownloadHandler(app: Hono) {
 
             const urlQueriesForLatestVersion = new URLSearchParams();
             urlQueriesForLatestVersion.set("id", videoId);
-            urlQueriesForLatestVersion.set("check", check || '');
+            urlQueriesForLatestVersion.set("check", check || "");
             urlQueriesForLatestVersion.set("itag", itag.toString());
             // "title" for compatibility with how Invidious sets the content disposition header
             // in /videoplayback and /latest_version
