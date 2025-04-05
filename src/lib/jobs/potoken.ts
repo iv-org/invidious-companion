@@ -141,7 +141,7 @@ async function checkToken({
     instantiatedInnertubeClient: Innertube;
     config: Config;
     integrityTokenBasedMinter: TokenMinter;
-    metrics: Metrics | undefined,
+    metrics: Metrics | undefined;
 }) {
     const fetchImpl = getFetchClient(config);
 
