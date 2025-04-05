@@ -163,7 +163,7 @@ videoPlaybackProxy.get("/", async (c) => {
         if (lastByte) {
             responseStatus = 206;
             headersForResponse["content-range"] = `bytes ${requestBytes}/${
-                queryParams.get('clen') || '*'
+                queryParams.get("clen") || "*"
             }`;
         } else {
             // i.e. "bytes=0-", "bytes=600-"
