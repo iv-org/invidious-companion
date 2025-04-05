@@ -28,6 +28,7 @@
 # #proxy = "" # env variable: PROXY
 # # Enable YouTube new video format UMP
 # ump = false
+# video_fetch_chunk_size_mb = 5 # size of chunks to request from google servers for rate limiting reductions
  
 ###
 # Network call timeouts when talking to YouTube. 
