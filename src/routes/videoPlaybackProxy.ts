@@ -162,7 +162,9 @@ videoPlaybackProxy.get("/", async (c) => {
         const [firstByte, lastByte] = requestBytes.split("-");
         if (lastByte) {
             responseStatus = 206;
-            headersForResponse["content-range"] = `bytes ${requestBytes}/*`;
+            headersForResponse["content-range"] = `bytes ${requestBytes}/${
+                queryParams.get('clen') || '*'
+            }`;
         } else {
             // i.e. "bytes=0-", "bytes=600-"
             // full size of content is able to be calculated, so a full Content-Range header can be constructed
