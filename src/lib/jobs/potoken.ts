@@ -1,4 +1,4 @@
-import { Innertube, UniversalCache } from "youtubei.js";
+import { Innertube } from "youtubei.js";
 import {
     youtubePlayerParsing,
     youtubeVideoInfo,
