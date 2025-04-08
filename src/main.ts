@@ -133,13 +133,42 @@ app.use("*", async (c, next) => {
 
 routes(app, config);
 
-export function run(signal: AbortSignal, port: number, hostname: string) {
-    return Deno.serve(
-        { signal: signal, port: port, hostname: hostname },
-        app.fetch,
-    );
-}
+const uds = config.server.uds;
+// This cannot be changed since companion restricts the
+// files it can access using deno `--allow-write` argument
+const udsPath = "/tmp/invidious-companion.sock";
 
+export function run(signal: AbortSignal, port: number, hostname: string) {
+    if (uds) {
+        try {
+            if (Deno.statSync(udsPath).isSocket) {
+                // Delete the unix domain socket manually before starting the server
+                Deno.removeSync(udsPath);
+            }
+        } catch (e) {
+            console.log(
+                `[ERROR] Failed to delete unix domain socket '${udsPath}' before starting the server:`,
+                e,
+            );
+        }
+
+        const srv = Deno.serve({
+            path: udsPath,
+        }, app.fetch);
+
+        console.log(
+            `[INFO] Setting unix domain socket '${udsPath}' permissions to 777`,
+        );
+        Deno.chmodSync(udsPath, 0o777);
+
+        return srv
+    } else {
+        return Deno.serve(
+            { signal: signal, port: port, hostname: hostname },
+            app.fetch,
+        );
+    }
+}
 if (import.meta.main) {
     const controller = new AbortController();
     const { signal } = controller;
