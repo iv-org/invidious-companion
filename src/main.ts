@@ -161,7 +161,7 @@ export function run(signal: AbortSignal, port: number, hostname: string) {
         );
         Deno.chmodSync(udsPath, 0o777);
 
-        return srv
+        return srv;
     } else {
         return Deno.serve(
             { signal: signal, port: port, hostname: hostname },
