@@ -2,14 +2,24 @@ import { IRawResponse } from "youtubei.js";
 import { Counter, Registry } from "prom-client";
 
 export class Metrics {
+    trackUnknownInnertubeErrors: boolean;
     private METRICS_PREFIX = "invidious_companion_";
     public register = new Registry();
 
-    public createCounter(name: string, help?: string): Counter {
+    constructor(trackUnknownInnertubeErrors: boolean) {
+        this.trackUnknownInnertubeErrors = trackUnknownInnertubeErrors;
+    }
+
+    public createCounter(
+        name: string,
+        help?: string,
+        labels?: string[],
+    ): Counter {
         return new Counter({
             name: `${this.METRICS_PREFIX}${name}`,
             help: help || "No help has been provided for this metric",
             registers: [this.register],
+            labelNames: Array.isArray(labels) ? labels : [],
         });
     }
 
@@ -26,6 +36,7 @@ export class Metrics {
     private innertubeErrorStatusUnknown = this.createCounter(
         "innertube_error_status_unknown_total",
         "Number of times that an unknown status has been returned by Innertube API",
+        ["error"],
     );
 
     private innertubeErrorReasonSignIn = this.createCounter(
@@ -41,11 +52,13 @@ export class Metrics {
     private innertubeErrorReasonUnknown = this.createCounter(
         "innertube_error_reason_unknown_total",
         "Number of times that an unknown reason has been returned by the Innertube API",
+        ["error"],
     );
 
     private innertubeErrorSubreasonUnknown = this.createCounter(
         "innertube_error_subreason_unknown_total",
         "Number of times that an unknown subreason has been returned by the Innertube API",
+        ["error"],
     );
 
     public innertubeSuccessfulRequest = this.createCounter(
@@ -61,26 +74,67 @@ export class Metrics {
     private checkStatus(videoData: IRawResponse) {
         const status = videoData.playabilityStatus?.status;
 
-        return {
-            unplayable: status ===
-                "UNPLAYABLE",
-            contentCheckRequired: status ===
-                "CONTENT_CHECK_REQUIRED",
-            loginRequired: status === "LOGIN_REQUIRED",
+        interface Error {
+            unplayable: boolean;
+            contentCheckRequired: boolean;
+            loginRequired: boolean;
+            unknown: string | undefined;
+        }
+
+        const error: Error = {
+            unplayable: false,
+            contentCheckRequired: false,
+            loginRequired: false,
+            unknown: undefined,
         };
+
+        switch (status) {
+            case "UNPLAYABLE":
+                error.unplayable = true;
+                return error;
+            case "CONTENT_CHECK_REQUIRED":
+                error.contentCheckRequired = true;
+                return error;
+            case "LOGIN_REQUIRED":
+                error.loginRequired = true;
+                return error;
+            default:
+                error.unknown = status;
+                return error;
+        }
     }
 
     private checkReason(videoData: IRawResponse) {
-        const reason = videoData.playabilityStatus?.reason;
+        // On specific errors like `CONTENT_CHECK_REQUIRED`, the reason is
+        // contained inside `errorScreen`, just like how we check subReason.
+        const reason = videoData.playabilityStatus?.reason ||
+            videoData.playabilityStatus?.errorScreen
+                ?.playerErrorMessageRenderer
+                ?.reason?.simpleText;
 
-        return {
-            signInToConfirmAge: reason?.includes(
-                "Sign in to confirm your age",
-            ),
-            SignInToConfirmBot: reason?.includes(
-                "Sign in to confirm you’re not a bot",
-            ),
+        interface Error {
+            signInToConfirmAge: boolean;
+            SignInToConfirmBot: boolean;
+            unknown: string | undefined;
+        }
+
+        const error: Error = {
+            signInToConfirmAge: false,
+            SignInToConfirmBot: false,
+            unknown: undefined,
         };
+
+        switch (true) {
+            case reason?.includes("Sign in to confirm your age"):
+                error.signInToConfirmAge = true;
+                return error;
+            case reason?.includes("Sign in to confirm you’re not a bot"):
+                error.SignInToConfirmBot = true;
+                return error;
+            default:
+                error.unknown = reason;
+                return error;
+        }
     }
 
     private checkSubreason(videoData: IRawResponse) {
@@ -88,16 +142,55 @@ export class Metrics {
             ?.playerErrorMessageRenderer
             ?.subreason?.runs?.[0]?.text;
 
-        return {
-            thisHelpsProtectCommunity: subReason?.includes(
-                "This helps protect our community",
-            ),
+        interface Error {
+            thisHelpsProtectCommunity: boolean;
+            unknown: string | undefined;
+        }
+
+        const error: Error = {
+            thisHelpsProtectCommunity: false,
+            unknown: undefined,
         };
+
+        switch (true) {
+            case subReason?.includes("This helps protect our community"):
+                error.thisHelpsProtectCommunity = true;
+                return error;
+            default:
+                error.unknown = subReason;
+                return error;
+        }
     }
 
     public checkInnertubeResponse(videoData: IRawResponse) {
         this.innertubeFailedRequest.inc();
         const status = this.checkStatus(videoData);
+
+        // config.server.track_unknown_innertube_errors
+        if (this.trackUnknownInnertubeErrors) {
+            if (status?.unknown) {
+                this.innertubeErrorStatusUnknown.labels({
+                    error: status.unknown,
+                }).inc();
+            }
+
+                const reason = this.checkReason(videoData);
+                if (reason.unknown) {
+                    this.innertubeErrorReasonUnknown.labels({
+                        error: reason.unknown,
+                    }).inc();
+                }
+
+                // On specific `playabilityStatus.status` like `CONTENT_CHECK_REQUIRED`,
+                // `subReason` doesn't come with a `playabilityStatus.reason`
+                // key. So we need to check this separately from `reason`
+                const subReason = this.checkSubreason(videoData);
+                if (subReason.unknown) {
+                    this.innertubeErrorSubreasonUnknown.labels({
+                        error: subReason.unknown,
+                    }).inc();
+            }
+        }
 
         if (status.contentCheckRequired || status.unplayable) return;
 
