@@ -24,7 +24,7 @@ export const ConfigSchema = z.object({
         ump: z.boolean().default(false),
         proxy: z.string().nullable().default(Deno.env.get("PROXY") || null),
         fetch: z.object({
-            timeout_ms: z.number().optional(),
+            timeout_ms: z.number().default(30_000),
             retry: z.object({
                 enabled: z.boolean(),
                 times: z.number().optional(),
