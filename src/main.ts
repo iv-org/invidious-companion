@@ -27,7 +27,9 @@ declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
 const app = new Hono();
-const metrics = config.server.enable_metrics ? new Metrics() : undefined;
+const metrics = config.server.enable_metrics
+    ? new Metrics(config.server.track_unknown_innertube_errors)
+    : undefined;
 
 let tokenMinter: TokenMinter;
 let innertubeClient: Innertube;

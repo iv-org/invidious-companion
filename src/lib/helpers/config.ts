@@ -15,6 +15,10 @@ export const ConfigSchema = z.object({
         enable_metrics: z.boolean().default(
             Deno.env.get("SERVER_ENABLE_METRICS") === "true" || false,
         ),
+        track_unknown_innertube_errors: z.boolean().default(
+            Deno.env.get("SERVER_TRACK_UNKNOWN_INNERTUBE_ERRORS") === "true" ||
+                false,
+        ),
     }).strict().default({}),
     cache: z.object({
         enabled: z.boolean().default(true),
