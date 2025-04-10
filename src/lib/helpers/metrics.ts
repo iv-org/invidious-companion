@@ -92,6 +92,8 @@ export class Metrics {
             case "UNPLAYABLE":
                 error.unplayable = true;
                 return error;
+            // Sensitive content videos
+            // Example video id: `VuSU7PcEKpU`
             case "CONTENT_CHECK_REQUIRED":
                 error.contentCheckRequired = true;
                 return error;
@@ -105,7 +107,7 @@ export class Metrics {
     }
 
     private checkReason(videoData: IRawResponse) {
-        // On specific errors like `CONTENT_CHECK_REQUIRED`, the reason is
+        // On specific status like `CONTENT_CHECK_REQUIRED`, the reason is
         // contained inside `errorScreen`, just like how we check subReason.
         const reason = videoData.playabilityStatus?.reason ||
             videoData.playabilityStatus?.errorScreen
@@ -114,22 +116,31 @@ export class Metrics {
 
         interface Error {
             signInToConfirmAge: boolean;
-            SignInToConfirmBot: boolean;
+            signInToConfirmBot: boolean;
+            selfHarmTopics: boolean;
             unknown: string | undefined;
         }
 
         const error: Error = {
             signInToConfirmAge: false,
-            SignInToConfirmBot: false,
+            signInToConfirmBot: false,
+            selfHarmTopics: false,
             unknown: undefined,
         };
 
         switch (true) {
+            case reason?.includes("Sign in to confirm you’re not a bot"):
+                error.signInToConfirmBot = true;
+                return error;
+            // Age restricted videos
             case reason?.includes("Sign in to confirm your age"):
                 error.signInToConfirmAge = true;
                 return error;
-            case reason?.includes("Sign in to confirm you’re not a bot"):
-                error.SignInToConfirmBot = true;
+            // For videos with playabilityStatus.status == `CONTENT_CHECK_REQUIRED`
+            case reason?.includes(
+                "The following content may contain suicide or self-harm topics",
+            ):
+                error.selfHarmTopics = true;
                 return error;
             default:
                 error.unknown = reason;
@@ -144,17 +155,33 @@ export class Metrics {
 
         interface Error {
             thisHelpsProtectCommunity: boolean;
+            thisVideoMayBeInnapropiate: boolean;
+            viewerDiscretionAdvised: boolean;
             unknown: string | undefined;
         }
 
         const error: Error = {
             thisHelpsProtectCommunity: false,
+            thisVideoMayBeInnapropiate: false,
+            viewerDiscretionAdvised: false,
             unknown: undefined,
         };
 
         switch (true) {
             case subReason?.includes("This helps protect our community"):
                 error.thisHelpsProtectCommunity = true;
+                return error;
+            // Age restricted videos
+            case subReason?.includes(
+                "This video may be inappropriate for some users",
+            ):
+                error.thisVideoMayBeInnapropiate = true;
+                return error;
+            // For videos with playabilityStatus.status == `CONTENT_CHECK_REQUIRED`
+            case subReason?.includes(
+                "Viewer discretion is advised",
+            ):
+                error.viewerDiscretionAdvised = true;
                 return error;
             default:
                 error.unknown = subReason;
@@ -174,21 +201,21 @@ export class Metrics {
                 }).inc();
             }
 
-                const reason = this.checkReason(videoData);
-                if (reason.unknown) {
-                    this.innertubeErrorReasonUnknown.labels({
-                        error: reason.unknown,
-                    }).inc();
-                }
+            const reason = this.checkReason(videoData);
+            if (reason.unknown) {
+                this.innertubeErrorReasonUnknown.labels({
+                    error: reason.unknown,
+                }).inc();
+            }
 
-                // On specific `playabilityStatus.status` like `CONTENT_CHECK_REQUIRED`,
-                // `subReason` doesn't come with a `playabilityStatus.reason`
-                // key. So we need to check this separately from `reason`
-                const subReason = this.checkSubreason(videoData);
-                if (subReason.unknown) {
-                    this.innertubeErrorSubreasonUnknown.labels({
-                        error: subReason.unknown,
-                    }).inc();
+            // On specific `playabilityStatus.status` like `CONTENT_CHECK_REQUIRED`,
+            // `subReason` doesn't come with a `playabilityStatus.reason`
+            // key. So we need to check this separately from `reason`
+            const subReason = this.checkSubreason(videoData);
+            if (subReason.unknown) {
+                this.innertubeErrorSubreasonUnknown.labels({
+                    error: subReason.unknown,
+                }).inc();
             }
         }
 
@@ -200,20 +227,14 @@ export class Metrics {
 
             if (reason.signInToConfirmAge) return;
 
-            if (reason.SignInToConfirmBot) {
+            if (reason.signInToConfirmBot) {
                 this.innertubeErrorReasonSignIn.inc();
                 const subReason = this.checkSubreason(videoData);
 
                 if (subReason.thisHelpsProtectCommunity) {
                     this.innertubeErrorSubreasonProtectCommunity.inc();
-                } else {
-                    this.innertubeErrorSubreasonUnknown.inc();
                 }
-            } else {
-                this.innertubeErrorReasonUnknown.inc();
             }
-        } else {
-            this.innertubeErrorStatusUnknown.inc();
         }
     }
 }
