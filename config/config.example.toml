@@ -14,47 +14,54 @@
 # host = "127.0.0.1" # env variable: HOST
 # # secret key needs to be 16 characters long or more
 # secret_key = "CHANGE_ME" # env variable: SERVER_SECRET_KEY
-# verify_requests = false
+# verify_requests = false # env variable: SERVER_VERIFY_REQUESTS
 # encrypt_query_params = false # env variable: SERVER_ENCRYPT_QUERY_PARAMS
 # enable_metrics = false # env variable: SERVER_ENABLE_METRICS
  
 # [cache]
-# enabled = true
+# enabled = true # env variable: CACHE_ENABLED
 # # will get cached in /var/tmp/youtubei.js if you specify /var/tmp
 # # you need to change the --allow-write from deno run too
-# directory = "/var/tmp"
+# directory = "/var/tmp" # env variable: CACHE_DIRECTORY
  
 # [networking]
 # #proxy = "" # env variable: PROXY
 # # Enable YouTube new video format UMP
 
 # [networking.videoplayback]
-# ump = false
-# video_fetch_chunk_size_mb = 5 # size of chunks to request from google servers for rate limiting reductions
+# ump = false # env variable: NETWORKING_VIDEOPLAYBACK_UMP
+# # size of chunks to request from google servers for rate limiting reductions
+# video_fetch_chunk_size_mb = 5 # env variable: NETWORKING_VIDEOPLAYBACK_VIDEO_FETCH_CHUNK_SIZE_MB
  
 ###
 # Network call timeouts when talking to YouTube. 
 # Needed in order to ensure Deno closes hanging connections
 ###
 # [networking.fetch]
-# timeout_ms = 30000
+# timeout_ms = 30000 # env variable: NETWORKING_FETCH_TIMEOUT_MS
  
 ###
 # Network call retries when talking to YouTube, using
 # https://docs.deno.com/examples/exponential_backoff/
 ###
 # [networking.fetch.retry]
-# enabled = false # enable retries on calls to YouTube
-# times = 1 # max number of times to retry
-# initial_debounce = 0 # minimum wait after first call (ms)
-# debounce_multiplier = 0 # how much to back off after each retry (multiplier of initial_debounce)
+# # enable retries on calls to YouTube
+# enabled = false # env variable: NETWORKING_FETCH_RETRY_ENABLED
+# # max number of times to retry
+# times = 1 # env variable: NETWORKING_FETCH_RETRY_TIMES
+# # minimum wait after first call (ms)
+# initial_debounce = 0 # env variable: NETWORKING_FETCH_RETRY_INITIAL_DEBOUNCE
+# # how much to back off after each retry (multiplier of initial_debounce)
+# debounce_multiplier = 0 # env variable: NETWORKING_FETCH_RETRY_DEBOUNCE_MULTIPLIER
  
 # [jobs]
  
 # [jobs.youtube_session]
-# po_token_enabled = true # whether to generate PO tokens
-# frequency = "*/5 * * * *" # frequency of PO token refresh in cron format 
+# # whether to generate PO tokens
+# po_token_enabled = true # env variable: JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED
+# # frequency of PO token refresh in cron format
+# frequency = "*/5 * * * *" # env variable: JOBS_YOUTUBE_SESSION_FREQUENCY
  
 # [youtube_session]
-# oauth_enabled = false
-# cookies = ""
+# oauth_enabled = false # env variable: YOUTUBE_SESSION_OAUTH_ENABLED
+# cookies = "" # env variable: YOUTUBE_SESSION_COOKIES
