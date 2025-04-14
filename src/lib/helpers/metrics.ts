@@ -111,23 +111,31 @@ export class Metrics {
 
         interface Error {
             signInToConfirmAge: boolean;
-            SignInToConfirmBot: boolean;
+            signInToConfirmBot: boolean;
+            selfHarmTopics: boolean;
             unknown: string | undefined;
         }
 
         const error: Error = {
             signInToConfirmAge: false,
-            SignInToConfirmBot: false,
+            signInToConfirmBot: false,
+            selfHarmTopics: false,
             unknown: undefined,
         };
 
         switch (true) {
             case reason?.includes("Sign in to confirm you’re not a bot"):
-                error.SignInToConfirmBot = true;
+                error.signInToConfirmBot = true;
                 return error;
             // Age restricted videos
             case reason?.includes("Sign in to confirm your age"):
                 error.signInToConfirmAge = true;
+                return error;
+            // For videos with playabilityStatus.status == `CONTENT_CHECK_REQUIRED`
+            case reason?.includes(
+                "The following content may contain suicide or self-harm topics",
+            ):
+                error.selfHarmTopics = true;
                 return error;
             default:
                 error.unknown = reason;
@@ -142,17 +150,33 @@ export class Metrics {
 
         interface Error {
             thisHelpsProtectCommunity: boolean;
+            thisVideoMayBeInnapropiate: boolean;
+            viewerDiscretionAdvised: boolean;
             unknown: string | undefined;
         }
 
         const error: Error = {
             thisHelpsProtectCommunity: false,
+            thisVideoMayBeInnapropiate: false,
+            viewerDiscretionAdvised: false,
             unknown: undefined,
         };
 
         switch (true) {
             case subReason?.includes("This helps protect our community"):
                 error.thisHelpsProtectCommunity = true;
+                return error;
+            // Age restricted videos
+            case subReason?.includes(
+                "This video may be inappropriate for some users",
+            ):
+                error.thisVideoMayBeInnapropiate = true;
+                return error;
+            // For videos with playabilityStatus.status == `CONTENT_CHECK_REQUIRED`
+            case subReason?.includes(
+                "Viewer discretion is advised",
+            ):
+                error.viewerDiscretionAdvised = true;
                 return error;
             default:
                 error.unknown = subReason;
@@ -194,7 +218,7 @@ export class Metrics {
         if (status.loginRequired) {
             this.innertubeErrorStatusLoginRequired.inc();
 
-            if (reason.SignInToConfirmBot) {
+            if (reason.signInToConfirmBot) {
                 this.innertubeErrorReasonSignIn.inc();
 
                 if (subReason.thisHelpsProtectCommunity) {
