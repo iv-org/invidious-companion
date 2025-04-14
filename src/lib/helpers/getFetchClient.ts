@@ -54,9 +54,9 @@ function fetchShim(
     const fetchDebounceMultiplier = config.networking.fetch?.retry
         ?.debounce_multiplier;
     const retryOptions: RetryOptions = {
-        maxAttempts: fetchMaxAttempts || 1,
-        minTimeout: fetchInitialDebounce || 0,
-        multiplier: fetchDebounceMultiplier || 0,
+        maxAttempts: fetchMaxAttempts,
+        minTimeout: fetchInitialDebounce,
+        multiplier: fetchDebounceMultiplier,
         jitter: 0,
     };
 
