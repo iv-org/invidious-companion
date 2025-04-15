@@ -9,9 +9,6 @@ RUN mkdir -p /var/tmp/youtubei.js
 
 RUN apt update && apt install -y curl
 
-COPY ./src/ /app/src/
-COPY deno.json /app/
-
 RUN curl -fsSL https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini-$(dpkg --print-architecture) \
         --output /tini \
     && chmod +x /tini
@@ -21,7 +18,15 @@ RUN arch=$(uname -m) && \
     --output /thc \
     && chmod +x /thc
 
-RUN deno task compile
+COPY deno.json /app/
+COPY deno.lock /app/
+
+RUN --mount=type=cache,target=/deno-dir deno install
+
+COPY ./src/ /app/src/
+
+# Dependencies are cached on /deno-dir for the denoland/deno:debian image
+RUN --mount=type=cache,target=/deno-dir deno task compile
 
 # Stage for creating the non-privileged user
 FROM alpine:3.20 AS user-stage
