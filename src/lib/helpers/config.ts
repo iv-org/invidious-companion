@@ -20,9 +20,7 @@ export const ConfigSchema = z.object({
     }).strict().default({}),
     cache: z.object({
         enabled: z.boolean().default(
-            Deno.env.get("CACHE_ENABLED") === "true"
-                ? true
-                : Deno.env.get("CACHE_ENALBED") === "false"
+            Deno.env.get("CACHE_ENALBED") === "false"
                 ? false
                 : true,
         ),
