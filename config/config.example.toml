@@ -31,10 +31,10 @@
  
 ###
 # Network call timeouts when talking to YouTube. 
-# Should only be used when connections are hanging unexpectedly.
+# Needed in order to ensure Deno closes hanging connections
 ###
 # [networking.fetch]
-# timeout_ms = 
+# timeout_ms = 30000
  
 ###
 # Network call retries when talking to YouTube, using
