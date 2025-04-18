@@ -156,7 +156,8 @@ videoPlaybackProxy.get("/", async (c) => {
         await stream.pipe(postResponse.body);
     };
 
-    const chunkSize = config.networking.videoplayback.video_fetch_chunk_size_mb * 1_000_000;
+    const chunkSize =
+        config.networking.videoplayback.video_fetch_chunk_size_mb * 1_000_000;
     const totalBytes = Number(
         headResponse.headers.get("Content-Length") || "0",
     );
