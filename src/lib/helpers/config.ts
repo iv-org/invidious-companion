@@ -21,8 +21,6 @@ export const ConfigSchema = z.object({
         directory: z.string().default("/var/tmp"),
     }).strict().default({}),
     networking: z.object({
-        ump: z.boolean().default(false),
-        video_fetch_chunk_size_mb: z.number().default(5),
         proxy: z.string().nullable().default(Deno.env.get("PROXY") || null),
         fetch: z.object({
             timeout_ms: z.number().optional(),
@@ -33,6 +31,10 @@ export const ConfigSchema = z.object({
                 debounce_multiplier: z.number().optional(),
             }).strict().optional(),
         }).strict().optional(),
+        videoplayback: z.object({
+            ump: z.boolean().default(false),
+            video_fetch_chunk_size_mb: z.number().default(5),
+        }).strict().default({}),
     }).strict().default({}),
     jobs: z.object({
         youtube_session: z.object({

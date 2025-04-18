@@ -73,7 +73,7 @@ dashManifest.get("/:videoId", async (c) => {
                 queryParams.set("host", dashUrl.host);
 
                 if (local) {
-                    if (config.networking.ump) {
+                    if (config.networking.videoplayback.ump) {
                         queryParams.set("ump", "yes");
                     }
                     if (
