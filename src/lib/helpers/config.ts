@@ -73,12 +73,7 @@ export const ConfigSchema = z.object({
     jobs: z.object({
         youtube_session: z.object({
             po_token_enabled: z.boolean().default(
-                Deno.env.get("JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED") === "true"
-                    ? true
-                    : Deno.env.get("JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED") ===
-                            "false"
-                    ? false
-                    : true,
+                    Deno.env.get("JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED") === "false" ? false : true,
             ),
             frequency: z.string().default(
                 Deno.env.get("JOBS_YOUTUBE_SESSION_FREQUENCY") || "*/5 * * * *",
