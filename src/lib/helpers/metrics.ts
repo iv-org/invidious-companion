@@ -73,6 +73,7 @@ export class Metrics {
             unplayable: boolean;
             contentCheckRequired: boolean;
             loginRequired: boolean;
+            liveStreamOffline: boolean;
             unknown: string | undefined;
         }
 
@@ -80,6 +81,7 @@ export class Metrics {
             unplayable: false,
             contentCheckRequired: false,
             loginRequired: false,
+            liveStreamOffline: false,
             unknown: undefined,
         };
 
@@ -94,6 +96,10 @@ export class Metrics {
                 return error;
             case "LOGIN_REQUIRED":
                 error.loginRequired = true;
+                return error;
+            // Livestreams
+            case "LIVE_STREAM_OFFLINE":
+                error.liveStreamOffline = true;
                 return error;
             default:
                 error.unknown = status;
@@ -113,6 +119,10 @@ export class Metrics {
             signInToConfirmAge: boolean;
             signInToConfirmBot: boolean;
             selfHarmTopics: boolean;
+            liveStreamOffline: boolean;
+            liveEventWillBegin: boolean;
+            premiere: boolean;
+            privateVideo: boolean;
             unknown: string | undefined;
         }
 
@@ -120,6 +130,10 @@ export class Metrics {
             signInToConfirmAge: false,
             signInToConfirmBot: false,
             selfHarmTopics: false,
+            liveStreamOffline: false,
+            liveEventWillBegin: false,
+            premiere: false,
+            privateVideo: false,
             unknown: undefined,
         };
 
@@ -136,6 +150,23 @@ export class Metrics {
                 "The following content may contain suicide or self-harm topics",
             ):
                 error.selfHarmTopics = true;
+                return error;
+            // Offline Livestreams
+            case reason?.includes("Offline."):
+                error.liveStreamOffline = true;
+                return error;
+            // Livestreams that are about to start
+            case reason?.includes(
+                "This live event will begin in a few moments",
+            ):
+                error.liveEventWillBegin = true;
+                return error;
+            case reason?.includes("Premiere will begin shortly") ||
+                reason?.includes("Premieres in"):
+                error.premiere = true;
+                return error;
+            case reason?.includes("Private video"):
+                error.privateVideo = true;
                 return error;
             default:
                 error.unknown = reason;
@@ -188,7 +219,11 @@ export class Metrics {
         this.innertubeFailedRequest.inc();
 
         const status = this.checkStatus(videoData);
-        if (status.contentCheckRequired || status.unplayable) return;
+        if (
+            status.contentCheckRequired ||
+            status.unplayable ||
+            status.liveStreamOffline
+        ) return;
 
         if (status?.unknown) {
             this.innertubeErrorStatusUnknown.labels({
@@ -197,7 +232,13 @@ export class Metrics {
         }
 
         const reason = this.checkReason(videoData);
-        if (reason.signInToConfirmAge) return;
+        if (
+            reason.signInToConfirmAge ||
+            reason.liveStreamOffline ||
+            reason.liveEventWillBegin ||
+            reason.premiere ||
+            reason.privateVideo
+        ) return;
 
         if (reason.unknown) {
             this.innertubeErrorReasonUnknown.labels({
