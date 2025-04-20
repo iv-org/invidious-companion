@@ -21,8 +21,6 @@ RUN arch=$(uname -m) && \
 COPY deno.json /app/
 COPY deno.lock /app/
 
-RUN --mount=type=cache,target=/deno-dir deno install
-
 COPY ./src/ /app/src/
 
 # Dependencies are cached on /deno-dir for the denoland/deno:debian image
