@@ -66,6 +66,12 @@ export class Metrics {
         "Number failed requests made to the Innertube API for whatever reason",
     );
 
+    public videoplaybackForbidden = this.createCounter(
+        "videoplayback_forbidden_total",
+        'Number of times YouTube\'s /videoplayback endpoint returns a "403" HTTP status code',
+        ["method"],
+    );
+
     private checkStatus(videoData: IRawResponse) {
         const status = videoData.playabilityStatus?.status;
 
