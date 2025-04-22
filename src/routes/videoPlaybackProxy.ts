@@ -36,6 +36,7 @@ videoPlaybackProxy.get("/", async (c) => {
     const urlReq = new URL(c.req.url);
     const config = c.get("config");
     const queryParams = new URLSearchParams(urlReq.search);
+    const metrics = c.get("metrics");
 
     if (c.req.query("enc") === "true") {
         const { data: encryptedQuery } = c.req.query();
@@ -119,11 +120,16 @@ videoPlaybackProxy.get("/", async (c) => {
             redirect: "manual",
         });
         if (googlevideoResponse.status == 403) {
+            metrics?.videoplaybackForbidden.labels({
+                method: "HEAD",
+            }).inc();
+
             return new Response(googlevideoResponse.body, {
                 status: googlevideoResponse.status,
                 statusText: googlevideoResponse.statusText,
             });
         }
+
         if (googlevideoResponse.headers.has("Location")) {
             location = googlevideoResponse.headers.get("Location") as string;
             continue;
@@ -157,6 +163,11 @@ videoPlaybackProxy.get("/", async (c) => {
             headers: headersToSend,
         });
         if (postResponse.status !== 200) {
+            if (postResponse.status == 403) {
+                metrics?.videoplaybackForbidden.labels({
+                    method: "POST",
+                }).inc();
+            }
             throw new Error("Non-200 response from google servers");
         }
         await stream.pipe(postResponse.body);
@@ -209,6 +220,7 @@ videoPlaybackProxy.get("/", async (c) => {
     }
 
     let responseStatus = headResponse.status;
+
     if (requestBytes && responseStatus == 200) {
         // check for range headers in the forms:
         // "bytes=0-" get full length from start
