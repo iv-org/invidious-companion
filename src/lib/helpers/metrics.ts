@@ -91,26 +91,26 @@ export class Metrics {
             unknown: undefined,
         };
 
-        switch (status) {
-            case "UNPLAYABLE":
-                error.unplayable = true;
-                return error;
+        const map: { [key: string]: Exclude<keyof Error, "unknown"> } = {
+            "UNPLAYABLE": "unplayable",
             // Sensitive content videos
-            // Example video id: `VuSU7PcEKpU`
-            case "CONTENT_CHECK_REQUIRED":
-                error.contentCheckRequired = true;
-                return error;
-            case "LOGIN_REQUIRED":
-                error.loginRequired = true;
-                return error;
+            "CONTENT_CHECK_REQUIRED": "contentCheckRequired",
+            /**
+             * Age restricted videos
+             * Private videos (maybe)
+             */
+            "LOGIN_REQUIRED": "loginRequired",
             // Livestreams
-            case "LIVE_STREAM_OFFLINE":
-                error.liveStreamOffline = true;
-                return error;
-            default:
-                error.unknown = status;
-                return error;
+            "LIVE_STREAM_OFFLINE": "liveStreamOffline",
+        };
+
+        if (map[status as string]) {
+            error[map[status as string]] = true;
+        } else {
+            error.unknown = status;
         }
+
+        return error;
     }
 
     private checkReason(videoData: IRawResponse) {
@@ -143,41 +143,32 @@ export class Metrics {
             unknown: undefined,
         };
 
-        switch (true) {
-            case reason?.includes("Sign in to confirm you’re not a bot"):
-                error.signInToConfirmBot = true;
-                return error;
+        const map: { [key: string]: Exclude<keyof Error, "unknown"> } = {
+            "Sign in to confirm you’re not a bot": "signInToConfirmBot",
             // Age restricted videos
-            case reason?.includes("Sign in to confirm your age"):
-                error.signInToConfirmAge = true;
+            "Sign in to confirm your age": "signInToConfirmAge",
+            // Sensitive content videos
+            "The following content may contain suicide or self-harm topics":
+                "selfHarmTopics",
+            // Livestreams
+            "Offline.": "liveStreamOffline",
+            "This live event will begin in a few moments": "liveEventWillBegin",
+            // Premieres
+            "Premiere will begin shortly": "premiere",
+            "Premieres in": "premiere",
+            // Private videos
+            "Private video": "privateVideo",
+        };
+
+        for (const [key, e] of Object.entries(map)) {
+            if (reason?.includes(key)) {
+                error[e] = true;
                 return error;
-            // For videos with playabilityStatus.status == `CONTENT_CHECK_REQUIRED`
-            case reason?.includes(
-                "The following content may contain suicide or self-harm topics",
-            ):
-                error.selfHarmTopics = true;
-                return error;
-            // Offline Livestreams
-            case reason?.includes("Offline."):
-                error.liveStreamOffline = true;
-                return error;
-            // Livestreams that are about to start
-            case reason?.includes(
-                "This live event will begin in a few moments",
-            ):
-                error.liveEventWillBegin = true;
-                return error;
-            case reason?.includes("Premiere will begin shortly") ||
-                reason?.includes("Premieres in"):
-                error.premiere = true;
-                return error;
-            case reason?.includes("Private video"):
-                error.privateVideo = true;
-                return error;
-            default:
-                error.unknown = reason;
-                return error;
+            }
         }
+
+        error.unknown = reason;
+        return error;
     }
 
     private checkSubreason(videoData: IRawResponse) {
@@ -199,26 +190,24 @@ export class Metrics {
             unknown: undefined,
         };
 
-        switch (true) {
-            case subReason?.includes("This helps protect our community"):
-                error.thisHelpsProtectCommunity = true;
-                return error;
+        const map: { [key: string]: Exclude<keyof Error, "unknown"> } = {
+            "This helps protect our community": "thisHelpsProtectCommunity",
             // Age restricted videos
-            case subReason?.includes(
-                "This video may be inappropriate for some users",
-            ):
-                error.thisVideoMayBeInnapropiate = true;
+            "This video may be inappropriate for some users":
+                "thisVideoMayBeInnapropiate",
+            // Sensitive content videos
+            "Viewer discretion is advised": "viewerDiscretionAdvised",
+        };
+
+        for (const [key, e] of Object.entries(map)) {
+            if (subReason?.includes(key)) {
+                error[e] = true;
                 return error;
-            // For videos with playabilityStatus.status == `CONTENT_CHECK_REQUIRED`
-            case subReason?.includes(
-                "Viewer discretion is advised",
-            ):
-                error.viewerDiscretionAdvised = true;
-                return error;
-            default:
-                error.unknown = subReason;
-                return error;
+            }
         }
+
+        error.unknown = subReason;
+        return error;
     }
 
     public checkInnertubeResponse(videoData: IRawResponse) {
