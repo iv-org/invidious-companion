@@ -55,7 +55,7 @@ export const youtubePlayerReq = async (
         contentPoToken,
     );
 
-    // Check if the first adaptive format URL is empty, if it it fallback to multiple YT clients
+    // Check if the first adaptive format URL is undefined, if it is then fallback to multiple YT clients
 
     if (
         !innertubeClientOauthEnabled &&
