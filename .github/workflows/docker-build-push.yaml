@@ -27,8 +27,6 @@ jobs:
       # Step 1: Check out the repository code
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          submodules: true
 
       # Step 2: Set up QEMU for multi-architecture builds
       - name: Set up QEMU
