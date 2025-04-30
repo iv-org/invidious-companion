@@ -13,5 +13,6 @@ Companion for Invidious which handle all the video stream retrieval from YouTube
 ## Run Locally (development)
 
 ```
+git submodule init && git submodule update
 SERVER_SECRET_KEY=CHANGEME deno task dev
 ```
