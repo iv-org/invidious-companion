@@ -78,15 +78,20 @@ export class Metrics {
         ["error"],
     );
 
-    private checkStatus(videoData: IRawResponse) {
-        const status = videoData.playabilityStatus?.status;
+    public checkStatus(
+        { videoData, status }: { videoData?: IRawResponse; status?: string },
+    ) {
+        if (videoData) {
+            // deno-fmt-ignore
+            status = 
+                videoData.playabilityStatus?.status!;
+        }
 
         interface Error {
             unplayable: boolean;
             contentCheckRequired: boolean;
             loginRequired: boolean;
             liveStreamOffline: boolean;
-            unknown: string | undefined;
         }
 
         const error: Error = {
@@ -94,12 +99,11 @@ export class Metrics {
             contentCheckRequired: false,
             loginRequired: false,
             liveStreamOffline: false,
-            unknown: undefined,
         };
 
-        const map: { [key: string]: Exclude<keyof Error, "unknown"> } = {
+        const map: { [key: string]: keyof Error } = {
             "UNPLAYABLE": "unplayable",
-            // Sensitive content videos
+            // Innertube error            // Sensitive content videos
             "CONTENT_CHECK_REQUIRED": "contentCheckRequired",
             /**
              * Age restricted videos
@@ -113,19 +117,31 @@ export class Metrics {
         if (map[status as string]) {
             error[map[status as string]] = true;
         } else {
-            error.unknown = status;
+            this.innertubeErrorStatusUnknown.labels({
+                error: status,
+            }).inc();
+            return;
         }
 
-        return error;
+        if (error.loginRequired) {
+            this.innertubeErrorStatusLoginRequired.inc();
+            return;
+        }
     }
 
-    private checkReason(videoData: IRawResponse) {
-        // On specific status like `CONTENT_CHECK_REQUIRED`, the reason is
-        // contained inside `errorScreen`, just like how we check subReason.
-        const reason = videoData.playabilityStatus?.reason ||
-            videoData.playabilityStatus?.errorScreen
-                ?.playerErrorMessageRenderer
-                ?.reason?.simpleText;
+    public checkReason(
+        { videoData, reason }: { videoData?: IRawResponse; reason?: string },
+    ) {
+        if (videoData) {
+            // On specific status like `CONTENT_CHECK_REQUIRED`, the reason is
+            // contained inside `errorScreen`, just like how we check subReason.
+            const playabilityStatus = videoData.playabilityStatus;
+            // deno-fmt-ignore
+            reason = 
+                playabilityStatus?.reason
+                ||
+                playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.reason?.simpleText;
+        }
 
         interface Error {
             signInToConfirmAge: boolean;
@@ -135,7 +151,6 @@ export class Metrics {
             liveEventWillBegin: boolean;
             premiere: boolean;
             privateVideo: boolean;
-            unknown: string | undefined;
         }
 
         const error: Error = {
@@ -146,10 +161,9 @@ export class Metrics {
             liveEventWillBegin: false,
             premiere: false,
             privateVideo: false,
-            unknown: undefined,
         };
 
-        const map: { [key: string]: Exclude<keyof Error, "unknown"> } = {
+        const map: { [key: string]: keyof Error } = {
             "Sign in to confirm you’re not a bot": "signInToConfirmBot",
             // Age restricted videos
             "Sign in to confirm your age": "signInToConfirmAge",
@@ -166,37 +180,56 @@ export class Metrics {
             "Private video": "privateVideo",
         };
 
+        let isKnownError = false;
         for (const [key, e] of Object.entries(map)) {
             if (reason?.includes(key)) {
                 error[e] = true;
-                return error;
+                isKnownError = true;
+                break;
             }
         }
 
-        error.unknown = reason;
-        return error;
+        if (!isKnownError) {
+            this.innertubeErrorReasonUnknown.labels({
+                error: reason,
+            }).inc();
+            return;
+        }
+
+        if (error.signInToConfirmBot) {
+            this.innertubeErrorReasonSignIn.inc();
+            return;
+        }
     }
 
-    private checkSubreason(videoData: IRawResponse) {
-        const subReason = videoData.playabilityStatus?.errorScreen
-            ?.playerErrorMessageRenderer
-            ?.subreason?.runs?.[0]?.text;
+    public checkSubreason(
+        { videoData, subReason }: {
+            videoData?: IRawResponse;
+            subReason?: string;
+        },
+    ) {
+        if (videoData) {
+            const errorScreen = videoData.playabilityStatus?.errorScreen;
+            // deno-fmt-ignore
+            subReason = 
+                errorScreen?.playerErrorMessageRenderer?.subreason?.runs?.[0]?.text;
+        }
 
         interface Error {
             thisHelpsProtectCommunity: boolean;
             thisVideoMayBeInnapropiate: boolean;
             viewerDiscretionAdvised: boolean;
-            unknown: string | undefined;
+            accountTerminated: boolean;
         }
 
         const error: Error = {
             thisHelpsProtectCommunity: false,
             thisVideoMayBeInnapropiate: false,
             viewerDiscretionAdvised: false,
-            unknown: undefined,
+            accountTerminated: false,
         };
 
-        const map: { [key: string]: Exclude<keyof Error, "unknown"> } = {
+        const map: { [key: string]: keyof Error } = {
             "This helps protect our community": "thisHelpsProtectCommunity",
             // Age restricted videos
             "This video may be inappropriate for some users":
@@ -205,68 +238,37 @@ export class Metrics {
             "Viewer discretion is advised": "viewerDiscretionAdvised",
         };
 
+        let isKnownError = false;
         for (const [key, e] of Object.entries(map)) {
             if (subReason?.includes(key)) {
                 error[e] = true;
-                return error;
+                isKnownError = true;
+                break;
             }
         }
 
-        error.unknown = subReason;
-        return error;
+        if (!isKnownError) {
+            this.innertubeErrorSubreasonUnknown.labels({
+                error: subReason,
+            }).inc();
+            return;
+        }
+
+        if (error.thisHelpsProtectCommunity) {
+            this.innertubeErrorSubreasonProtectCommunity.inc();
+            return;
+        }
     }
 
     public checkInnertubeResponse(videoData: IRawResponse) {
         this.innertubeFailedRequest.inc();
 
-        const status = this.checkStatus(videoData);
-        if (
-            status.contentCheckRequired ||
-            status.unplayable ||
-            status.liveStreamOffline
-        ) return;
-
-        if (status?.unknown) {
-            this.innertubeErrorStatusUnknown.labels({
-                error: status.unknown,
-            }).inc();
-        }
-
-        const reason = this.checkReason(videoData);
-        if (
-            reason.signInToConfirmAge ||
-            reason.liveStreamOffline ||
-            reason.liveEventWillBegin ||
-            reason.premiere ||
-            reason.privateVideo
-        ) return;
-
-        if (reason.unknown) {
-            this.innertubeErrorReasonUnknown.labels({
-                error: reason.unknown,
-            }).inc();
-        }
+        this.checkStatus({ videoData: videoData });
+        this.checkReason({ videoData: videoData });
 
         // On specific `playabilityStatus.status` like `CONTENT_CHECK_REQUIRED`,
         // `subReason` doesn't come with a `playabilityStatus.reason`
         // key. So we need to check this separately from `reason`
-        const subReason = this.checkSubreason(videoData);
-        if (subReason.unknown) {
-            this.innertubeErrorSubreasonUnknown.labels({
-                error: subReason.unknown,
-            }).inc();
-        }
-
-        if (status.loginRequired) {
-            this.innertubeErrorStatusLoginRequired.inc();
-
-            if (reason.signInToConfirmBot) {
-                this.innertubeErrorReasonSignIn.inc();
-
-                if (subReason.thisHelpsProtectCommunity) {
-                    this.innertubeErrorSubreasonProtectCommunity.inc();
-                }
-            }
-        }
+        this.checkSubreason({ videoData: videoData });
     }
 }
