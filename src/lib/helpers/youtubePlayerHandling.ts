@@ -1,5 +1,9 @@
 import { ApiResponse, Innertube, YT } from "youtubei.js";
-import { generateRandomString, PlayerError } from "youtubei.js/Utils";
+import {
+    generateRandomString,
+    InnertubeError,
+    PlayerError,
+} from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
 import type { TokenMinter } from "../jobs/potoken.ts";
 import { Metrics } from "../helpers/metrics.ts";
@@ -51,11 +55,28 @@ export const youtubePlayerParsing = async ({
         );
         const videoData = youtubePlayerResponse.data;
 
-        const video = new YT.VideoInfo(
-            [youtubePlayerResponse],
-            innertubeClient.actions,
-            generateRandomString(16),
-        );
+        let video!: YT.VideoInfo;
+        try {
+            video = new YT.VideoInfo(
+                [youtubePlayerResponse],
+                innertubeClient.actions,
+                generateRandomString(16),
+            );
+        } catch (err) {
+            if (err instanceof InnertubeError) {
+                if (err.message === "This video is unavailable") {
+                    const info = err.info;
+                    const status: string = info.status;
+                    const reason: string = info.reason;
+                    const subReason: string =
+                        err.info.error_screen.subreason.text;
+                    metrics?.checkStatus({ status: status });
+                    metrics?.checkReason({ reason: reason });
+                    metrics?.checkSubreason({ subReason: subReason });
+                }
+                throw `[ERROR] Got error '${err.message}' for video id '${videoId}'`;
+            }
+        }
 
         const streamingData = video.streaming_data;
 
