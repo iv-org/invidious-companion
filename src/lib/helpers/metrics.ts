@@ -72,6 +72,12 @@ export class Metrics {
         ["method"],
     );
 
+    public playerErrors = this.createCounter(
+        "youtubejs_player_errors_total",
+        'Number of times a PlayerError error has been returned by the Youtube.JS library. This includes deciphering errors, signature errors and "nsig" errors.',
+        ["error"],
+    );
+
     private checkStatus(videoData: IRawResponse) {
         const status = videoData.playabilityStatus?.status;
 
