@@ -89,6 +89,7 @@ export class Metrics {
 
         interface Error {
             unplayable: boolean;
+            error: boolean;
             contentCheckRequired: boolean;
             loginRequired: boolean;
             liveStreamOffline: boolean;
@@ -96,6 +97,7 @@ export class Metrics {
 
         const error: Error = {
             unplayable: false,
+            error: false,
             contentCheckRequired: false,
             loginRequired: false,
             liveStreamOffline: false,
@@ -103,7 +105,9 @@ export class Metrics {
 
         const map: { [key: string]: keyof Error } = {
             "UNPLAYABLE": "unplayable",
-            // Innertube error            // Sensitive content videos
+            // Innertube error
+            "ERROR": "error",
+            // Sensitive content videos
             "CONTENT_CHECK_REQUIRED": "contentCheckRequired",
             /**
              * Age restricted videos
@@ -151,6 +155,7 @@ export class Metrics {
             liveEventWillBegin: boolean;
             premiere: boolean;
             privateVideo: boolean;
+            videoUnavailable: boolean;
         }
 
         const error: Error = {
@@ -161,6 +166,7 @@ export class Metrics {
             liveEventWillBegin: false,
             premiere: false,
             privateVideo: false,
+            videoUnavailable: false,
         };
 
         const map: { [key: string]: keyof Error } = {
@@ -178,6 +184,8 @@ export class Metrics {
             "Premieres in": "premiere",
             // Private videos
             "Private video": "privateVideo",
+            // Unavailable videos
+            "Video unavailable": "videoUnavailable",
         };
 
         let isKnownError = false;
@@ -236,6 +244,9 @@ export class Metrics {
                 "thisVideoMayBeInnapropiate",
             // Sensitive content videos
             "Viewer discretion is advised": "viewerDiscretionAdvised",
+            // Unavailable videos
+            "This video is no longer available because the YouTube account associated with this video has been terminated":
+                "accountTerminated",
         };
 
         let isKnownError = false;
