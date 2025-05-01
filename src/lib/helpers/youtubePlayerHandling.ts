@@ -1,5 +1,5 @@
 import { ApiResponse, Innertube, YT } from "youtubei.js";
-import { generateRandomString } from "youtubei.js/Utils";
+import { generateRandomString, PlayerError } from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
 import type { TokenMinter } from "../jobs/potoken.ts";
 import { Metrics } from "../helpers/metrics.ts";
@@ -108,11 +108,25 @@ export const youtubePlayerParsing = async ({
                         .adaptive_formats
                         .entries()
                 ) {
-                    videoData.streamingData.adaptiveFormats[index].url =
-                        adaptive_format
+                    let decipheredUrl: string | undefined;
+
+                    try {
+                        decipheredUrl = adaptive_format
                             .decipher(
                                 innertubeClient.session.player,
                             );
+                    } catch (err) {
+                        if (err instanceof PlayerError) {
+                            metrics?.playerErrors.labels({
+                                error: err.message,
+                            }).inc();
+                            throw `[ERROR] Got error '${err.message}' for video id '${video.basic_info.id}'`;
+                        }
+                    }
+
+                    videoData.streamingData.adaptiveFormats[index].url =
+                        decipheredUrl;
+
                     if (
                         videoData.streamingData.adaptiveFormats[index]
                             .signatureCipher !==
