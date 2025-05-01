@@ -52,8 +52,8 @@ export const ConfigSchema = z.object({
                         ),
                     ) || 0,
                 ),
-            }).strict().optional(),
-        }).strict().optional(),
+            }).strict().default({}),
+        }).strict().default({}),
         videoplayback: z.object({
             ump: z.boolean().default(
                 Deno.env.get("NETWORKING_VIDEOPLAYBACK_UMP") === "true" ||
