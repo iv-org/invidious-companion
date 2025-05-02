@@ -1,7 +1,7 @@
 Deno.env.set("SERVER_SECRET_KEY", "aaaaaaaaaaaaaaaa");
 const { run } = await import("../main.ts");
 
-import { parseConfig } from "../lib/helpers/config.ts";
+const { parseConfig } = await import("../lib/helpers/config.ts");
 const config = await parseConfig();
 
 import { dashManifest } from "./dashManifest.ts";
