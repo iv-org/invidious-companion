@@ -85,9 +85,10 @@ latestVersion.get("/", async (c) => {
                 queryParams.set("enc", "true");
                 queryParams.set("data", encryptedParams);
             }
-            urlToRedirect = config.server.base_path + itagUrlParsed.pathname + "?" +
+            urlToRedirect = config.server.base_path + itagUrlParsed.pathname +
+                "?" +
                 queryParams.toString();
-            console.log(urlToRedirect)
+            console.log(urlToRedirect);
         }
 
         if (title) urlToRedirect += `&title=${encodeURIComponent(title)}`;
