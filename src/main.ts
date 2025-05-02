@@ -26,7 +26,7 @@ const { getFetchClient } = await import(getFetchClientLocation);
 declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
-const app = new Hono();
+const app = new Hono().basePath(config.server.base_path);
 const metrics = config.server.enable_metrics ? new Metrics() : undefined;
 
 let tokenMinter: TokenMinter;
@@ -125,7 +125,16 @@ routes(app, config);
 
 export function run(signal: AbortSignal, port: number, hostname: string) {
     return Deno.serve(
-        { signal: signal, port: port, hostname: hostname },
+        {
+            onListen() {
+                console.log(
+                    `[INFO] Server successfully started at http://${config.server.host}:${config.server.port}${config.server.base_path}`,
+                );
+            },
+            signal: signal,
+            port: port,
+            hostname: hostname,
+        },
         app.fetch,
     );
 }
