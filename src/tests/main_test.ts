@@ -12,7 +12,8 @@ Deno.test({
     name: "Checking if Invidious companion works",
     async fn(t) {
         const controller = new AbortController();
-        const baseUrl = `http://${config.server.host}:${config.server.port.toString()}${config.server.base_path}`;
+        const baseUrl =
+            `http://${config.server.host}:${config.server.port.toString()}${config.server.base_path}`;
         const headers = { Authorization: "Bearer aaaaaaaaaaaaaaaa" };
 
         await run(

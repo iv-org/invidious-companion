@@ -93,8 +93,9 @@ dashManifest.get("/:videoId", async (c) => {
                         queryParams.set("enc", "true");
                         queryParams.set("data", encryptedParams);
                     }
-                    dashUrl = (config.server.base_path + dashUrl.pathname + "?" +
-                        queryParams.toString()) as unknown as URL;
+                    dashUrl =
+                        (config.server.base_path + dashUrl.pathname + "?" +
+                            queryParams.toString()) as unknown as URL;
                     return dashUrl;
                 } else {
                     return dashUrl;
