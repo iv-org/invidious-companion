@@ -88,7 +88,6 @@ latestVersion.get("/", async (c) => {
             urlToRedirect = config.server.base_path + itagUrlParsed.pathname +
                 "?" +
                 queryParams.toString();
-            console.log(urlToRedirect);
         }
 
         if (title) urlToRedirect += `&title=${encodeURIComponent(title)}`;
