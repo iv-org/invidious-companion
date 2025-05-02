@@ -125,7 +125,16 @@ routes(app, config);
 
 export function run(signal: AbortSignal, port: number, hostname: string) {
     return Deno.serve(
-        { signal: signal, port: port, hostname: hostname },
+        {
+            onListen() {
+                console.log(
+                    `[INFO] Server successfully started at http://${config.server.host}:${config.server.port}${config.server.base_path}`,
+                );
+            },
+            signal: signal,
+            port: port,
+            hostname: hostname,
+        },
         app.fetch,
     );
 }
