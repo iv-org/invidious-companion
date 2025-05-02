@@ -26,7 +26,7 @@ const { getFetchClient } = await import(getFetchClientLocation);
 declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
-const app = new Hono();
+const app = new Hono().basePath(config.server.base_path);
 const metrics = config.server.enable_metrics ? new Metrics() : undefined;
 
 let tokenMinter: TokenMinter;
