@@ -10,7 +10,7 @@ Deno.test({
     async fn(t) {
         const controller = new AbortController();
         const port = 8282;
-        const baseUrl = `http://localhost:${port.toString()}`;
+        const baseUrl = `http://localhost:${port.toString()}/companion`;
         const headers = { Authorization: "Bearer aaaaaaaaaaaaaaaa" };
 
         await run(
