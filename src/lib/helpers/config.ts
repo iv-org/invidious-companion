@@ -12,6 +12,9 @@ export const ConfigSchema = z.object({
             Deno.env.get("SERVER_UNIX_SOCKET_PATH") ||
                 "/tmp/invidious-companion.sock",
         ),
+        base_path: z.string().default(
+            Deno.env.get("SERVER_BASE_PATH") || "/companion",
+        ),
         secret_key: z.string().length(16).default(
             Deno.env.get("SERVER_SECRET_KEY") || "",
         ),

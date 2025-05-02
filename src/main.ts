@@ -39,7 +39,7 @@ declare module "hono" {
 
 const app = new Hono({
     getPath: (req) => new URL(req.url).pathname,
-});
+}).basePath(config.server.base_path);
 const metrics = config.server.enable_metrics ? new Metrics() : undefined;
 
 let tokenMinter: TokenMinter;
