@@ -1,6 +1,9 @@
 Deno.env.set("SERVER_SECRET_KEY", "aaaaaaaaaaaaaaaa");
 const { run } = await import("../main.ts");
 
+import { parseConfig } from "../lib/helpers/config.ts";
+const config = await parseConfig();
+
 import { dashManifest } from "./dashManifest.ts";
 import { youtubePlayer } from "./youtubePlayer.ts";
 import { latestVersion } from "./latestVersion.ts";
@@ -9,14 +12,13 @@ Deno.test({
     name: "Checking if Invidious companion works",
     async fn(t) {
         const controller = new AbortController();
-        const port = 8282;
-        const baseUrl = `http://localhost:${port.toString()}/companion`;
+        const baseUrl = `http://${config.server.host}:${config.server.port.toString()}${config.server.base_path}`;
         const headers = { Authorization: "Bearer aaaaaaaaaaaaaaaa" };
 
         await run(
             controller.signal,
-            port,
-            "localhost",
+            config.server.port,
+            config.server.host,
         );
 
         await t.step(

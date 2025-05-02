@@ -62,7 +62,7 @@ export default function getDownloadHandler(app: Hono) {
 
         if ("label" in downloadWidgetData) {
             return await app.request(
-                `/api/v1/captions/${videoId}?label=${
+                `${config.server.base_path}/api/v1/captions/${videoId}?label=${
                     encodeURIComponent(downloadWidgetData.label)
                 }`,
             );
@@ -84,7 +84,7 @@ export default function getDownloadHandler(app: Hono) {
             urlQueriesForLatestVersion.set("local", "true");
 
             return await app.request(
-                `/latest_version?${urlQueriesForLatestVersion.toString()}`,
+                `${config.server.base_path}/latest_version?${urlQueriesForLatestVersion.toString()}`,
             );
         }
     }

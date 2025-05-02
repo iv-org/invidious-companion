@@ -64,7 +64,7 @@ captionsHandler.get("/:videoId", async (c) => {
             invidiousAvailableCaptionsArr.push({
                 label: caption_track.name.text || "",
                 languageCode: caption_track.language_code,
-                url: `/api/v1/captions/${videoId}?label=${
+                url: `${config.server.base_path}/api/v1/captions/${videoId}?label=${
                     encodeURIComponent(caption_track.name.text || "")
                 }`,
             });
