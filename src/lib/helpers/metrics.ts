@@ -223,8 +223,14 @@ export class Metrics {
         if (videoData) {
             const errorScreen = videoData.playabilityStatus?.errorScreen;
             // deno-fmt-ignore
-            subReason = 
-                errorScreen?.playerErrorMessageRenderer?.subreason?.runs?.[0]?.text;
+
+            subReason =
+                errorScreen?.playerErrorMessageRenderer?.subreason?.runs?.[0]?.text 
+                ||
+                // On specific status like `LOGIN_REQUIRED` with reason 
+                // "Private video", the subReason is contained inside
+                // `simpleText` instead of `runs?.[0]?.text`
+                errorScreen?.playerErrorMessageRenderer?.subreason?.simpleText;
         }
 
         if (subReason == undefined) return;
