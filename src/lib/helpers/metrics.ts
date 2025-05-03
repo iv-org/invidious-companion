@@ -87,6 +87,8 @@ export class Metrics {
                 videoData.playabilityStatus?.status!;
         }
 
+        if (status == undefined) return;
+
         interface Error {
             unplayable: boolean;
             error: boolean;
@@ -146,6 +148,8 @@ export class Metrics {
                 ||
                 playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.reason?.simpleText;
         }
+
+        if (reason == undefined) return;
 
         interface Error {
             signInToConfirmAge: boolean;
@@ -222,6 +226,8 @@ export class Metrics {
             subReason = 
                 errorScreen?.playerErrorMessageRenderer?.subreason?.runs?.[0]?.text;
         }
+
+        if (subReason == undefined) return;
 
         interface Error {
             thisHelpsProtectCommunity: boolean;
