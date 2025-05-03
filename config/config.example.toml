@@ -12,7 +12,7 @@
 # [server]
 # port = 8282 # env variable: PORT
 # host = "127.0.0.1" # env variable: HOST
-# # secret key needs to be 16 characters long or more
+# # secret key needs to be exactly 16 characters long
 # secret_key = "CHANGE_ME" # env variable: SERVER_SECRET_KEY
 # verify_requests = false # env variable: SERVER_VERIFY_REQUESTS
 # encrypt_query_params = false # env variable: SERVER_ENCRYPT_QUERY_PARAMS
