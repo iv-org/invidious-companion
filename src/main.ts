@@ -87,6 +87,7 @@ if (!innertubeClientOauthEnabled) {
                     fetch: getFetchClient(config),
                     retrieve_player: innertubeClientFetchPlayer,
                     user_agent: USER_AGENT,
+                    cookie: innertubeClientCookies || undefined,
                 });
             }
         },
