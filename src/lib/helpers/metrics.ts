@@ -280,6 +280,7 @@ export class Metrics {
             thisVideoMayBeInnapropiate: boolean;
             viewerDiscretionAdvised: boolean;
             accountTerminated: boolean;
+            privateVideo: boolean;
         }
 
         const error: Error = {
@@ -287,18 +288,21 @@ export class Metrics {
             thisVideoMayBeInnapropiate: false,
             viewerDiscretionAdvised: false,
             accountTerminated: false,
+            privateVideo: false,
         };
 
+        // deno-fmt-ignore
         const map: { [key: string]: keyof Error } = {
-            "This helps protect our community": "thisHelpsProtectCommunity",
+            // Youtube blockage
+                "This helps protect our community": "thisHelpsProtectCommunity",
             // Age restricted videos
-            "This video may be inappropriate for some users":
-                "thisVideoMayBeInnapropiate",
+                "This video may be inappropriate for some users": "thisVideoMayBeInnapropiate",
             // Sensitive content videos
-            "Viewer discretion is advised": "viewerDiscretionAdvised",
+                "Viewer discretion is advised": "viewerDiscretionAdvised",
             // Unavailable videos
-            "This video is no longer available because the YouTube account associated with this video has been terminated":
-                "accountTerminated",
+                "This video is no longer available because the YouTube account associated with this video has been terminated": "accountTerminated",
+            // Private videos
+                "If the owner of this video has granted you access": "privateVideo",
         };
 
         let isKnownError = false;
