@@ -154,6 +154,7 @@ export class Metrics {
         interface Error {
             signInToConfirmAge: boolean;
             signInToConfirmBot: boolean;
+            vpnProxy: boolean;
             selfHarmTopics: boolean;
             liveStreamOffline: boolean;
             liveEventWillBegin: boolean;
@@ -175,6 +176,7 @@ export class Metrics {
         const error: Error = {
             signInToConfirmAge: false,
             signInToConfirmBot: false,
+            vpnProxy: false,
             selfHarmTopics: false,
             liveStreamOffline: false,
             liveEventWillBegin: false,
@@ -230,6 +232,8 @@ export class Metrics {
                 "The uploader has not made this video available in your country": "uploaderGeorestrictedVideo", // Unknown client
             // Video being processed
                 "We're processing this video. Check back later": "videoBeingProcessed", // Unknown client
+            // VPN/Proxy
+                "VPN/Proxy Detected": "vpnProxy", // Unknown client
         };
 
         let isKnownError = false;
@@ -277,6 +281,7 @@ export class Metrics {
 
         interface Error {
             thisHelpsProtectCommunity: boolean;
+            vpnProxy: boolean;
             thisVideoMayBeInnapropiate: boolean;
             viewerDiscretionAdvised: boolean;
             accountTerminated: boolean;
@@ -285,6 +290,7 @@ export class Metrics {
 
         const error: Error = {
             thisHelpsProtectCommunity: false,
+            vpnProxy: false,
             thisVideoMayBeInnapropiate: false,
             viewerDiscretionAdvised: false,
             accountTerminated: false,
@@ -303,6 +309,8 @@ export class Metrics {
                 "This video is no longer available because the YouTube account associated with this video has been terminated": "accountTerminated",
             // Private videos
                 "If the owner of this video has granted you access": "privateVideo",
+            // VPN/Proxy
+                "To continue, turn off your VPN/Proxy. This will allow YouTube to locate the best content.": "vpnProxy",
         };
 
         let isKnownError = false;
