@@ -94,15 +94,13 @@ export const poTokenGenerate = (
         // worker is initialised and has passed back a session token and visitor data
         if (parsedMessage.type === "initialised") {
             try {
-                const innertubeClientCookies = config.youtube_session.cookies;
-
                 const instantiatedInnertubeClient = await Innertube.create({
                     enable_session_cache: false,
                     po_token: parsedMessage.sessionPoToken,
                     visitor_data: parsedMessage.visitorData,
                     fetch: getFetchClient(config),
                     generate_session_locally: true,
-                    cookie: innertubeClientCookies || undefined,
+                    cookie: config.youtube_session.cookies || undefined,
                 });
                 const minter = createMinter(worker);
                 // check token from minter
