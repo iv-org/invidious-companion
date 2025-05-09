@@ -5,11 +5,16 @@ export class Metrics {
     private METRICS_PREFIX = "invidious_companion_";
     public register = new Registry();
 
-    public createCounter(name: string, help?: string): Counter {
+    public createCounter(
+        name: string,
+        help?: string,
+        labels?: string[],
+    ): Counter {
         return new Counter({
             name: `${this.METRICS_PREFIX}${name}`,
             help: help || "No help has been provided for this metric",
             registers: [this.register],
+            labelNames: Array.isArray(labels) ? labels : [],
         });
     }
 
@@ -26,6 +31,7 @@ export class Metrics {
     private innertubeErrorStatusUnknown = this.createCounter(
         "innertube_error_status_unknown_total",
         "Number of times that an unknown status has been returned by Innertube API",
+        ["error"],
     );
 
     private innertubeErrorReasonSignIn = this.createCounter(
@@ -41,11 +47,13 @@ export class Metrics {
     private innertubeErrorReasonUnknown = this.createCounter(
         "innertube_error_reason_unknown_total",
         "Number of times that an unknown reason has been returned by the Innertube API",
+        ["error"],
     );
 
     private innertubeErrorSubreasonUnknown = this.createCounter(
         "innertube_error_subreason_unknown_total",
         "Number of times that an unknown subreason has been returned by the Innertube API",
+        ["error"],
     );
 
     public innertubeSuccessfulRequest = this.createCounter(
@@ -58,69 +66,284 @@ export class Metrics {
         "Number failed requests made to the Innertube API for whatever reason",
     );
 
-    private checkStatus(videoData: IRawResponse) {
-        const status = videoData.playabilityStatus?.status;
+    public videoplaybackForbidden = this.createCounter(
+        "videoplayback_forbidden_total",
+        'Number of times YouTube\'s /videoplayback endpoint returns a "403" HTTP status code',
+        ["method"],
+    );
 
-        return {
-            unplayable: status ===
-                "UNPLAYABLE",
-            contentCheckRequired: status ===
-                "CONTENT_CHECK_REQUIRED",
-            loginRequired: status === "LOGIN_REQUIRED",
+    public playerErrors = this.createCounter(
+        "youtubejs_player_errors_total",
+        'Number of times a PlayerError error has been returned by the Youtube.JS library. This includes deciphering errors, signature errors and "nsig" errors.',
+        ["error"],
+    );
+
+    public checkStatus(
+        { videoData, status }: { videoData?: IRawResponse; status?: string },
+    ) {
+        if (videoData) {
+            // deno-fmt-ignore
+            status = 
+                videoData.playabilityStatus?.status!;
+        }
+
+        if (status == undefined) return;
+
+        interface Error {
+            unplayable: boolean;
+            error: boolean;
+            contentCheckRequired: boolean;
+            loginRequired: boolean;
+            liveStreamOffline: boolean;
+        }
+
+        const error: Error = {
+            unplayable: false,
+            error: false,
+            contentCheckRequired: false,
+            loginRequired: false,
+            liveStreamOffline: false,
         };
+
+        const map: { [key: string]: keyof Error } = {
+            "UNPLAYABLE": "unplayable",
+            // Innertube error
+            "ERROR": "error",
+            // Sensitive content videos
+            "CONTENT_CHECK_REQUIRED": "contentCheckRequired",
+            /**
+             * Age restricted videos
+             * Private videos (maybe)
+             */
+            "LOGIN_REQUIRED": "loginRequired",
+            // Livestreams
+            "LIVE_STREAM_OFFLINE": "liveStreamOffline",
+        };
+
+        if (map[status as string]) {
+            error[map[status as string]] = true;
+        } else {
+            this.innertubeErrorStatusUnknown.labels({
+                error: status,
+            }).inc();
+            return;
+        }
+
+        if (error.loginRequired) {
+            this.innertubeErrorStatusLoginRequired.inc();
+            return;
+        }
     }
 
-    private checkReason(videoData: IRawResponse) {
-        const reason = videoData.playabilityStatus?.reason;
+    public checkReason(
+        { videoData, reason }: { videoData?: IRawResponse; reason?: string },
+    ) {
+        if (videoData) {
+            // On specific status like `CONTENT_CHECK_REQUIRED`, the reason is
+            // contained inside `errorScreen`, just like how we check subReason.
+            const playabilityStatus = videoData.playabilityStatus;
+            // deno-fmt-ignore
+            reason = 
+                playabilityStatus?.reason
+                ||
+                playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.reason?.simpleText;
+        }
 
-        return {
-            signInToConfirmAge: reason?.includes(
-                "Sign in to confirm your age",
-            ),
-            SignInToConfirmBot: reason?.includes(
-                "Sign in to confirm you’re not a bot",
-            ),
+        if (reason == undefined) return;
+
+        interface Error {
+            signInToConfirmAge: boolean;
+            signInToConfirmBot: boolean;
+            vpnProxy: boolean;
+            selfHarmTopics: boolean;
+            liveStreamOffline: boolean;
+            liveEventWillBegin: boolean;
+            liveStreamRecordingUnavailable: boolean;
+            premiere: boolean;
+            privateVideo: boolean;
+            videoUnavailable: boolean;
+            videoUnavailableCopyrightClaim: boolean;
+            videoUnavailableClosedYTAccount: boolean;
+            videoRemovedYt: boolean;
+            videoRemovedUploader: boolean;
+            videoUnplayableMobileBrowser: boolean;
+            videoBeingProcessed: boolean;
+            membersOnlyVideo: boolean;
+            contentIdClaimedVideo: boolean;
+            uploaderGeorestrictedVideo: boolean;
+        }
+
+        const error: Error = {
+            signInToConfirmAge: false,
+            signInToConfirmBot: false,
+            vpnProxy: false,
+            selfHarmTopics: false,
+            liveStreamOffline: false,
+            liveEventWillBegin: false,
+            liveStreamRecordingUnavailable: false,
+            premiere: false,
+            privateVideo: false,
+            videoUnavailable: false,
+            videoUnavailableCopyrightClaim: false,
+            videoUnavailableClosedYTAccount: false,
+            videoRemovedYt: false,
+            videoRemovedUploader: false,
+            videoUnplayableMobileBrowser: false,
+            videoBeingProcessed: false,
+            membersOnlyVideo: false,
+            contentIdClaimedVideo: false,
+            uploaderGeorestrictedVideo: false,
         };
+
+        // deno-fmt-ignore
+        const map: { [key: string]: keyof Error } = {
+            // Youtube blockage
+                "Sign in to confirm you’re not a bot": "signInToConfirmBot",
+            // Age restricted videos
+                "Sign in to confirm your age": "signInToConfirmAge",
+            // Sensitive content videos
+                "The following content may contain suicide or self-harm topics": "selfHarmTopics",
+            // Livestreams
+                "Offline.": "liveStreamOffline",
+                "This live event will begin in": "liveEventWillBegin",
+                "This live stream recording is not available": "liveStreamRecordingUnavailable",
+            // Premieres
+                "Premiere will begin shortly": "premiere",
+                "Premieres in": "premiere",
+            // Private videos
+                "Private video": "privateVideo", // WEB Client
+                "This video is private": "privateVideo", // MWEB Client
+            // Unavailable videos
+                "Video unavailable": "videoUnavailable", // WEB Client
+                "This video is unavailable": "videoUnavailable", // MWEB Client
+                "This video is no longer available due to a copyright claim": "videoUnavailableCopyrightClaim", // Unknown client
+                "This video is no longer available because the uploader has closed their YouTube account": "videoUnavailableClosedYTAccount", // Unknown client
+                "This content can't be played on your mobile browser. Get the YouTube app to start watching": "videoUnplayableMobileBrowser", // MWEB Client maybe?
+            // Removed videos
+                // Videos removed because of a violation of the community guidelines or TOS
+                "This video has been removed for violating YouTube's": "videoRemovedYt", // Unknown client
+                "This video has been removed by the uploader": "videoRemovedUploader", // Unknown client
+            // Members only
+                "This video is available to this channel's members on level": "membersOnlyVideo", // Unknown client
+                "Join this channel from your computer or Android app to get access to members-only content like this video": "membersOnlyVideo", // Unknown client
+            // Geo restricted videos
+                // Video with a content ID claim that restricts the video to a certain set of countries
+                "This video contains content from": "contentIdClaimedVideo", // Unknown client
+                "The uploader has not made this video available in your country": "uploaderGeorestrictedVideo", // Unknown client
+            // Video being processed
+                "We're processing this video. Check back later": "videoBeingProcessed", // Unknown client
+            // VPN/Proxy
+                "VPN/Proxy Detected": "vpnProxy", // Unknown client
+        };
+
+        let isKnownError = false;
+        for (const [key, e] of Object.entries(map)) {
+            if (reason?.includes(key)) {
+                error[e] = true;
+                isKnownError = true;
+                break;
+            }
+        }
+
+        if (!isKnownError) {
+            this.innertubeErrorReasonUnknown.labels({
+                error: reason,
+            }).inc();
+            return;
+        }
+
+        if (error.signInToConfirmBot) {
+            this.innertubeErrorReasonSignIn.inc();
+            return;
+        }
     }
 
-    private checkSubreason(videoData: IRawResponse) {
-        const subReason = videoData.playabilityStatus?.errorScreen
-            ?.playerErrorMessageRenderer
-            ?.subreason?.runs?.[0]?.text;
+    public checkSubreason(
+        { videoData, subReason }: {
+            videoData?: IRawResponse;
+            subReason?: string;
+        },
+    ) {
+        if (videoData) {
+            const errorScreen = videoData.playabilityStatus?.errorScreen;
+            // deno-fmt-ignore
 
-        return {
-            thisHelpsProtectCommunity: subReason?.includes(
-                "This helps protect our community",
-            ),
+            subReason =
+                errorScreen?.playerErrorMessageRenderer?.subreason?.runs?.[0]?.text 
+                ||
+                // On specific status like `LOGIN_REQUIRED` with reason 
+                // "Private video", the subReason is contained inside
+                // `simpleText` instead of `runs?.[0]?.text`
+                errorScreen?.playerErrorMessageRenderer?.subreason?.simpleText;
+        }
+
+        if (subReason == undefined) return;
+
+        interface Error {
+            thisHelpsProtectCommunity: boolean;
+            vpnProxy: boolean;
+            thisVideoMayBeInnapropiate: boolean;
+            viewerDiscretionAdvised: boolean;
+            accountTerminated: boolean;
+            privateVideo: boolean;
+        }
+
+        const error: Error = {
+            thisHelpsProtectCommunity: false,
+            vpnProxy: false,
+            thisVideoMayBeInnapropiate: false,
+            viewerDiscretionAdvised: false,
+            accountTerminated: false,
+            privateVideo: false,
         };
+
+        // deno-fmt-ignore
+        const map: { [key: string]: keyof Error } = {
+            // Youtube blockage
+                "This helps protect our community": "thisHelpsProtectCommunity",
+            // Age restricted videos
+                "This video may be inappropriate for some users": "thisVideoMayBeInnapropiate",
+            // Sensitive content videos
+                "Viewer discretion is advised": "viewerDiscretionAdvised",
+            // Unavailable videos
+                "This video is no longer available because the YouTube account associated with this video has been terminated": "accountTerminated",
+            // Private videos
+                "If the owner of this video has granted you access": "privateVideo",
+            // VPN/Proxy
+                "To continue, turn off your VPN/Proxy. This will allow YouTube to locate the best content.": "vpnProxy",
+        };
+
+        let isKnownError = false;
+        for (const [key, e] of Object.entries(map)) {
+            if (subReason?.includes(key)) {
+                error[e] = true;
+                isKnownError = true;
+                break;
+            }
+        }
+
+        if (!isKnownError) {
+            this.innertubeErrorSubreasonUnknown.labels({
+                error: subReason,
+            }).inc();
+            return;
+        }
+
+        if (error.thisHelpsProtectCommunity) {
+            this.innertubeErrorSubreasonProtectCommunity.inc();
+            return;
+        }
     }
 
     public checkInnertubeResponse(videoData: IRawResponse) {
         this.innertubeFailedRequest.inc();
-        const status = this.checkStatus(videoData);
 
-        if (status.contentCheckRequired || status.unplayable) return;
+        this.checkStatus({ videoData: videoData });
+        this.checkReason({ videoData: videoData });
 
-        if (status.loginRequired) {
-            this.innertubeErrorStatusLoginRequired.inc();
-            const reason = this.checkReason(videoData);
-
-            if (reason.signInToConfirmAge) return;
-
-            if (reason.SignInToConfirmBot) {
-                this.innertubeErrorReasonSignIn.inc();
-                const subReason = this.checkSubreason(videoData);
-
-                if (subReason.thisHelpsProtectCommunity) {
-                    this.innertubeErrorSubreasonProtectCommunity.inc();
-                } else {
-                    this.innertubeErrorSubreasonUnknown.inc();
-                }
-            } else {
-                this.innertubeErrorReasonUnknown.inc();
-            }
-        } else {
-            this.innertubeErrorStatusUnknown.inc();
-        }
+        // On specific `playabilityStatus.status` like `CONTENT_CHECK_REQUIRED`,
+        // `subReason` doesn't come with a `playabilityStatus.reason`
+        // key. So we need to check this separately from `reason`
+        this.checkSubreason({ videoData: videoData });
     }
 }
