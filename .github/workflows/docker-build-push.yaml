@@ -47,7 +47,7 @@ jobs:
       # Step 5: Extract metadata for Docker image tagging and labeling
       - name: Extract metadata for Docker
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           # Define tagging strategy
