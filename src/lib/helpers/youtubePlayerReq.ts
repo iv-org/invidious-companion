@@ -11,7 +11,13 @@ function callWatchEndpoint(
     contentPoToken: string,
 ) {
     const watch_endpoint = new NavigationEndpoint({
-        watchEndpoint: { videoId: videoId },
+        watchEndpoint: {
+            videoId: videoId,
+            // Allow companion to gather sensitive content videos like
+            // `VuSU7PcEKpU`
+            racyCheckOk: true,
+            contentCheckOk: true,
+        },
     });
 
     return watch_endpoint.call(
