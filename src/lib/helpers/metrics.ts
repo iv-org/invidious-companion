@@ -39,9 +39,19 @@ export class Metrics {
         'Number of times that the message "Sign in to confirm you’re not a bot." has been returned by Innertube API',
     );
 
+    private innertubeErrorReasonVpnProxyDetected = this.createCounter(
+        "innertube_error_reason_VpnProxyDetected_total",
+        'Number of times that the message "VPN/Proxy Detected" has been returned by Innertube API',
+    );
+
     private innertubeErrorSubreasonProtectCommunity = this.createCounter(
         "innertube_error_subreason_ProtectCommunity_total",
         'Number of times that the message "This helps protect our community." has been returned by Innertube API',
+    );
+
+    private innertubeErrorSubreasonVpnProxyDetected = this.createCounter(
+        "innertube_error_subreason_VpnProxyDetected_total",
+        'Number of times that the message "To continue, turn off your VPN/Proxy. This will allow YouTube to locate the best content." has been returned by Innertube API',
     );
 
     private innertubeErrorReasonUnknown = this.createCounter(
@@ -252,6 +262,11 @@ export class Metrics {
             return;
         }
 
+        if (error.vpnProxy) {
+            this.innertubeErrorReasonVpnProxyDetected.inc();
+            return;
+        }
+
         if (error.signInToConfirmBot) {
             this.innertubeErrorReasonSignIn.inc();
             return;
@@ -326,6 +341,11 @@ export class Metrics {
             this.innertubeErrorSubreasonUnknown.labels({
                 error: subReason,
             }).inc();
+            return;
+        }
+
+        if (error.vpnProxy) {
+            this.innertubeErrorSubreasonVpnProxyDetected.inc();
             return;
         }
 
