@@ -35,7 +35,10 @@ const { getFetchClient } = await import(getFetchClientLocation);
 declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
-const app = new Hono();
+
+const app = new Hono({
+    getPath: (req) => new URL(req.url).pathname,
+});
 const metrics = config.server.enable_metrics ? new Metrics() : undefined;
 
 let tokenMinter: TokenMinter;
@@ -145,16 +148,21 @@ export function run(signal: AbortSignal, port: number, hostname: string) {
                 // Delete the unix domain socket manually before starting the server
                 Deno.removeSync(udsPath);
             }
-        } catch (e) {
-            console.log(
-                `[ERROR] Failed to delete unix domain socket '${udsPath}' before starting the server:`,
-                e,
-            );
+        } catch (err) {
+            if (err instanceof Error) {
+                if (err.name !== "NotFound") {
+                    console.log(
+                        `[ERROR] Failed to delete unix domain socket '${udsPath}' before starting the server:`,
+                        err,
+                    );
+                }
+            }
         }
 
-        const srv = Deno.serve({
-            path: udsPath,
-        }, app.fetch);
+        const srv = Deno.serve(
+            { signal: signal, path: udsPath },
+            app.fetch,
+        );
 
         console.log(
             `[INFO] Setting unix domain socket '${udsPath}' permissions to 777`,
