@@ -123,7 +123,7 @@ ENV SERVER_BASE_URL=/companion \
     HOST="${HOST}" \
     PORT="${PORT}" \
     THC_PORT="${PORT}" \
-    THC_PATH="${SERVER_BASE_URL}/healthz" \
+    THC_PATH="${SERVER_BASE_PATH:-/companion}/healthz" \
     THC_VERSION="${THC_VERSION}" \
     TINI_VERSION="${TINI_VERSION}"
 
