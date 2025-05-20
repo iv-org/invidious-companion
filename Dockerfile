@@ -39,11 +39,10 @@ COPY ./config/ /app/config/
 COPY --from=builder /tini /tini
 
 ENV PORT=8282 \
-    HOST=0.0.0.0 \
-    SERVER_BASE_URL=/companion
+    HOST=0.0.0.0
 
 ENV THC_PORT=${PORT} \
-    THC_PATH=${SERVER_BASE_URL}/healthz
+    THC_PATH=${SERVER_BASE_PATH:-/companion}/healthz
 
 # Copy passwd file for the non-privileged user from the user-stage
 COPY --from=user-stage /etc/passwd /etc/passwd
