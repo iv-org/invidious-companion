@@ -6,6 +6,7 @@ import { USER_AGENT } from "bgutils";
 import { retry } from "@std/async";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 import { parseArgs } from "@std/cli/parse-args";
+import { existsSync } from "@std/fs/exists";
 
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
@@ -144,19 +145,15 @@ const udsPath = "/tmp/invidious-companion.sock";
 export function run(signal: AbortSignal, port: number, hostname: string) {
     if (uds) {
         try {
-            if (Deno.statSync(udsPath).isSocket) {
+            if (existsSync(udsPath)) {
                 // Delete the unix domain socket manually before starting the server
                 Deno.removeSync(udsPath);
             }
         } catch (err) {
-            if (err instanceof Error) {
-                if (err.name !== "NotFound") {
-                    console.log(
-                        `[ERROR] Failed to delete unix domain socket '${udsPath}' before starting the server:`,
-                        err,
-                    );
-                }
-            }
+            console.log(
+                `[ERROR] Failed to delete unix domain socket '${udsPath}' before starting the server:`,
+                err,
+            );
         }
 
         const srv = Deno.serve(
