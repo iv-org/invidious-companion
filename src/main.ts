@@ -137,13 +137,12 @@ app.use("*", async (c, next) => {
 
 routes(app, config);
 
-const uds = config.server.use_unix_socket;
 // This cannot be changed since companion restricts the
 // files it can access using deno `--allow-write` argument
 const udsPath = "/tmp/invidious-companion.sock";
 
 export function run(signal: AbortSignal, port: number, hostname: string) {
-    if (uds) {
+    if (config.server.use_unix_socket) {
         try {
             if (existsSync(udsPath)) {
                 // Delete the unix domain socket manually before starting the server
