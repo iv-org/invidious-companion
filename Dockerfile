@@ -7,7 +7,7 @@ WORKDIR /app
 # cache dir for youtube.js library
 RUN mkdir -p /var/tmp/youtubei.js
 
-RUN apt update && apt install -y curl
+RUN apt update && apt install -y curl git
 
 RUN curl -fsSL https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini-$(dpkg --print-architecture) \
         --output /tini \
@@ -22,6 +22,9 @@ COPY deno.json /app/
 COPY deno.lock /app/
 
 COPY ./src/ /app/src/
+# To let the `deno task compile` know the current commit on which
+# Invidious companion is being built, similar to how Invidious does it.
+COPY ./.git/ /app/
 
 # Dependencies are cached on /deno-dir for the denoland/deno:debian image
 RUN --mount=type=cache,target=/deno-dir deno task compile

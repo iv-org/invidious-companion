@@ -1,11 +1,12 @@
 {
-  "version": "4",
+  "version": "5",
   "specifiers": {
     "jsr:@hono/hono@4.7.4": "4.7.4",
     "jsr:@luanrt/googlevideo@2.0.0": "2.0.0",
     "jsr:@luanrt/jintr@3.3.1": "3.3.1",
     "jsr:@std/assert@1.0.12": "1.0.12",
     "jsr:@std/async@1.0.11": "1.0.11",
+    "jsr:@std/cli@^1.0.17": "1.0.17",
     "jsr:@std/collections@^1.0.9": "1.0.10",
     "jsr:@std/encoding@1.0.7": "1.0.7",
     "jsr:@std/fs@1.0.14": "1.0.14",
@@ -45,6 +46,9 @@
     },
     "@std/async@1.0.11": {
       "integrity": "eee0d3405275506638a9c8efaa849cf0d35873120c69b7caa1309c9a9e5b6f85"
+    },
+    "@std/cli@1.0.17": {
+      "integrity": "e15b9abe629e17be90cc6216327f03a29eae613365f1353837fa749aad29ce7b"
     },
     "@std/collections@1.0.10": {
       "integrity": "903af106a3d92970d74e20f7ebff77d9658af9bef4403f1dc42a7801c0575899"
@@ -123,7 +127,8 @@
       ]
     },
     "acorn@8.14.1": {
-      "integrity": "sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg=="
+      "integrity": "sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg==",
+      "bin": true
     },
     "agent-base@7.1.3": {
       "integrity": "sha512-jRR5wdylq8CkOe6hei19GGZnxM6rBGwFl3Bg0YItGDimvjGtAvdZk4Pu6Cl4u4Igsws4a1fd1Vq3ezrhn4KmFw=="
@@ -307,6 +312,9 @@
         "whatwg-url",
         "ws",
         "xml-name-validator"
+      ],
+      "optionalPeers": [
+        "canvas@^3.0.0"
       ]
     },
     "lru-cache@10.4.3": {
@@ -361,7 +369,8 @@
       "integrity": "sha512-aRGIbCIF3teodtUFAYSdQONVmDRy21REM3o6JnqWn5ZkQBJJ4gHxhw6OfwQ+WkSAi3ASamrS4N4nyazWx6uTYg==",
       "dependencies": [
         "tldts-core"
-      ]
+      ],
+      "bin": true
     },
     "tough-cookie@5.1.2": {
       "integrity": "sha512-FVDYdxtnj0G6Qm/DhNPSb8Ju59ULcup3tuJxkFb5K8Bv2pUXILbf0xZWU8PX8Ov19OXljbUyveOFwRMwkXzO+A==",
@@ -404,7 +413,11 @@
       ]
     },
     "ws@8.18.1": {
-      "integrity": "sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w=="
+      "integrity": "sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w==",
+      "optionalPeers": [
+        "bufferutil@^4.0.1",
+        "utf-8-validate@>=5.0.2"
+      ]
     },
     "xml-name-validator@5.0.0": {
       "integrity": "sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg=="
@@ -4336,6 +4349,7 @@
       "jsr:@luanrt/googlevideo@2.0.0",
       "jsr:@luanrt/jintr@3.3.1",
       "jsr:@std/async@1.0.11",
+      "jsr:@std/cli@^1.0.17",
       "jsr:@std/encoding@1.0.7",
       "jsr:@std/fs@1.0.14",
       "jsr:@std/path@1.0.8",
