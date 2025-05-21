@@ -5,10 +5,19 @@ import { poTokenGenerate, type TokenMinter } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
 import { retry } from "@std/async";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
+import { parseArgs } from "@std/cli/parse-args";
 
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
 import { Metrics } from "./lib/helpers/metrics.ts";
+
+const args = parseArgs(Deno.args);
+
+if (args._version_date && args._version_commit) {
+    console.log(
+        `[INFO] Using invidious-companion version ${args._version_date}-${args._version_commit}`,
+    );
+}
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
