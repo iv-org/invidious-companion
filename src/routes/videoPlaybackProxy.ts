@@ -118,6 +118,12 @@ videoPlaybackProxy.get("/", async (c) => {
             headers: headersToSend,
             redirect: "manual",
         });
+        if (googlevideoResponse.status == 403) {
+            return new Response(googlevideoResponse.body, {
+                status: googlevideoResponse.status,
+                statusText: googlevideoResponse.statusText,
+            });
+        }
         if (googlevideoResponse.headers.has("Location")) {
             location = googlevideoResponse.headers.get("Location") as string;
             continue;
