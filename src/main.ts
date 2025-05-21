@@ -136,7 +136,7 @@ app.use("*", async (c, next) => {
 
 routes(app, config);
 
-const uds = config.server.uds;
+const uds = config.server.use_unix_socket;
 // This cannot be changed since companion restricts the
 // files it can access using deno `--allow-write` argument
 const udsPath = "/tmp/invidious-companion.sock";
