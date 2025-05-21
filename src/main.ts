@@ -5,6 +5,7 @@ import { poTokenGenerate, type TokenMinter } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
 import { retry } from "@std/async";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
+import { existsSync } from "@std/fs/exists";
 
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
@@ -26,7 +27,10 @@ const { getFetchClient } = await import(getFetchClientLocation);
 declare module "hono" {
     interface ContextVariableMap extends HonoVariables {}
 }
-const app = new Hono();
+
+const app = new Hono({
+    getPath: (req) => new URL(req.url).pathname,
+});
 const metrics = config.server.enable_metrics ? new Metrics() : undefined;
 
 let tokenMinter: TokenMinter;
@@ -124,13 +128,42 @@ app.use("*", async (c, next) => {
 
 routes(app, config);
 
-export function run(signal: AbortSignal, port: number, hostname: string) {
-    return Deno.serve(
-        { signal: signal, port: port, hostname: hostname },
-        app.fetch,
-    );
-}
+// This cannot be changed since companion restricts the
+// files it can access using deno `--allow-write` argument
+const udsPath = "/tmp/invidious-companion.sock";
 
+export function run(signal: AbortSignal, port: number, hostname: string) {
+    if (config.server.use_unix_socket) {
+        try {
+            if (existsSync(udsPath)) {
+                // Delete the unix domain socket manually before starting the server
+                Deno.removeSync(udsPath);
+            }
+        } catch (err) {
+            console.log(
+                `[ERROR] Failed to delete unix domain socket '${udsPath}' before starting the server:`,
+                err,
+            );
+        }
+
+        const srv = Deno.serve(
+            { signal: signal, path: udsPath },
+            app.fetch,
+        );
+
+        console.log(
+            `[INFO] Setting unix domain socket '${udsPath}' permissions to 777`,
+        );
+        Deno.chmodSync(udsPath, 0o777);
+
+        return srv;
+    } else {
+        return Deno.serve(
+            { signal: signal, port: port, hostname: hostname },
+            app.fetch,
+        );
+    }
+}
 if (import.meta.main) {
     const controller = new AbortController();
     const { signal } = controller;
