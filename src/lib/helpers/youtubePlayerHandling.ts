@@ -51,6 +51,10 @@ export const youtubePlayerParsing = async ({
         );
         const videoData = youtubePlayerResponse.data;
 
+        if (videoData.playabilityStatus.status === "ERROR") {
+            return videoData;
+        }
+
         const video = new YT.VideoInfo(
             [youtubePlayerResponse],
             innertubeClient.actions,
