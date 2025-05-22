@@ -99,7 +99,7 @@ COPY --from=thc-bin /thc /thc
 COPY --from=tini-bin /tini /tini
 
 # Copy cache directory and set correct permissions
-COPY --from=builder --chown=appuser /var/tmp/youtubei.js /var/tmp/youtubei.js
+COPY --from=builder --chown=appuser:nogroup /var/tmp/youtubei.js /var/tmp/youtubei.js
 
 # Set the working directory
 WORKDIR /app
