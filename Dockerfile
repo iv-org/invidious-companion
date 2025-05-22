@@ -23,7 +23,7 @@ RUN adduser -u 10001 -S appuser
 # Stage for downloading files using curl from Debian
 FROM debian:${DEBIAN_VERSION}-slim AS debian-curl
 RUN DEBIAN_FRONTEND='noninteractive' && export DEBIAN_FRONTEND && \
-    apt update && apt install -y curl
+    apt-get update && apt-get install -y curl
 
 # Download tiny-health-checker from GitHub
 FROM debian-curl AS thc-download
