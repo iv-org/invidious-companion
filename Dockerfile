@@ -14,6 +14,11 @@ ARG DENO_DIR='/deno-dir' \
     HOST='0.0.0.0' \
     PORT='8282'
 
+# these aren't actually used except for dependabot
+FROM alpine:3.21 AS dependabot-alpine
+FROM debian:12-slim AS dependabot-debian
+FROM denoland/deno:bin-2.3.3 AS dependabot-deno
+
 
 # Stage for creating the non-privileged user
 FROM alpine:${ALPINE_VERSION} AS user-stage
