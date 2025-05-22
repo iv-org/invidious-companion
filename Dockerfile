@@ -27,7 +27,7 @@ RUN DEBIAN_FRONTEND='noninteractive' && export DEBIAN_FRONTEND && \
 
 # Download tiny-health-checker from GitHub
 FROM debian-curl AS thc-download
-ARG THC_VERSION
+ARG GH_BASE_URL THC_VERSION
 RUN arch="$(uname -m)" && \
     gh_url() { printf -- "${GH_BASE_URL}/%s/releases/download/%s/%s\n" "$@" ; } && \
     URL="$(gh_url dmikusa/tiny-health-checker v${THC_VERSION} thc-${arch}-unknown-linux-musl)" && \
@@ -41,7 +41,7 @@ COPY --from=thc-download /thc /thc
 
 # Download tini from GitHub
 FROM debian-curl AS tini-download
-ARG TINI_VERSION
+ARG GH_BASE_URL TINI_VERSION
 RUN arch="$(dpkg --print-architecture)" && \
     gh_url() { printf -- "${GH_BASE_URL}/%s/releases/download/%s/%s\n" "$@" ; } && \
     URL="$(gh_url krallin/tini v${TINI_VERSION} tini-${arch})" && \
