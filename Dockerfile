@@ -14,19 +14,26 @@ ARG DENO_DIR='/deno-dir' \
     HOST='0.0.0.0' \
     PORT='8282'
 
-# these aren't actually used except for dependabot
+
+# we can use these aliases and let dependabot remain simple
+# inspired by:
+# https://github.com/dependabot/dependabot-core/issues/2057#issuecomment-1351660410
+# updating the ARG above also would be best,
+# however nothing breaks if that doesn't happen.
 FROM alpine:3.21 AS dependabot-alpine
 FROM debian:12-slim AS dependabot-debian
-FROM denoland/deno:bin-2.3.3 AS dependabot-deno
+
+# Retrieve the deno binary from the repository
+FROM denoland/deno:bin-2.3.3 AS deno-bin
 
 
 # Stage for creating the non-privileged user
-FROM alpine:${ALPINE_VERSION} AS user-stage
+FROM dependabot-alpine AS user-stage
 
 RUN adduser -u 10001 -S appuser
 
 # Stage for downloading files using curl from Debian
-FROM debian:${DEBIAN_VERSION}-slim AS debian-curl
+FROM dependabot-debian AS debian-curl
 RUN DEBIAN_FRONTEND='noninteractive' && export DEBIAN_FRONTEND && \
     apt-get update && apt-get install -y curl
 
@@ -58,11 +65,8 @@ ARG TINI_VERSION
 ENV TINI_VERSION="${TINI_VERSION}"
 COPY --from=tini-download /tini /tini
 
-# Retrieve the deno binary from the repository
-FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
-
 # Stage for using deno on Debian
-FROM debian:${DEBIAN_VERSION}-slim AS debian-deno
+FROM dependabot-debian AS debian-deno
 
 # cache dir for youtube.js library
 RUN mkdir -v -p /var/tmp/youtubei.js
