@@ -1,57 +1,119 @@
-FROM denoland/deno:debian-2.3.3 AS builder
+# syntax=docker/dockerfile:1
+# check=error=true
 
-ARG TINI_VERSION=0.19.0
+# Default values for versions
+ARG ALPINE_VERSION='3.21' \
+    DEBIAN_VERSION='12' \
+    DENO_VERSION='2.3.3' \
+    THC_VERSION='0.36.0' \
+    TINI_VERSION='0.19.0'
 
-WORKDIR /app
+# Default values for variables that change less often
+ARG DENO_DIR='/deno-dir' \
+    GH_BASE_URL='https://github.com' \
+    HOST='0.0.0.0' \
+    PORT='8282'
 
-# cache dir for youtube.js library
-RUN mkdir -p /var/tmp/youtubei.js
-
-RUN apt update && apt install -y curl
-
-RUN curl -fsSL https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini-$(dpkg --print-architecture) \
-        --output /tini \
-    && chmod +x /tini
-
-RUN arch=$(uname -m) && \
-    curl -fsSL https://github.com/dmikusa/tiny-health-checker/releases/download/v0.36.0/thc-${arch}-unknown-linux-musl \
-    --output /thc \
-    && chmod +x /thc
-
-COPY deno.json /app/
-COPY deno.lock /app/
-
-COPY ./src/ /app/src/
-
-# Dependencies are cached on /deno-dir for the denoland/deno:debian image
-RUN --mount=type=cache,target=/deno-dir deno task compile
 
 # Stage for creating the non-privileged user
-FROM alpine:3.21 AS user-stage
+FROM alpine:${ALPINE_VERSION} AS user-stage
 
 RUN adduser -u 10001 -S appuser
 
-FROM gcr.io/distroless/cc
+# Stage for downloading files using curl from Debian
+FROM debian:${DEBIAN_VERSION}-slim AS debian-curl
+RUN DEBIAN_FRONTEND='noninteractive' && export DEBIAN_FRONTEND && \
+    apt update && apt install -y curl
 
-COPY --from=builder /app/invidious_companion /app/
-COPY --from=builder /thc /thc
-COPY ./config/ /app/config/
-COPY --from=builder /tini /tini
+# Download tiny-health-checker from GitHub
+FROM debian-curl AS thc-download
+ARG THC_VERSION
+RUN arch="$(uname -m)" && \
+    gh_url() { printf -- "${GH_BASE_URL}/%s/releases/download/%s/%s\n" "$@" ; } && \
+    URL="$(gh_url dmikusa/tiny-health-checker v${THC_VERSION} thc-${arch}-unknown-linux-musl)" && \
+    curl -fsSL --output /thc "${URL}" && chmod -v 00555 /thc
 
-ENV PORT=8282 \
-    HOST=0.0.0.0
+# Cache the thc binary as a layer
+FROM scratch AS thc-bin
+ARG THC_VERSION
+ENV THC_VERSION="${THC_VERSION}"
+COPY --from=thc-download /thc /thc
 
-ENV THC_PORT=${PORT} \
-    THC_PATH=/healthz
+# Download tini from GitHub
+FROM debian-curl AS tini-download
+ARG TINI_VERSION
+RUN arch="$(dpkg --print-architecture)" && \
+    gh_url() { printf -- "${GH_BASE_URL}/%s/releases/download/%s/%s\n" "$@" ; } && \
+    URL="$(gh_url krallin/tini v${TINI_VERSION} tini-${arch})" && \
+    curl -fsSL --output /tini "${URL}" && chmod -v 00555 /tini
+
+# Cache the tini binary as a layer
+FROM scratch AS tini-bin
+ARG TINI_VERSION
+ENV TINI_VERSION="${TINI_VERSION}"
+COPY --from=tini-download /tini /tini
+
+# Retrieve the deno binary from the repository
+FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
+
+# Stage for using deno on Debian
+FROM debian:${DEBIAN_VERSION}-slim AS debian-deno
+
+# cache dir for youtube.js library
+RUN mkdir -v -p /var/tmp/youtubei.js
+
+ARG DENO_DIR
+RUN useradd --uid 1993 --user-group deno \
+  && mkdir -v "${DENO_DIR}" \
+  && chown deno:deno "${DENO_DIR}"
+
+ARG DENO_VERSION
+ENV DENO_DIR="${DENO_DIR}" \
+    DENO_INSTALL_ROOT='/usr/local' \
+    DENO_VERSION="${DENO_VERSION}"
+
+COPY --from=deno-bin /deno /usr/bin/deno
+
+# Create a builder using deno on Debian
+FROM debian-deno AS builder
+
+WORKDIR /app
+
+COPY deno.lock ./
+COPY deno.json ./
+
+COPY ./src/ ./src/
+
+# Dependencies are cached in ${DENO_DIR} for our deno builder
+RUN --mount=type=cache,target="${DENO_DIR}" deno task compile
+
+FROM gcr.io/distroless/cc AS app
 
 # Copy passwd file for the non-privileged user from the user-stage
 COPY --from=user-stage /etc/passwd /etc/passwd
+
+COPY --from=thc-bin /thc /thc
+COPY --from=tini-bin /tini /tini
 
 # Copy cache directory and set correct permissions
 COPY --from=builder --chown=appuser /var/tmp/youtubei.js /var/tmp/youtubei.js
 
 # Set the working directory
 WORKDIR /app
+
+COPY --from=builder /app/invidious_companion ./
+
+ARG HOST PORT DENO_VERSION THC_VERSION TINI_VERSION
+EXPOSE "${PORT}/tcp"
+ENV HOST="${HOST}" \
+    PORT="${PORT}" \
+    THC_PORT="${PORT}" \
+    THC_PATH='/healthz' \
+    DENO_VERSION="${DENO_VERSION}" \
+    THC_VERSION="${THC_VERSION}" \
+    TINI_VERSION="${TINI_VERSION}"
+
+COPY ./config/ ./config/
 
 # Switch to non-privileged user
 USER appuser
