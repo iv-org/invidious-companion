@@ -89,6 +89,9 @@ RUN --mount=type=cache,target="${DENO_DIR}" deno task compile
 
 FROM gcr.io/distroless/cc AS app
 
+# Copy group file for the non-privileged user from the user-stage
+COPY --from=user-stage /etc/group /etc/group
+
 # Copy passwd file for the non-privileged user from the user-stage
 COPY --from=user-stage /etc/passwd /etc/passwd
 
