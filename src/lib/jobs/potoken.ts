@@ -150,40 +150,40 @@ async function checkToken({
         const feed = await instantiatedInnertubeClient.getTrending();
         // get all videos and shuffle them randomly to avoid using the same trending video over and over
         const videos = feed.videos
-            .filter((video) => video.type === "Video")
+            .filter((video) => video.type === "Video" && "id" in video)
             .map((value) => ({ value, sort: Math.random() }))
             .sort((a, b) => a.sort - b.sort)
             .map(({ value }) => value);
 
-        const video = videos.find((video) => "id" in video);
-        if (!video) {
-            throw new Error("no videos with id found in trending");
-        }
-
-        const youtubePlayerResponseJson = await youtubePlayerParsing({
-            innertubeClient: instantiatedInnertubeClient,
-            videoId: video.id,
-            config,
-            tokenMinter: integrityTokenBasedMinter,
-            metrics,
-            overrideCache: true,
-        });
-        const videoInfo = youtubeVideoInfo(
-            instantiatedInnertubeClient,
-            youtubePlayerResponseJson,
-        );
-        const validFormat = videoInfo.streaming_data?.adaptive_formats[0];
-        if (!validFormat) {
-            throw new Error(
-                "failed to find valid video with adaptive format to check token against",
+        let err;
+        for (const video of videos) {
+            const youtubePlayerResponseJson = await youtubePlayerParsing({
+                innertubeClient: instantiatedInnertubeClient,
+                videoId: video.id,
+                config,
+                tokenMinter: integrityTokenBasedMinter,
+                metrics,
+                overrideCache: true,
+            });
+            const videoInfo = youtubeVideoInfo(
+                instantiatedInnertubeClient,
+                youtubePlayerResponseJson,
             );
+            const validFormat = videoInfo.streaming_data?.adaptive_formats[0];
+            if (!validFormat) {
+                err = new Error("failed to find valid video with adaptive format to check token against");
+                console.warn(err);
+                continue;
+            }
+            const result = await fetchImpl(validFormat?.url, { method: "HEAD" });
+            if (result.status !== 200) {
+                err = new Error(`did not get a 200 when checking video, got ${result.status} instead`);
+                console.warn(err);
+                continue
+            }
+            return;
         }
-        const result = await fetchImpl(validFormat?.url, { method: "HEAD" });
-        if (result.status !== 200) {
-            throw new Error(
-                `did not get a 200 when checking video, got ${result.status} instead`,
-            );
-        }
+        throw err;
     } catch (err) {
         console.log("Failed to get valid PO token, will retry", { err });
         throw err;
