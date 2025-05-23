@@ -159,6 +159,7 @@ async function checkToken({
         for (const video of videos) {
             const youtubePlayerResponseJson = await youtubePlayerParsing({
                 innertubeClient: instantiatedInnertubeClient,
+                //@ts-ignore
                 videoId: video?.id,
                 config,
                 tokenMinter: integrityTokenBasedMinter,
