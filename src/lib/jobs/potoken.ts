@@ -172,15 +172,21 @@ async function checkToken({
             );
             const validFormat = videoInfo.streaming_data?.adaptive_formats[0];
             if (!validFormat) {
-                err = new Error("failed to find valid video with adaptive format to check token against");
+                err = new Error(
+                    "failed to find valid video with adaptive format to check token against",
+                );
                 console.warn(err);
                 continue;
             }
-            const result = await fetchImpl(validFormat?.url, { method: "HEAD" });
+            const result = await fetchImpl(validFormat?.url, {
+                method: "HEAD",
+            });
             if (result.status !== 200) {
-                err = new Error(`did not get a 200 when checking video, got ${result.status} instead`);
+                err = new Error(
+                    `did not get a 200 when checking video, got ${result.status} instead`,
+                );
                 console.warn(err);
-                continue
+                continue;
             }
             return;
         }
