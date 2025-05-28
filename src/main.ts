@@ -15,7 +15,7 @@ const args = parseArgs(Deno.args);
 
 if (args._version_date && args._version_commit) {
     console.log(
-        `[INFO] Using invidious-companion version ${args._version_date}-${args._version_commit}`,
+        `[INFO] Using Invidious companion version ${args._version_date}-${args._version_commit}`,
     );
 }
 
