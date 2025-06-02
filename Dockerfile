@@ -2,9 +2,9 @@
 # check=error=true
 
 # Default values for versions
-ARG ALPINE_VERSION='3.21' \
+ARG ALPINE_VERSION='3.22' \
     DEBIAN_VERSION='12' \
-    DENO_VERSION='2.3.3' \
+    DENO_VERSION='2.3.5' \
     THC_VERSION='0.36.0' \
     TINI_VERSION='0.19.0'
 
@@ -20,11 +20,11 @@ ARG DENO_DIR='/deno-dir' \
 # https://github.com/dependabot/dependabot-core/issues/2057#issuecomment-1351660410
 # updating the ARG above also would be best,
 # however nothing breaks if that doesn't happen.
-FROM alpine:3.21 AS dependabot-alpine
+FROM alpine:3.22 AS dependabot-alpine
 FROM debian:12-slim AS dependabot-debian
 
 # Retrieve the deno binary from the repository
-FROM denoland/deno:bin-2.3.3 AS deno-bin
+FROM denoland/deno:bin-2.3.5 AS deno-bin
 
 
 # Stage for creating the non-privileged user
@@ -65,8 +65,13 @@ ARG TINI_VERSION
 ENV TINI_VERSION="${TINI_VERSION}"
 COPY --from=tini-download /tini /tini
 
+# Stage for using git from Debian
+FROM dependabot-debian AS debian-git
+RUN DEBIAN_FRONTEND='noninteractive' && export DEBIAN_FRONTEND && \
+    apt-get update && apt-get install -y git
+
 # Stage for using deno on Debian
-FROM dependabot-debian AS debian-deno
+FROM debian-git AS debian-deno
 
 # cache dir for youtube.js library
 RUN mkdir -v -p /var/tmp/youtubei.js
@@ -93,8 +98,12 @@ COPY deno.json ./
 
 COPY ./src/ ./src/
 
+# To let the `deno task compile` know the current commit on which
+# Invidious companion is being built, similar to how Invidious does it.
 # Dependencies are cached in ${DENO_DIR} for our deno builder
-RUN --mount=type=cache,target="${DENO_DIR}" deno task compile
+RUN --mount=type=bind,source=.git,target=/app/.git \
+    --mount=type=cache,target="${DENO_DIR}" \
+    deno task compile
 
 FROM gcr.io/distroless/cc AS app
 
