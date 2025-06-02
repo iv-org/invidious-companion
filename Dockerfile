@@ -1,4 +1,4 @@
-FROM denoland/deno:debian-2.3.3 AS builder
+FROM denoland/deno:debian-2.3.5 AS builder
 
 ARG TINI_VERSION=0.19.0
 
