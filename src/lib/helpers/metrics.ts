@@ -99,21 +99,14 @@ export class Metrics {
 
         if (status == undefined) return;
 
-        interface Error {
-            unplayable: boolean;
-            error: boolean;
-            contentCheckRequired: boolean;
-            loginRequired: boolean;
-            liveStreamOffline: boolean;
-        }
-
-        const error: Error = {
+        const error = {
             unplayable: false,
             error: false,
             contentCheckRequired: false,
             loginRequired: false,
             liveStreamOffline: false,
         };
+        type Error = typeof error;
 
         const map: { [key: string]: keyof Error } = {
             "UNPLAYABLE": "unplayable",
@@ -161,29 +154,7 @@ export class Metrics {
 
         if (reason == undefined) return;
 
-        interface Error {
-            signInToConfirmAge: boolean;
-            signInToConfirmBot: boolean;
-            vpnProxy: boolean;
-            selfHarmTopics: boolean;
-            liveStreamOffline: boolean;
-            liveEventWillBegin: boolean;
-            liveStreamRecordingUnavailable: boolean;
-            premiere: boolean;
-            privateVideo: boolean;
-            videoUnavailable: boolean;
-            videoUnavailableCopyrightClaim: boolean;
-            videoUnavailableClosedYTAccount: boolean;
-            videoRemovedYt: boolean;
-            videoRemovedUploader: boolean;
-            videoUnplayableMobileBrowser: boolean;
-            videoBeingProcessed: boolean;
-            membersOnlyVideo: boolean;
-            contentIdClaimedVideo: boolean;
-            uploaderGeorestrictedVideo: boolean;
-        }
-
-        const error: Error = {
+        const error = {
             signInToConfirmAge: false,
             signInToConfirmBot: false,
             vpnProxy: false,
@@ -204,6 +175,7 @@ export class Metrics {
             contentIdClaimedVideo: false,
             uploaderGeorestrictedVideo: false,
         };
+        type Error = typeof error;
 
         // deno-fmt-ignore
         const map: { [key: string]: keyof Error } = {
@@ -294,16 +266,7 @@ export class Metrics {
 
         if (subReason == undefined) return;
 
-        interface Error {
-            thisHelpsProtectCommunity: boolean;
-            vpnProxy: boolean;
-            thisVideoMayBeInnapropiate: boolean;
-            viewerDiscretionAdvised: boolean;
-            accountTerminated: boolean;
-            privateVideo: boolean;
-        }
-
-        const error: Error = {
+        const error = {
             thisHelpsProtectCommunity: false,
             vpnProxy: false,
             thisVideoMayBeInnapropiate: false,
@@ -311,6 +274,7 @@ export class Metrics {
             accountTerminated: false,
             privateVideo: false,
         };
+        type Error = typeof error;
 
         // deno-fmt-ignore
         const map: { [key: string]: keyof Error } = {
