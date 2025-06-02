@@ -30,7 +30,7 @@ COPY ./.git/ /app/
 RUN --mount=type=cache,target=/deno-dir deno task compile
 
 # Stage for creating the non-privileged user
-FROM alpine:3.21 AS user-stage
+FROM alpine:3.22 AS user-stage
 
 RUN adduser -u 10001 -S appuser
 
