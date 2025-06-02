@@ -93,7 +93,7 @@ export class Metrics {
     ) {
         if (videoData) {
             // deno-fmt-ignore
-            status = 
+            status =
                 videoData.playabilityStatus?.status!;
         }
 
@@ -102,9 +102,8 @@ export class Metrics {
         const error = {
             unplayable: false,
             error: false,
-            contentCheckRequired: false,
             loginRequired: false,
-            liveStreamOffline: false,
+            generic: false,
         };
         type Error = typeof error;
 
@@ -112,15 +111,15 @@ export class Metrics {
             "UNPLAYABLE": "unplayable",
             // Innertube error
             "ERROR": "error",
-            // Sensitive content videos
-            "CONTENT_CHECK_REQUIRED": "contentCheckRequired",
             /**
              * Age restricted videos
              * Private videos (maybe)
              */
             "LOGIN_REQUIRED": "loginRequired",
+            // Sensitive content videos
+            "CONTENT_CHECK_REQUIRED": "generic",
             // Livestreams
-            "LIVE_STREAM_OFFLINE": "liveStreamOffline",
+            "LIVE_STREAM_OFFLINE": "generic",
         };
 
         if (map[status as string]) {
@@ -146,7 +145,7 @@ export class Metrics {
             // contained inside `errorScreen`, just like how we check subReason.
             const playabilityStatus = videoData.playabilityStatus;
             // deno-fmt-ignore
-            reason = 
+            reason =
                 playabilityStatus?.reason
                 ||
                 playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.reason?.simpleText;
@@ -158,22 +157,7 @@ export class Metrics {
             signInToConfirmAge: false,
             signInToConfirmBot: false,
             vpnProxy: false,
-            selfHarmTopics: false,
-            liveStreamOffline: false,
-            liveEventWillBegin: false,
-            liveStreamRecordingUnavailable: false,
-            premiere: false,
-            privateVideo: false,
-            videoUnavailable: false,
-            videoUnavailableCopyrightClaim: false,
-            videoUnavailableClosedYTAccount: false,
-            videoRemovedYt: false,
-            videoRemovedUploader: false,
-            videoUnplayableMobileBrowser: false,
-            videoBeingProcessed: false,
-            membersOnlyVideo: false,
-            contentIdClaimedVideo: false,
-            uploaderGeorestrictedVideo: false,
+            generic: false,
         };
         type Error = typeof error;
 
@@ -183,39 +167,28 @@ export class Metrics {
                 "Sign in to confirm you’re not a bot": "signInToConfirmBot",
             // Age restricted videos
                 "Sign in to confirm your age": "signInToConfirmAge",
+            // VPN/Proxy
+                "VPN/Proxy Detected": "vpnProxy",
             // Sensitive content videos
-                "The following content may contain suicide or self-harm topics": "selfHarmTopics",
+                "The following content may contain suicide or self-harm topics": "generic",
             // Livestreams
-                "Offline.": "liveStreamOffline",
-                "This live event will begin in": "liveEventWillBegin",
-                "This live stream recording is not available": "liveStreamRecordingUnavailable",
+                "This live event will begin in": "generic",
             // Premieres
-                "Premiere will begin shortly": "premiere",
-                "Premieres in": "premiere",
+                "Premiere will begin shortly": "generic",
+                "Premieres in": "generic",
             // Private videos
-                "Private video": "privateVideo", // WEB Client
-                "This video is private": "privateVideo", // MWEB Client
+                "Private video": "generic",
             // Unavailable videos
-                "Video unavailable": "videoUnavailable", // WEB Client
-                "This video is unavailable": "videoUnavailable", // MWEB Client
-                "This video is no longer available due to a copyright claim": "videoUnavailableCopyrightClaim", // Unknown client
-                "This video is no longer available because the uploader has closed their YouTube account": "videoUnavailableClosedYTAccount", // Unknown client
-                "This content can't be played on your mobile browser. Get the YouTube app to start watching": "videoUnplayableMobileBrowser", // MWEB Client maybe?
+                "Video unavailable": "generic",
             // Removed videos
                 // Videos removed because of a violation of the community guidelines or TOS
-                "This video has been removed for violating YouTube's": "videoRemovedYt", // Unknown client
-                "This video has been removed by the uploader": "videoRemovedUploader", // Unknown client
+                "This video has been removed for violating YouTube's": "generic",
+                "This video has been removed by the uploader": "generic",
             // Members only
-                "This video is available to this channel's members on level": "membersOnlyVideo", // Unknown client
-                "Join this channel from your computer or Android app to get access to members-only content like this video": "membersOnlyVideo", // Unknown client
-            // Geo restricted videos
-                // Video with a content ID claim that restricts the video to a certain set of countries
-                "This video contains content from": "contentIdClaimedVideo", // Unknown client
-                "The uploader has not made this video available in your country": "uploaderGeorestrictedVideo", // Unknown client
+                "This video is available to this channel's members on level": "generic",
             // Video being processed
-                "We're processing this video. Check back later": "videoBeingProcessed", // Unknown client
-            // VPN/Proxy
-                "VPN/Proxy Detected": "vpnProxy", // Unknown client
+                "We're processing this video. Check back later": "generic",
+
         };
 
         let isKnownError = false;
@@ -256,9 +229,9 @@ export class Metrics {
             // deno-fmt-ignore
 
             subReason =
-                errorScreen?.playerErrorMessageRenderer?.subreason?.runs?.[0]?.text 
+                errorScreen?.playerErrorMessageRenderer?.subreason?.runs?.[0]?.text
                 ||
-                // On specific status like `LOGIN_REQUIRED` with reason 
+                // On specific status like `LOGIN_REQUIRED` with reason
                 // "Private video", the subReason is contained inside
                 // `simpleText` instead of `runs?.[0]?.text`
                 errorScreen?.playerErrorMessageRenderer?.subreason?.simpleText;
@@ -268,11 +241,9 @@ export class Metrics {
 
         const error = {
             thisHelpsProtectCommunity: false,
-            vpnProxy: false,
             thisVideoMayBeInnapropiate: false,
-            viewerDiscretionAdvised: false,
-            accountTerminated: false,
-            privateVideo: false,
+            vpnProxy: false,
+            generic: false,
         };
         type Error = typeof error;
 
@@ -282,14 +253,24 @@ export class Metrics {
                 "This helps protect our community": "thisHelpsProtectCommunity",
             // Age restricted videos
                 "This video may be inappropriate for some users": "thisVideoMayBeInnapropiate",
-            // Sensitive content videos
-                "Viewer discretion is advised": "viewerDiscretionAdvised",
-            // Unavailable videos
-                "This video is no longer available because the YouTube account associated with this video has been terminated": "accountTerminated",
-            // Private videos
-                "If the owner of this video has granted you access": "privateVideo",
             // VPN/Proxy
                 "To continue, turn off your VPN/Proxy. This will allow YouTube to locate the best content.": "vpnProxy",
+            // Content not available (error that generally appears when companion is not able to generate a potoken)
+                "This content isn't available, try again later.": "generic",
+            // Sensitive content videos
+                "Viewer discretion is advised": "generic",
+            // Unavailable videos
+                "This video is not available": "generic",
+                "This video is no longer available because the YouTube account associated with this video has been terminated": "generic",
+                "The uploader has not made this video available.": "generic",
+            // Private videos
+                "If the owner of this video has granted you access": "generic",
+                "Sign in if you've been granted access to this video": "generic",
+            // Geo restricted videos
+                "This video is not available in your country": "generic",
+                "The uploader has not made this video available in your country": "generic",
+            // Unknown
+                "The video you have requested has been rated": "generic"
         };
 
         let isKnownError = false;
