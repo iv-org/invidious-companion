@@ -2,10 +2,7 @@
 # check=error=true
 
 # Default values for versions
-ARG ALPINE_VERSION='3.22' \
-    DEBIAN_VERSION='12' \
-    DENO_VERSION='2.3.5' \
-    THC_VERSION='0.36.0' \
+ARG THC_VERSION='0.36.0' \
     TINI_VERSION='0.19.0'
 
 # Default values for variables that change less often
@@ -81,10 +78,11 @@ RUN useradd --uid 1993 --user-group deno \
   && mkdir -v "${DENO_DIR}" \
   && chown deno:deno "${DENO_DIR}"
 
-ARG DENO_VERSION
+# Controlled by dependabot.
+#ARG DENO_VERSION
+#ENV DENO_VERSION="${DENO_VERSION}"
 ENV DENO_DIR="${DENO_DIR}" \
-    DENO_INSTALL_ROOT='/usr/local' \
-    DENO_VERSION="${DENO_VERSION}"
+    DENO_INSTALL_ROOT='/usr/local'
 
 COPY --from=deno-bin /deno /usr/bin/deno
 
@@ -124,13 +122,15 @@ WORKDIR /app
 
 COPY --from=builder /app/invidious_companion ./
 
-ARG HOST PORT DENO_VERSION THC_VERSION TINI_VERSION
+# Controlled by dependabot.
+#ARG DENO_VERSION
+#ENV DENO_VERSION="${DENO_VERSION}"
+ARG HOST PORT THC_VERSION TINI_VERSION
 EXPOSE "${PORT}/tcp"
 ENV HOST="${HOST}" \
     PORT="${PORT}" \
     THC_PORT="${PORT}" \
     THC_PATH='/healthz' \
-    DENO_VERSION="${DENO_VERSION}" \
     THC_VERSION="${THC_VERSION}" \
     TINI_VERSION="${TINI_VERSION}"
 
