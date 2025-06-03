@@ -63,6 +63,7 @@ jobs:
 
       # Step 6: Build and push the Docker image
       - name: Build and push Docker image
+        id: 'build-push'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -72,3 +73,46 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      # Step 7: Create binary archives
+      - name: Extract `/app` from the Docker image
+        shell: bash
+        run: |
+          set -eu
+          mkdir -v -p .artifacts '.tmp/${{ env.IMAGE_NAME }}'
+          imageName='${{ fromJSON(steps.build-push.outputs.metadata)["image.name"] }}'
+          docker image pull "${imageName}"'@${{ steps.build-push.outputs.digest }}'
+          docker container rm -f -v tmp-container || :
+          docker container create --name tmp-container \
+            "${imageName}"'@${{ steps.build-push.outputs.digest }}'
+          docker container cp -a tmp-container:/app - | \
+            xz -8 --compress --stdout --threads=2 >| '.tmp/${{ env.IMAGE_NAME }}-amd64.tar.xz'
+          docker container rm tmp-container
+          docker image remove "${imageName}"'@${{ steps.build-push.outputs.digest }}' 
+          docker image pull --platform linux/arm64 \
+            "${imageName}"'@${{ steps.build-push.outputs.digest }}'
+          docker container create --platform linux/arm64 --name tmp-container \
+            "${imageName}"'@${{ steps.build-push.outputs.digest }}'
+          docker container cp -a tmp-container:/app - | \
+            xz -8 --compress --stdout --threads=2 >| '.tmp/${{ env.IMAGE_NAME }}-arm64.tar.xz'
+          docker container rm tmp-container
+          docker image remove --platform linux/arm64 \
+            "${imageName}"'@${{ steps.build-push.outputs.digest }}'
+          find .tmp -name '*.tar.xz' -exec mv -v -t .artifacts/ '{}' +
+          rm -rf .tmp
+      # Step 8: Upload linux/amd64 archive
+      - name: Upload `/app` directory archive from `linux/amd64`
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-app-linux-amd64
+          compression-level: 0
+          overwrite: true
+          path: .artifacts/*-amd64.tar.xz
+      # Step 9: Upload linux/arm64 archive
+      - name: Upload `/app` directory archive from `linux/arm64`
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-app-linux-arm64
+          compression-level: 0
+          overwrite: true
+          path: .artifacts/*-arm64.tar.xz
+        
