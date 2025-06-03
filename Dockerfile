@@ -15,8 +15,6 @@ ARG DENO_DIR='/deno-dir' \
 # we can use these aliases and let dependabot remain simple
 # inspired by:
 # https://github.com/dependabot/dependabot-core/issues/2057#issuecomment-1351660410
-# updating the ARG above also would be best,
-# however nothing breaks if that doesn't happen.
 FROM alpine:3.22 AS dependabot-alpine
 FROM debian:12-slim AS dependabot-debian
 
@@ -78,9 +76,6 @@ RUN useradd --uid 1993 --user-group deno \
   && mkdir -v "${DENO_DIR}" \
   && chown deno:deno "${DENO_DIR}"
 
-# Controlled by dependabot.
-#ARG DENO_VERSION
-#ENV DENO_VERSION="${DENO_VERSION}"
 ENV DENO_DIR="${DENO_DIR}" \
     DENO_INSTALL_ROOT='/usr/local'
 
@@ -122,9 +117,6 @@ WORKDIR /app
 
 COPY --from=builder /app/invidious_companion ./
 
-# Controlled by dependabot.
-#ARG DENO_VERSION
-#ENV DENO_VERSION="${DENO_VERSION}"
 ARG HOST PORT THC_VERSION TINI_VERSION
 EXPOSE "${PORT}/tcp"
 ENV HOST="${HOST}" \
