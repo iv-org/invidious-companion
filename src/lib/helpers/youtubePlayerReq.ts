@@ -72,7 +72,7 @@ export const youtubePlayerReq = async (
         console.log(
             "[WARNING] No URLs found for adaptive formats. Falling back to other YT clients.",
         );
-        const innertubeClientsTypeFallback = ["TV", "MWEB"];
+        const innertubeClientsTypeFallback = ["TV", "MWEB", "TV_SIMPLY"];
 
         for await (const innertubeClientType of innertubeClientsTypeFallback) {
             console.log(
@@ -85,9 +85,12 @@ export const youtubePlayerReq = async (
                 contentPoToken,
             );
             if (
-                youtubePlayerResponseFallback.data.streamingData &&
-                youtubePlayerResponseFallback.data.streamingData
-                    .adaptiveFormats[0].url
+                youtubePlayerResponseFallback.data.streamingData && (
+                    youtubePlayerResponseFallback.data.streamingData
+                        .adaptiveFormats[0].url ||
+                    youtubePlayerResponseFallback.data.streamingData
+                        .adaptiveFormats[0].signatureCipher
+                )
             ) {
                 youtubePlayerResponse.data.streamingData.adaptiveFormats =
                     youtubePlayerResponseFallback.data.streamingData
