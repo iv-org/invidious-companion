@@ -1,8 +1,8 @@
 {
   "tasks": {
-    "dev": "deno run --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443,raw.githubusercontent.com:443 --allow-net --allow-env --allow-sys=hostname --allow-read --allow-write=/var/tmp/youtubei.js --watch src/main.ts",
-    "compile": "deno compile --include ./src/lib/helpers/youtubePlayerReq.ts --include ./src/lib/helpers/getFetchClient.ts --output invidious_companion --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443,raw.githubusercontent.com:443 --allow-net --allow-env --allow-read --allow-sys=hostname --allow-write=/var/tmp/youtubei.js src/main.ts --_version_date=\"$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)\" --_version_commit=\"$(git rev-list HEAD --max-count=1 --abbrev-commit)\"",
-    "test": "deno test --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443,raw.githubusercontent.com:443 --allow-net --allow-env --allow-sys=hostname --allow-read --allow-write=/var/tmp/youtubei.js",
+    "dev": "deno run --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname --allow-read --allow-write=/var/tmp/youtubei.js --watch src/main.ts",
+    "compile": "deno compile --include ./src/lib/helpers/youtubePlayerReq.ts --include ./src/lib/helpers/getFetchClient.ts --output invidious_companion --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-read --allow-sys=hostname --allow-write=/var/tmp/youtubei.js src/main.ts --_version_date=\"$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)\" --_version_commit=\"$(git rev-list HEAD --max-count=1 --abbrev-commit)\"",
+    "test": "deno test --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname --allow-read --allow-write=/var/tmp/youtubei.js",
     "format": "deno fmt src/**"
   },
   "imports": {
@@ -10,10 +10,10 @@
     "hono": "jsr:@hono/hono@4.7.4",
     "@std/toml": "jsr:@std/toml@1.0.2",
     "prom-client": "https://esm.sh/prom-client@15.1.3",
-    "youtubei.js": "https://raw.githubusercontent.com/iv-org/YouTube.js/refs/heads/TV_SIMPLY-deno/deno.ts",
-    "youtubei.js/Utils": "https://raw.githubusercontent.com/iv-org/YouTube.js/refs/heads/TV_SIMPLY-deno/deno/src/utils/Utils.ts",
-    "youtubei.js/NavigationEndpoint": "https://raw.githubusercontent.com/iv-org/YouTube.js/refs/heads/TV_SIMPLY-deno/deno/src/parser/classes/NavigationEndpoint.ts",
-    "youtubei.js/PlayerCaptionsTracklist": "https://raw.githubusercontent.com/iv-org/YouTube.js/refs/heads/TV_SIMPLY-deno/deno/src/parser/classes/PlayerCaptionsTracklist.ts",
+    "youtubei.js": "https://cdn.jsdelivr.net/gh/iv-org/YouTube.js@TV_SIMPLY-deno/deno.ts",
+    "youtubei.js/Utils": "https://cdn.jsdelivr.net/gh/iv-org/YouTube.js@TV_SIMPLY-deno/deno/src/utils/Utils.ts",
+    "youtubei.js/NavigationEndpoint": "https://cdn.jsdelivr.net/gh/iv-org/YouTube.js@TV_SIMPLY-deno/deno/src/parser/classes/NavigationEndpoint.ts",
+    "youtubei.js/PlayerCaptionsTracklist": "https://cdn.jsdelivr.net/gh/iv-org/YouTube.js@TV_SIMPLY-deno/deno/src/parser/classes/PlayerCaptionsTracklist.ts",
     "jsdom": "npm:jsdom@26.0.0",
     "bgutils": "https://esm.sh/bgutils-js@3.2.0",
     "estree": "https://esm.sh/@types/estree@1.0.6",
