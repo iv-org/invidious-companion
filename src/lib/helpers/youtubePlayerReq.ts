@@ -90,7 +90,7 @@ export const youtubePlayerReq = async (
                         .adaptiveFormats[0].url ||
                     youtubePlayerResponseFallback.data.streamingData
                         .adaptiveFormats[0].signatureCipher
-                ) && innertubeClientType == "MWEB"
+                )
             ) {
                 youtubePlayerResponse.data.streamingData.adaptiveFormats =
                     youtubePlayerResponseFallback.data.streamingData
