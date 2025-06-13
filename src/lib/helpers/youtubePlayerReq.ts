@@ -72,7 +72,7 @@ export const youtubePlayerReq = async (
         console.log(
             "[WARNING] No URLs found for adaptive formats. Falling back to other YT clients.",
         );
-        const innertubeClientsTypeFallback = ["TV", "TV_SIMPLY", "MWEB"];
+        const innertubeClientsTypeFallback = ["TV_SIMPLY", "MWEB"];
 
         for await (const innertubeClientType of innertubeClientsTypeFallback) {
             console.log(
