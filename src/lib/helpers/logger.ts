@@ -24,13 +24,17 @@ export class Logger {
         console.log(this.logLevel);
     }
 
-    private log(level: LogLevel, msg: string | undefined, err?: object | undefined) {
+    private log(
+        level: LogLevel,
+        msg: string | undefined,
+        err?: object | undefined,
+    ) {
         if (level >= this.logLevel) {
             const levelName = LogLevel[level].toUpperCase();
             const date = new Date().toISOString();
-            if (typeof err === 'undefined') {
+            if (typeof err === "undefined") {
                 console.log(`[${date}] ${levelName}: ${msg}`);
-            } else if (typeof msg === 'undefined') {
+            } else if (typeof msg === "undefined") {
                 console.log(`[${date}] ${levelName}:`, err);
             } else {
                 console.log(`[${date}] ${levelName}: ${msg}`, err);
