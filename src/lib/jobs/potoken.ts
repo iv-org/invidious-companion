@@ -19,6 +19,7 @@ if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
 const { getFetchClient } = await import(getFetchClientLocation);
 
 import { InputMessage, OutputMessageSchema } from "./worker.ts";
+import { Logger } from "../helpers/logger.ts";
 
 interface TokenGeneratorWorker extends Omit<Worker, "postMessage"> {
     postMessage(message: InputMessage): void;
@@ -60,6 +61,7 @@ export type TokenMinter = ReturnType<typeof createMinter>;
 export const poTokenGenerate = (
     config: Config,
     metrics: Metrics | undefined,
+    logger: Logger | undefined,
 ): Promise<{ innertubeClient: Innertube; tokenMinter: TokenMinter }> => {
     const { promise, resolve, reject } = Promise.withResolvers<
         Awaited<ReturnType<typeof poTokenGenerate>>
@@ -86,7 +88,7 @@ export const poTokenGenerate = (
         }
 
         if (parsedMessage.type === "error") {
-            console.log({ errorFromWorker: parsedMessage.error });
+            logger?.error(undefined, { errorFromWorker: parsedMessage.error });
             worker.terminate();
             reject(parsedMessage.error);
         }
@@ -109,8 +111,9 @@ export const poTokenGenerate = (
                     config,
                     integrityTokenBasedMinter: minter,
                     metrics,
+                    logger,
                 });
-                console.log("[INFO] Successfully generated PO token");
+                logger?.info("Successfully generated PO token");
                 const numberToKill = workers.length - 1;
                 for (let i = 0; i < numberToKill; i++) {
                     const workerToKill = workers.shift();
@@ -121,7 +124,7 @@ export const poTokenGenerate = (
                     tokenMinter: minter,
                 });
             } catch (err) {
-                console.log("[WARN] Failed to get valid PO token, will retry", {
+                logger?.warn("Failed to get valid PO token, will retry", {
                     err,
                 });
                 worker.terminate();
@@ -138,11 +141,13 @@ async function checkToken({
     config,
     integrityTokenBasedMinter,
     metrics,
+    logger,
 }: {
     instantiatedInnertubeClient: Innertube;
     config: Config;
     integrityTokenBasedMinter: TokenMinter;
     metrics: Metrics | undefined;
+    logger: Logger | undefined;
 }) {
     const fetchImpl = getFetchClient(config);
 
@@ -185,7 +190,7 @@ async function checkToken({
             );
         }
     } catch (err) {
-        console.log("Failed to get valid PO token, will retry", { err });
+        logger?.error("Failed to get valid PO token, will retry", { err });
         throw err;
     }
 }

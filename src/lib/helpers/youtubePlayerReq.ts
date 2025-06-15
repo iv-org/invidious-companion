@@ -3,6 +3,8 @@ import NavigationEndpoint from "youtubei.js/NavigationEndpoint";
 import type { TokenMinter } from "../jobs/potoken.ts";
 
 import type { Config } from "./config.ts";
+import { logger } from "hono/logger";
+import { Logger } from "./logger.ts";
 
 function callWatchEndpoint(
     videoId: string,
@@ -44,6 +46,7 @@ export const youtubePlayerReq = async (
     videoId: string,
     config: Config,
     tokenMinter: TokenMinter,
+    logger: Logger | undefined,
 ): Promise<ApiResponse> => {
     const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
 
@@ -69,14 +72,14 @@ export const youtubePlayerReq = async (
         youtubePlayerResponse.data.streamingData.adaptiveFormats[0].url ===
             undefined
     ) {
-        console.log(
-            "[WARNING] No URLs found for adaptive formats. Falling back to other YT clients.",
+        logger?.warn(
+            "No URLs found for adaptive formats. Falling back to other YT clients.",
         );
         const innertubeClientsTypeFallback = ["TV", "TV_SIMPLY", "MWEB"];
 
         for await (const innertubeClientType of innertubeClientsTypeFallback) {
-            console.log(
-                `[WARNING] Trying fallback YT client ${innertubeClientType}`,
+            logger?.warn(
+                `Trying fallback YT client ${innertubeClientType}`,
             );
             const youtubePlayerResponseFallback = await callWatchEndpoint(
                 videoId,
