@@ -269,6 +269,8 @@ export class Metrics {
             // Geo restricted videos
                 "This video is not available in your country": "generic",
                 "The uploader has not made this video available in your country": "generic",
+            // Privacy/Trademark complaint
+                "This content is not available in your country due to a": "generic",
             // Unknown
                 "The video you have requested has been rated": "generic"
         };
