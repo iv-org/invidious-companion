@@ -1,9 +1,5 @@
 import { ApiResponse, Innertube, YT } from "youtubei.js";
-import {
-    generateRandomString,
-    InnertubeError,
-    PlayerError,
-} from "youtubei.js/Utils";
+import { generateRandomString, PlayerError } from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
 import type { TokenMinter } from "../jobs/potoken.ts";
 import { Metrics } from "../helpers/metrics.ts";
