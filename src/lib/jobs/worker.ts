@@ -139,6 +139,7 @@ async function setup(
 ) {
     const innertubeClient = await Innertube.create({
         enable_session_cache: false,
+        fetch: fetchImpl,
         user_agent: USER_AGENT,
         retrieve_player: false,
         cookie: innertubeClientCookies || undefined,
