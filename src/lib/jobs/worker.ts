@@ -6,6 +6,8 @@ import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils";
 import type { WebPoSignalOutput } from "bgutils";
 import { JSDOM } from "jsdom";
 import { Innertube } from "youtubei.js";
+import { Logger } from "../helpers/logger.ts";
+
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
