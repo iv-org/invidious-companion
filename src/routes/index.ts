@@ -16,7 +16,16 @@ export const routes = (
     app: Hono,
     config: Config,
 ) => {
-    app.use("*", logger());
+    const loggerUnixSocket = (message: string, ...rest: string[]) => {
+        message = message.replace("//localhost/", "/");
+        console.log(message, ...rest);
+    };
+
+    if (config.server.use_unix_socket) {
+        app.use("*", logger(loggerUnixSocket));
+    } else {
+        app.use("*", logger());
+    }
 
     app.use(
         "/youtubei/v1/*",
