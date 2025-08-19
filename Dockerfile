@@ -16,7 +16,7 @@ ARG DENO_DIR='/deno-dir' \
 # inspired by:
 # https://github.com/dependabot/dependabot-core/issues/2057#issuecomment-1351660410
 FROM alpine:3.22 AS dependabot-alpine
-FROM debian:12-slim AS dependabot-debian
+FROM debian:13-slim AS dependabot-debian
 
 # Retrieve the deno binary from the repository
 FROM denoland/deno:bin-2.4.3 AS deno-bin
