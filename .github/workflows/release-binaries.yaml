@@ -6,12 +6,31 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+*'  # Trigger on semantic version tags
   workflow_dispatch:  # Allow manual triggering
 
+env:
+  DENO_COMPILED: true  # Required for compilation as seen in compile.env
+
 jobs:
   build-binaries:
     runs-on: ubuntu-latest
     
-    env:
-      DENO_COMPILED: true  # Required for compilation as seen in compile.env
+    strategy:
+      matrix:
+        target:
+          - name: windows-x64
+            target: x86_64-pc-windows-msvc
+            ext: .exe
+          - name: macos-x64
+            target: x86_64-apple-darwin
+            ext: ""
+          - name: macos-arm64
+            target: aarch64-apple-darwin
+            ext: ""
+          - name: linux-x64
+            target: x86_64-unknown-linux-gnu
+            ext: ""
+          - name: linux-arm64
+            target: aarch64-unknown-linux-gnu
+            ext: ""
     
     steps:
       # Step 1: Check out the repository code
@@ -39,14 +58,14 @@ jobs:
       - name: Create binaries directory
         run: mkdir -p ./binaries
 
-      # Step 5: Build binaries for all supported targets
-      - name: Build Windows binary (x86_64-pc-windows-msvc)
+      # Step 5: Build binary for target
+      - name: Build binary for ${{ matrix.target.name }}
         run: |
           deno compile \
-            --target x86_64-pc-windows-msvc \
+            --target ${{ matrix.target.target }} \
             --include ./src/lib/helpers/youtubePlayerReq.ts \
             --include ./src/lib/helpers/getFetchClient.ts \
-            --output ./binaries/invidious-companion-windows-x64.exe \
+            --output ./binaries/invidious-companion-${{ matrix.target.name }}${{ matrix.target.ext }} \
             --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
             --allow-net \
             --allow-env \
@@ -57,89 +76,36 @@ jobs:
             --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
             --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
 
-      - name: Build macOS Intel binary (x86_64-apple-darwin)
+      # Step 6: Upload individual binary as artifact
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: invidious-companion-${{ matrix.target.name }}
+          path: ./binaries/invidious-companion-${{ matrix.target.name }}${{ matrix.target.ext }}
+          retention-days: 7
+
+  # Separate job to create the release with all binaries
+  create-release:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create release directory and move binaries
         run: |
-          deno compile \
-            --target x86_64-apple-darwin \
-            --include ./src/lib/helpers/youtubePlayerReq.ts \
-            --include ./src/lib/helpers/getFetchClient.ts \
-            --output ./binaries/invidious-companion-macos-x64 \
-            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
-            --allow-net \
-            --allow-env \
-            --allow-read \
-            --allow-sys=hostname \
-            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
-            src/main.ts \
-            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
-            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
+          mkdir -p ./release
+          find ./artifacts -name 'invidious-companion-*' -type f -exec cp {} ./release/ \;
+          ls -la ./release/
 
-      - name: Build macOS Apple Silicon binary (aarch64-apple-darwin)
-        run: |
-          deno compile \
-            --target aarch64-apple-darwin \
-            --include ./src/lib/helpers/youtubePlayerReq.ts \
-            --include ./src/lib/helpers/getFetchClient.ts \
-            --output ./binaries/invidious-companion-macos-arm64 \
-            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
-            --allow-net \
-            --allow-env \
-            --allow-read \
-            --allow-sys=hostname \
-            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
-            src/main.ts \
-            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
-            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
-
-      - name: Build Linux x64 binary (x86_64-unknown-linux-gnu)
-        run: |
-          deno compile \
-            --target x86_64-unknown-linux-gnu \
-            --include ./src/lib/helpers/youtubePlayerReq.ts \
-            --include ./src/lib/helpers/getFetchClient.ts \
-            --output ./binaries/invidious-companion-linux-x64 \
-            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
-            --allow-net \
-            --allow-env \
-            --allow-read \
-            --allow-sys=hostname \
-            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
-            src/main.ts \
-            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
-            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
-
-      - name: Build Linux ARM64 binary (aarch64-unknown-linux-gnu)
-        run: |
-          deno compile \
-            --target aarch64-unknown-linux-gnu \
-            --include ./src/lib/helpers/youtubePlayerReq.ts \
-            --include ./src/lib/helpers/getFetchClient.ts \
-            --output ./binaries/invidious-companion-linux-arm64 \
-            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
-            --allow-net \
-            --allow-env \
-            --allow-read \
-            --allow-sys=hostname \
-            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
-            src/main.ts \
-            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
-            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
-
-      # Step 6: List created binaries for verification
-      - name: List created binaries
-        run: ls -la ./binaries/
-
-      # Step 7: Upload binaries as release assets
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            ./binaries/invidious-companion-windows-x64.exe
-            ./binaries/invidious-companion-macos-x64
-            ./binaries/invidious-companion-macos-arm64
-            ./binaries/invidious-companion-linux-x64
-            ./binaries/invidious-companion-linux-arm64
+          files: ./release/*
           draft: false
           prerelease: false
           generate_release_notes: true

@@ -6,6 +6,23 @@ Companion for Invidious which handle all the video stream retrieval from YouTube
 
 - [deno](https://docs.deno.com/runtime/)  
 
+## Binary Releases
+
+Pre-compiled binaries are available for download from the [GitHub Releases](https://github.com/iv-org/invidious-companion/releases) page. The following platforms are supported:
+
+- **Windows x64** (`invidious-companion-windows-x64.exe`)
+- **macOS Intel** (`invidious-companion-macos-x64`)  
+- **macOS Apple Silicon** (`invidious-companion-macos-arm64`)
+- **Linux x64** (`invidious-companion-linux-x64`)
+- **Linux ARM64** (`invidious-companion-linux-arm64`)
+
+To use a binary release:
+1. Download the appropriate binary for your platform from the releases page
+2. Make it executable (on Unix-like systems): `chmod +x invidious-companion-*`
+3. Run it with your configuration: `./invidious-companion-* --help`
+
+**Note:** Binaries are automatically built and published using GitHub Actions when new tags are created. They include version information and are cross-compiled using `deno compile --target`.  
+
 ## Documentation
 - Installation guide: https://docs.invidious.io/companion-installation/
 - Extra documentation for Invidious companion: https://github.com/iv-org/invidious-companion/wiki
