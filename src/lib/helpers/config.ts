@@ -12,7 +12,10 @@ export const ConfigSchema = z.object({
             Deno.env.get("SERVER_UNIX_SOCKET_PATH") ||
                 "/tmp/invidious-companion.sock",
         ),
-        secret_key: z.string().length(16).default(
+        secret_key: z.string().length(16).regex(
+            /^[a-zA-Z0-9]+$/,
+            "SERVER_SECRET_KEY contains invalid characters. Only alphanumeric characters (a-z, A-Z, 0-9) are allowed. Please generate a valid key using 'pwgen 16 1' or ensure your key contains only letters and numbers.",
+        ).default(
             Deno.env.get("SERVER_SECRET_KEY") || "",
         ),
         verify_requests: z.boolean().default(
