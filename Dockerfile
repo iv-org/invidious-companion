@@ -119,11 +119,12 @@ COPY --from=builder /app/invidious_companion ./
 
 ARG HOST PORT THC_VERSION TINI_VERSION
 EXPOSE "${PORT}/tcp"
+
 ENV SERVER_BASE_PATH=/companion \
     HOST="${HOST}" \
     PORT="${PORT}" \
     THC_PORT="${PORT}" \
-    THC_PATH="${SERVER_BASE_PATH:-/companion}/healthz" \
+    THC_PATH="/healthz" \
     THC_VERSION="${THC_VERSION}" \
     TINI_VERSION="${TINI_VERSION}"
 

@@ -11,6 +11,7 @@ import { existsSync } from "@std/fs/exists";
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
 import { Metrics } from "./lib/helpers/metrics.ts";
+import health from "./routes/health.ts";
 
 const args = parseArgs(Deno.args);
 
@@ -38,6 +39,9 @@ declare module "hono" {
 }
 
 const app = new Hono({
+    getPath: (req) => new URL(req.url).pathname,
+});
+const companionApp = new Hono({
     getPath: (req) => new URL(req.url).pathname,
 }).basePath(config.server.base_path);
 const metrics = config.server.enable_metrics ? new Metrics() : undefined;
@@ -127,15 +131,17 @@ if (!innertubeClientOauthEnabled) {
     await innertubeClient.session.oauth.cacheCredentials();
 }
 
-app.use("*", async (c, next) => {
+companionApp.use("*", async (c, next) => {
     c.set("innertubeClient", innertubeClient);
     c.set("tokenMinter", tokenMinter);
     c.set("config", config);
     c.set("metrics", metrics);
     await next();
 });
+routes(companionApp, config);
 
-routes(app, config);
+app.route("/healthz", health);
+app.route("/", companionApp);
 
 // This cannot be changed since companion restricts the
 // files it can access using deno `--allow-write` argument
