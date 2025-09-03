@@ -164,6 +164,7 @@ export function run(signal: AbortSignal, port: number, hostname: string) {
         const srv = Deno.serve(
             {
                 onListen() {
+                    Deno.chmodSync(udsPath, 0o777);
                     console.log(
                         `[INFO] Server successfully started at ${udsPath} with permissions set to 777.`,
                     );
@@ -173,8 +174,6 @@ export function run(signal: AbortSignal, port: number, hostname: string) {
             },
             app.fetch,
         );
-
-        Deno.chmodSync(udsPath, 0o777);
 
         return srv;
     } else {
