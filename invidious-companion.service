@@ -40,7 +40,7 @@ Environment=CACHE_DIRECTORY=/var/tmp/youtubei.js
 # Use Tor SOCKS proxy to bypass network restrictions
 # For Tor Browser use: Environment=PROXY=socks5://127.0.0.1:9150
 # For Tor daemon use: Environment=PROXY=socks5://127.0.0.1:9050
-Environment=PROXY=socks5://127.0.0.1:9050
+Environment=PROXY=socks5://127.0.0.1:9150
 
 Restart=always
 

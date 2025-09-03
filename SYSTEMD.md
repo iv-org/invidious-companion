@@ -68,13 +68,15 @@ The service is pre-configured to use a Tor SOCKS proxy to bypass potential netwo
 1. Install and start Tor:
 ```bash
 sudo apt install tor
-sudo systemctl enable tor@default
-sudo systemctl start tor@default
+# Add additional SOCKS port for compatibility
+echo "SocksPort 9150" | sudo tee -a /etc/tor/torrc
+sudo systemctl enable tor
+sudo systemctl start tor
 ```
 
 2. The service file includes proxy configuration for:
-   - Tor daemon: `PROXY=socks5://127.0.0.1:9050` (default)
-   - Tor Browser: `PROXY=socks5://127.0.0.1:9150` (alternative)
+   - Tor daemon: `PROXY=socks5://127.0.0.1:9050` (standard port)
+   - Tor Browser compatible: `PROXY=socks5://127.0.0.1:9150` (current default)
 
 3. To disable proxy, comment out or remove the `Environment=PROXY=...` line in the service file.
 
