@@ -14,6 +14,7 @@
 # host = "127.0.0.1" # env variable: HOST
 # # Listens to a unix socket on instead of a TCP socket
 # use_unix_socket = false # env variable: SERVER_USE_UNIX_SOCKET
+# unix_socket_path = "/tmp/invidious-companion.sock" # env variable: SERVER_UNIX_SOCKET_PATH
 # # secret key needs to be exactly 16 characters long
 # secret_key = "CHANGE_ME" # env variable: SERVER_SECRET_KEY
 # verify_requests = false # env variable: SERVER_VERIFY_REQUESTS

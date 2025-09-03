@@ -8,6 +8,10 @@ export const ConfigSchema = z.object({
         use_unix_socket: z.boolean().default(
             Deno.env.get("SERVER_USE_UNIX_SOCKET") === "true" || false,
         ),
+        unix_socket_path: z.string().default(
+            Deno.env.get("SERVER_UNIX_SOCKET_PATH") ||
+                "/tmp/invidious-companion.sock",
+        ),
         secret_key: z.string().length(16).default(
             Deno.env.get("SERVER_SECRET_KEY") || "",
         ),

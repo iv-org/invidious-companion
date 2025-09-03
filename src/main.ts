@@ -139,7 +139,7 @@ routes(app, config);
 
 // This cannot be changed since companion restricts the
 // files it can access using deno `--allow-write` argument
-const udsPath = "/tmp/invidious-companion.sock";
+const udsPath = config.server.unix_socket_path;
 
 export function run(signal: AbortSignal, port: number, hostname: string) {
     if (config.server.use_unix_socket) {
