@@ -57,8 +57,31 @@ The service is configured to:
 - Use a Unix domain socket at `/home/invidious/tmp/invidious-companion.sock`
 - Cache YouTube data in `/var/tmp/youtubei.js`
 - Apply strict security restrictions similar to inv_sig_helper
+- Use Tor SOCKS proxy for YouTube requests (optional)
 
 You can modify the environment variables in the service file or use a configuration file.
+
+### Proxy Configuration
+
+The service is pre-configured to use a Tor SOCKS proxy to bypass potential network restrictions when accessing YouTube. To use this feature:
+
+1. Install and start Tor:
+```bash
+sudo apt install tor
+sudo systemctl enable tor@default
+sudo systemctl start tor@default
+```
+
+2. The service file includes proxy configuration for:
+   - Tor daemon: `PROXY=socks5://127.0.0.1:9050` (default)
+   - Tor Browser: `PROXY=socks5://127.0.0.1:9150` (alternative)
+
+3. To disable proxy, comment out or remove the `Environment=PROXY=...` line in the service file.
+
+Other supported proxy formats:
+- HTTP proxy: `PROXY=http://proxy.example.com:8080`
+- HTTPS proxy: `PROXY=https://proxy.example.com:8080`
+- SOCKS4 proxy: `PROXY=socks4://127.0.0.1:1080`
 
 ## Monitoring
 
