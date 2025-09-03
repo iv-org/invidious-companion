@@ -1,18 +1,13 @@
 /**
- * Test for secret key validation in the config schema
+ * Test for secret key validation in the actual Invidious companion configuration
  * This test verifies that SERVER_SECRET_KEY validation properly rejects special characters
+ * when the actual config is parsed
  */
-import { assert, assertEquals } from "./deps.ts";
-import { z } from "zod";
+import { assert, assertEquals, assertRejects } from "./deps.ts";
+import { parseConfig } from "../lib/helpers/config.ts";
 
-// Extract the exact validation logic we implemented
-const SecretKeySchema = z.string().length(16).regex(
-    /^[a-zA-Z0-9]+$/,
-    "SERVER_SECRET_KEY contains invalid characters. Only alphanumeric characters (a-z, A-Z, 0-9) are allowed. Please generate a valid key using 'pwgen 16 1' or ensure your key contains only letters and numbers.",
-);
-
-Deno.test("Secret key validation in config schema", async (t) => {
-    await t.step("accepts valid alphanumeric keys", () => {
+Deno.test("Secret key validation in Invidious companion config", async (t) => {
+    await t.step("accepts valid alphanumeric keys", async () => {
         const validKeys = [
             "aaaaaaaaaaaaaaaa", // all lowercase
             "AAAAAAAAAAAAAAAA", // all uppercase
@@ -22,18 +17,26 @@ Deno.test("Secret key validation in config schema", async (t) => {
         ];
 
         for (const key of validKeys) {
-            const result = SecretKeySchema.safeParse(key);
-            assert(
-                result.success,
-                `Key "${key}" should be valid but was rejected`,
-            );
-            if (result.success) {
-                assertEquals(result.data, key);
+            // Set the environment variable for each test
+            Deno.env.set("SERVER_SECRET_KEY", key);
+            
+            try {
+                const config = await parseConfig();
+                assertEquals(
+                    config.server.secret_key,
+                    key,
+                    `Key "${key}" should be accepted and stored correctly`,
+                );
+            } catch (error) {
+                assert(
+                    false,
+                    `Key "${key}" should be valid but config parsing failed: ${error.message}`,
+                );
             }
         }
     });
 
-    await t.step("rejects keys with special characters", () => {
+    await t.step("rejects keys with special characters", async () => {
         const invalidKeys = [
             "my#key!123456789", // Contains # and !
             "test@key12345678", // Contains @ (fixed length)
@@ -48,32 +51,34 @@ Deno.test("Secret key validation in config schema", async (t) => {
         ];
 
         for (const key of invalidKeys) {
-            const result = SecretKeySchema.safeParse(key);
-            assert(
-                !result.success,
-                `Key "${key}" should be invalid but was accepted`,
-            );
-            if (!result.success) {
-                const errorMessage = result.error.issues[0].message;
+            // Set the environment variable for each test
+            Deno.env.set("SERVER_SECRET_KEY", key);
+            
+            try {
+                await parseConfig();
                 assert(
-                    errorMessage.includes(
-                        "SERVER_SECRET_KEY contains invalid characters",
-                    ),
-                    `Error message should mention invalid characters, got: ${errorMessage}`,
+                    false,
+                    `Key "${key}" should be invalid but config parsing succeeded`,
                 );
+            } catch (error) {
+                // Verify it's a config parsing error with the right message
                 assert(
-                    errorMessage.includes("alphanumeric characters"),
-                    `Error message should mention alphanumeric, got: ${errorMessage}`,
+                    error.message.includes("Failed to parse configuration"),
+                    `Should get config parsing error, got: ${error.message}`,
                 );
+                
+                // Check that the error contains expected validation message content
+                const errorStr = error.toString();
                 assert(
-                    errorMessage.includes("pwgen"),
-                    `Error message should suggest pwgen, got: ${errorMessage}`,
+                    errorStr.includes("SERVER_SECRET_KEY contains invalid characters") ||
+                    errorStr.includes("alphanumeric characters"),
+                    `Error should mention invalid characters or alphanumeric, got: ${errorStr}`,
                 );
             }
         }
     });
 
-    await t.step("rejects keys with wrong length", () => {
+    await t.step("rejects keys with wrong length", async () => {
         const wrongLengthKeys = [
             "short", // Too short
             "thiskeyistoolongtobevalid", // Too long
@@ -84,63 +89,101 @@ Deno.test("Secret key validation in config schema", async (t) => {
         ];
 
         for (const key of wrongLengthKeys) {
-            const result = SecretKeySchema.safeParse(key);
-            assert(
-                !result.success,
-                `Key "${key}" (length ${key.length}) should be invalid but was accepted`,
-            );
+            // Set the environment variable for each test
+            Deno.env.set("SERVER_SECRET_KEY", key);
+            
+            try {
+                await parseConfig();
+                assert(
+                    false,
+                    `Key "${key}" (length ${key.length}) should be invalid but config parsing succeeded`,
+                );
+            } catch (error) {
+                // Verify it's a config parsing error
+                assert(
+                    error.message.includes("Failed to parse configuration"),
+                    `Should get config parsing error, got: ${error.message}`,
+                );
+                
+                // Check that the error mentions length requirement
+                const errorStr = error.toString();
+                assert(
+                    errorStr.includes("exactly 16 character") || errorStr.includes("String must contain exactly 16 character"),
+                    `Error should mention 16 characters, got: ${errorStr}`,
+                );
+            }
         }
     });
 
-    await t.step("validates error message content", () => {
+    await t.step("validates error message content", async () => {
         // Test that special character validation provides the right error
-        const specialCharResult = SecretKeySchema.safeParse("my#key!123456789");
-        assert(!specialCharResult.success);
+        Deno.env.set("SERVER_SECRET_KEY", "my#key!123456789");
         
-        if (!specialCharResult.success) {
-            const errorMessage = specialCharResult.error.issues[0].message;
+        try {
+            await parseConfig();
+            assert(false, "Should have failed with special character key");
+        } catch (error) {
+            const errorStr = error.toString();
             
-            // Check that the error message contains all expected elements
+            // Check that the error message contains validation details
             assert(
-                errorMessage.includes("SERVER_SECRET_KEY contains invalid characters"),
-                "Should mention SERVER_SECRET_KEY and invalid characters",
-            );
-            assert(
-                errorMessage.includes("Only alphanumeric characters (a-z, A-Z, 0-9) are allowed"),
-                "Should specify allowed character set",
-            );
-            assert(
-                errorMessage.includes("pwgen 16 1"),
-                "Should suggest pwgen command",
+                errorStr.includes("SERVER_SECRET_KEY contains invalid characters") ||
+                errorStr.includes("alphanumeric characters"),
+                "Should mention SERVER_SECRET_KEY and character validation",
             );
         }
 
         // Test that length validation still works and provides clear message
-        const lengthResult = SecretKeySchema.safeParse("short");
-        assert(!lengthResult.success);
+        Deno.env.set("SERVER_SECRET_KEY", "short");
         
-        if (!lengthResult.success) {
-            const lengthMessage = lengthResult.error.issues[0].message;
+        try {
+            await parseConfig();
+            assert(false, "Should have failed with short key");
+        } catch (error) {
+            const errorStr = error.toString();
             assert(
-                lengthMessage.includes("exactly 16 character"),
-                `Should mention 16 characters: ${lengthMessage}`,
+                errorStr.includes("exactly 16 character") || errorStr.includes("String must contain exactly 16 character"),
+                `Should mention 16 characters: ${errorStr}`,
             );
         }
     });
 
-    await t.step("validates precedence - length vs character validation", () => {
+    await t.step("validates precedence - length vs character validation", async () => {
         // When both length and character validation fail, length should be checked first
         // This is the default Zod behavior
-        const result = SecretKeySchema.safeParse("bad#");
-        assert(!result.success);
+        Deno.env.set("SERVER_SECRET_KEY", "bad#");
         
-        if (!result.success) {
-            const errorMessage = result.error.issues[0].message;
+        try {
+            await parseConfig();
+            assert(false, "Should have failed with short key containing special chars");
+        } catch (error) {
+            const errorStr = error.toString();
             // Should get length error since it's checked first
             assert(
-                errorMessage.includes("exactly 16 character"),
-                `Should get length error first: ${errorMessage}`,
+                errorStr.includes("exactly 16 character") || errorStr.includes("String must contain exactly 16 character"),
+                `Should get length error first: ${errorStr}`,
             );
         }
+    });
+
+    // Clean up environment variable after tests
+    await t.step("validates missing SERVER_SECRET_KEY fails", async () => {
+        // Test with no SERVER_SECRET_KEY set (uses default empty string)
+        Deno.env.delete("SERVER_SECRET_KEY");
+        
+        try {
+            await parseConfig();
+            assert(false, "Should have failed with missing/empty SERVER_SECRET_KEY");
+        } catch (error) {
+            const errorStr = error.toString();
+            assert(
+                errorStr.includes("exactly 16 character") || errorStr.includes("String must contain exactly 16 character"),
+                `Should get length error for empty key: ${errorStr}`,
+            );
+        }
+    });
+
+    await t.step("cleanup", () => {
+        Deno.env.delete("SERVER_SECRET_KEY");
     });
 });
