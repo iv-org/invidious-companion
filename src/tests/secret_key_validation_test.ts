@@ -39,7 +39,7 @@ Deno.test("Secret key validation in config schema", async (t) => {
             "test@key12345678", // Contains @ (fixed length)
             "key-with-dashes1", // Contains -
             "key_with_under_s", // Contains _
-            "key with spaces12", // Contains spaces (fixed length)
+            "key with spaces1", // Contains spaces (fixed length to 16)
             "key$with$dollar$", // Contains $
             "key+with+plus+12", // Contains +
             "key=with=equals=", // Contains =
