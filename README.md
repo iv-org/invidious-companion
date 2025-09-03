@@ -9,6 +9,7 @@ Companion for Invidious which handle all the video stream retrieval from YouTube
 ## Documentation
 - Installation guide: https://docs.invidious.io/companion-installation/
 - Extra documentation for Invidious companion: https://github.com/iv-org/invidious-companion/wiki
+- Systemd service installation: [SYSTEMD.md](SYSTEMD.md)
 
 ## Run Locally (development)
 

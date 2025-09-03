@@ -41,3 +41,6 @@ invidious_companion
 test_things/
 config/config.toml
 .cache/
+
+# Temporary files
+*.zip
