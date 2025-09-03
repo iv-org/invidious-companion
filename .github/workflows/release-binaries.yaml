@@ -69,6 +69,16 @@ jobs:
             --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
             --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
 
+      - name: Verify binary
+        run: |
+          if [ -f "${{ steps.binary-name.outputs.name }}" ]; then
+            echo "✅ Binary created successfully: ${{ steps.binary-name.outputs.name }}"
+            ls -la "${{ steps.binary-name.outputs.name }}"
+          else
+            echo "❌ Binary not found: ${{ steps.binary-name.outputs.name }}"
+            exit 1
+          fi
+
       - name: Create archive
         run: |
           case "${{ matrix.target }}" in
