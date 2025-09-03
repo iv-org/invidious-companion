@@ -1,0 +1,147 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'  # Trigger on semantic version tags
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-binaries:
+    runs-on: ubuntu-latest
+    
+    env:
+      DENO_COMPILED: true  # Required for compilation as seen in compile.env
+    
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Need full history for git commands in compile task
+
+      # Step 2: Setup Deno
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # Step 3: Cache Deno dependencies
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: deno-${{ hashFiles('**/deno.lock') }}
+          restore-keys: |
+            deno-
+
+      # Step 4: Create binaries directory
+      - name: Create binaries directory
+        run: mkdir -p ./binaries
+
+      # Step 5: Build binaries for all supported targets
+      - name: Build Windows binary (x86_64-pc-windows-msvc)
+        run: |
+          deno compile \
+            --target x86_64-pc-windows-msvc \
+            --include ./src/lib/helpers/youtubePlayerReq.ts \
+            --include ./src/lib/helpers/getFetchClient.ts \
+            --output ./binaries/invidious-companion-windows-x64.exe \
+            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
+            --allow-net \
+            --allow-env \
+            --allow-read \
+            --allow-sys=hostname \
+            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
+            src/main.ts \
+            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
+            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
+
+      - name: Build macOS Intel binary (x86_64-apple-darwin)
+        run: |
+          deno compile \
+            --target x86_64-apple-darwin \
+            --include ./src/lib/helpers/youtubePlayerReq.ts \
+            --include ./src/lib/helpers/getFetchClient.ts \
+            --output ./binaries/invidious-companion-macos-x64 \
+            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
+            --allow-net \
+            --allow-env \
+            --allow-read \
+            --allow-sys=hostname \
+            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
+            src/main.ts \
+            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
+            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
+
+      - name: Build macOS Apple Silicon binary (aarch64-apple-darwin)
+        run: |
+          deno compile \
+            --target aarch64-apple-darwin \
+            --include ./src/lib/helpers/youtubePlayerReq.ts \
+            --include ./src/lib/helpers/getFetchClient.ts \
+            --output ./binaries/invidious-companion-macos-arm64 \
+            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
+            --allow-net \
+            --allow-env \
+            --allow-read \
+            --allow-sys=hostname \
+            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
+            src/main.ts \
+            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
+            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
+
+      - name: Build Linux x64 binary (x86_64-unknown-linux-gnu)
+        run: |
+          deno compile \
+            --target x86_64-unknown-linux-gnu \
+            --include ./src/lib/helpers/youtubePlayerReq.ts \
+            --include ./src/lib/helpers/getFetchClient.ts \
+            --output ./binaries/invidious-companion-linux-x64 \
+            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
+            --allow-net \
+            --allow-env \
+            --allow-read \
+            --allow-sys=hostname \
+            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
+            src/main.ts \
+            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
+            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
+
+      - name: Build Linux ARM64 binary (aarch64-unknown-linux-gnu)
+        run: |
+          deno compile \
+            --target aarch64-unknown-linux-gnu \
+            --include ./src/lib/helpers/youtubePlayerReq.ts \
+            --include ./src/lib/helpers/getFetchClient.ts \
+            --output ./binaries/invidious-companion-linux-arm64 \
+            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
+            --allow-net \
+            --allow-env \
+            --allow-read \
+            --allow-sys=hostname \
+            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
+            src/main.ts \
+            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
+            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
+
+      # Step 6: List created binaries for verification
+      - name: List created binaries
+        run: ls -la ./binaries/
+
+      # Step 7: Upload binaries as release assets
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ./binaries/invidious-companion-windows-x64.exe
+            ./binaries/invidious-companion-macos-x64
+            ./binaries/invidious-companion-macos-arm64
+            ./binaries/invidious-companion-linux-x64
+            ./binaries/invidious-companion-linux-arm64
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
