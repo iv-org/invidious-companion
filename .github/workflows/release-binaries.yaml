@@ -1,0 +1,88 @@
+name: Release Binaries
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'  # Semantic version tags
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # Version tags with 'v' prefix
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        target:
+          - x86_64-pc-windows-msvc
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Fetch full history for git commands
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Set binary name
+        id: binary-name
+        run: |
+          echo "Building for target: ${{ matrix.target }}"
+          case "${{ matrix.target }}" in
+            *-windows-*)
+              echo "name=invidious_companion.exe" >> $GITHUB_OUTPUT
+              echo "archive_name=invidious_companion-${{ matrix.target }}.zip" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "name=invidious_companion" >> $GITHUB_OUTPUT
+              echo "archive_name=invidious_companion-${{ matrix.target }}.tar.gz" >> $GITHUB_OUTPUT
+              ;;
+          esac
+          echo "Binary name: $(cat $GITHUB_OUTPUT | grep '^name=' | cut -d= -f2)"
+          echo "Archive name: $(cat $GITHUB_OUTPUT | grep '^archive_name=' | cut -d= -f2)"
+
+      - name: Build binary
+        run: |
+          deno compile \
+            --target="${{ matrix.target }}" \
+            --include ./src/lib/helpers/youtubePlayerReq.ts \
+            --include ./src/lib/helpers/getFetchClient.ts \
+            --output "${{ steps.binary-name.outputs.name }}" \
+            --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
+            --allow-net \
+            --allow-env \
+            --allow-read \
+            --allow-sys=hostname \
+            --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
+            src/main.ts \
+            --_version_date="$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)" \
+            --_version_commit="$(git rev-list HEAD --max-count=1 --abbrev-commit)"
+
+      - name: Create archive
+        run: |
+          case "${{ matrix.target }}" in
+            *-windows-*)
+              zip "${{ steps.binary-name.outputs.archive_name }}" "${{ steps.binary-name.outputs.name }}"
+              ;;
+            *)
+              tar -czf "${{ steps.binary-name.outputs.archive_name }}" "${{ steps.binary-name.outputs.name }}"
+              ;;
+          esac
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
+        with:
+          files: ./${{ steps.binary-name.outputs.archive_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
