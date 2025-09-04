@@ -35,7 +35,7 @@ ExecStart=/home/invidious/invidious-companion/invidious_companion
 
 Environment=SERVER_USE_UNIX_SOCKET=true
 Environment=SERVER_UNIX_SOCKET_PATH=/home/invidious/tmp/invidious-companion.sock
-Environment=SERVER_SECRET_KEY=testkey123456789
+Environment=SERVER_SECRET_KEY=CHANGE_ME
 Environment=CACHE_DIRECTORY=/var/tmp/youtubei.js
 
 Restart=always
