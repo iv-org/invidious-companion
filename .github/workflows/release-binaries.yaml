@@ -150,12 +150,15 @@ jobs:
           BINARY_DIR="${COMMIT_DATE}-${COMMIT_SHORT}"
           
           mkdir -p "${BINARY_DIR}"
+          mkdir -p "latest"
           
-          # Move all downloaded binaries to the new directory
+          # Move all downloaded binaries to both timestamped and latest directories
           find ./binaries -name "*.tar.gz" -o -name "*.zip" | while read -r file; do
             if [ -f "$file" ]; then
               cp "$file" "${BINARY_DIR}/"
+              cp "$file" "latest/"
               echo "Added: ${BINARY_DIR}/$(basename "$file")"
+              echo "Added: latest/$(basename "$file")"
             fi
           done
           
@@ -164,9 +167,9 @@ jobs:
 
       - name: Clean up old binaries (keep latest 20)
         run: |
-          # Count current directories (excluding . and ..)
-          TOTAL_DIRS=$(find . -maxdepth 1 -type d -name "*-*" | wc -l)
-          echo "Total binary directories: $TOTAL_DIRS"
+          # Count current timestamped directories (excluding . and .. and latest)
+          TOTAL_DIRS=$(find . -maxdepth 1 -type d -name "*-*" ! -name "latest" | wc -l)
+          echo "Total timestamped binary directories: $TOTAL_DIRS"
           
           if [ "$TOTAL_DIRS" -gt 20 ]; then
             # Get directories sorted by modification time (oldest first)
@@ -174,7 +177,7 @@ jobs:
             DIRS_TO_REMOVE=$((TOTAL_DIRS - 20))
             echo "Removing $DIRS_TO_REMOVE old binary directories"
             
-            find . -maxdepth 1 -type d -name "*-*" -printf "%T@ %p\n" | \
+            find . -maxdepth 1 -type d -name "*-*" ! -name "latest" -printf "%T@ %p\n" | \
               sort -n | \
               head -n $DIRS_TO_REMOVE | \
               cut -d' ' -f2- | \
@@ -192,13 +195,29 @@ jobs:
           echo "This branch contains pre-compiled binaries for invidious-companion." >> README.md
           echo "Binaries are automatically built from each commit to the main branch." >> README.md
           echo "" >> README.md
-          echo "## Latest Binaries" >> README.md
+          echo "## 🚀 Latest Binaries (Recommended)" >> README.md
           echo "" >> README.md
-          echo "The binaries are organized by build date and commit hash. Each directory contains binaries for all supported platforms:" >> README.md
+          echo "The latest binaries are always available in the \`latest\` directory:" >> README.md
+          echo "" >> README.md
+          
+          # List latest binaries
+          if [ -d "latest" ]; then
+            find "latest" -type f \( -name "*.tar.gz" -o -name "*.zip" \) | \
+              sort | \
+              while read -r file; do
+                filename=$(basename "$file")
+                echo "- [$filename]($file)" >> README.md
+              done
+          fi
+          
+          echo "" >> README.md
+          echo "## 📚 All Available Builds" >> README.md
+          echo "" >> README.md
+          echo "Historical builds are organized by build date and commit hash:" >> README.md
           echo "" >> README.md
           
           # List directories in reverse chronological order (newest first)
-          find . -maxdepth 1 -type d -name "*-*" -printf "%T@ %p\n" | \
+          find . -maxdepth 1 -type d -name "*-*" ! -name "latest" -printf "%T@ %p\n" | \
             sort -nr | \
             cut -d' ' -f2- | \
             head -20 | \
@@ -226,11 +245,12 @@ jobs:
           echo "" >> README.md
           echo "## Installation" >> README.md
           echo "" >> README.md
-          echo "1. Navigate to the appropriate directory above (latest is recommended)" >> README.md
-          echo "2. Download the archive for your platform" >> README.md
-          echo "3. Extract the archive to get the \`invidious_companion\` binary" >> README.md
-          echo "4. Make the binary executable (Linux/macOS): \`chmod +x invidious_companion\`" >> README.md
-          echo "5. Run the binary: \`./invidious_companion\`" >> README.md
+          echo "1. **Recommended**: Download from the \`latest\` directory above for the most recent build" >> README.md
+          echo "2. Alternatively, choose a specific build from the historical builds section" >> README.md
+          echo "3. Download the archive for your platform" >> README.md
+          echo "4. Extract the archive to get the \`invidious_companion\` binary" >> README.md
+          echo "5. Make the binary executable (Linux/macOS): \`chmod +x invidious_companion\`" >> README.md
+          echo "6. Run the binary: \`./invidious_companion\`" >> README.md
           echo "" >> README.md
 
       - name: Commit and push binaries
