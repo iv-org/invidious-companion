@@ -12,12 +12,16 @@ export const ConfigSchema = z.object({
             Deno.env.get("SERVER_UNIX_SOCKET_PATH") ||
                 "/tmp/invidious-companion.sock",
         ),
-        secret_key: z.string().length(16).regex(
-            /^[a-zA-Z0-9]+$/,
-            "SERVER_SECRET_KEY contains invalid characters. Only alphanumeric characters (a-z, A-Z, 0-9) are allowed. Please generate a valid key using 'pwgen 16 1' or ensure your key contains only letters and numbers.",
-        ).default(
-            Deno.env.get("SERVER_SECRET_KEY") || "",
-        ),
+        secret_key: z.preprocess(
+            (val) =>
+                val === undefined
+                    ? Deno.env.get("SERVER_SECRET_KEY") || ""
+                    : val,
+            z.string().length(16).regex(
+                /^[a-zA-Z0-9]+$/,
+                "SERVER_SECRET_KEY contains invalid characters. Only alphanumeric characters (a-z, A-Z, 0-9) are allowed. Please generate a valid key using 'pwgen 16 1' or ensure your key contains only letters and numbers.",
+            ),
+        ).default(undefined),
         verify_requests: z.boolean().default(
             Deno.env.get("SERVER_VERIFY_REQUESTS") === "true" || false,
         ),
@@ -133,7 +137,13 @@ export async function parseConfig() {
         console.log(errorMessage);
         if (err instanceof ZodError) {
             console.log(err.issues);
-            throw new Error("Failed to parse configuration file");
+            // Include detailed error information in the thrown error for testing
+            const detailedMessage = err.issues.map((issue) =>
+                `${issue.path.join(".")}: ${issue.message}`
+            ).join("; ");
+            throw new Error(
+                `Failed to parse configuration file: ${detailedMessage}`,
+            );
         }
         // rethrow error if not Zod
         throw err;
