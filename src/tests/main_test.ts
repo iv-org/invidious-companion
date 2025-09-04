@@ -1,4 +1,5 @@
 Deno.env.set("SERVER_SECRET_KEY", "aaaaaaaaaaaaaaaa");
+Deno.env.set("JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED", "false");
 const { run } = await import("../main.ts");
 
 import { dashManifest } from "./dashManifest.ts";

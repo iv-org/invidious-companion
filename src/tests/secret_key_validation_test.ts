@@ -7,6 +7,12 @@ import { assert, assertEquals } from "./deps.ts";
 import { parseConfig } from "../lib/helpers/config.ts";
 
 Deno.test("Secret key validation in Invidious companion config", async (t) => {
+    // Clean up any existing environment variables that might interfere
+    Deno.env.delete("SERVER_SECRET_KEY");
+    
+    // Disable PO token generation for testing to avoid network calls
+    Deno.env.set("JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED", "false");
+
     await t.step("accepts valid alphanumeric keys", async () => {
         const validKeys = [
             "aaaaaaaaaaaaaaaa", // all lowercase
@@ -19,6 +25,10 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
         for (const key of validKeys) {
             // Set the environment variable for each test
             Deno.env.set("SERVER_SECRET_KEY", key);
+            
+            // Debug: Check what environment variable is actually set
+            const actualEnvValue = Deno.env.get("SERVER_SECRET_KEY");
+            console.log(`Debug: Setting key "${key}", actual env value: "${actualEnvValue}"`);
 
             try {
                 const config = await parseConfig();
@@ -230,5 +240,6 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
 
     await t.step("cleanup", () => {
         Deno.env.delete("SERVER_SECRET_KEY");
+        Deno.env.delete("JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED");
     });
 });
