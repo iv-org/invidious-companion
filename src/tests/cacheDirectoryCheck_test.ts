@@ -24,8 +24,7 @@ function createMockConfig(
                     enabled: false,
                     times: 1,
                     initial_debounce: 0,
-                    max_debounce: 0,
-                    backoff_multiplier: 0,
+                    debounce_multiplier: 0,
                 },
             },
             videoplayback: {
