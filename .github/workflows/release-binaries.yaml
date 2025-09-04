@@ -145,8 +145,10 @@ jobs:
       - name: Add new binaries
         run: |
           # Create timestamp-based directory
-          COMMIT_SHORT=$(git log -1 --format="%h" origin/main)
-          COMMIT_DATE=$(git log -1 --format="%Y%m%d-%H%M" origin/main)
+          # Use the branch that triggered this workflow
+          TRIGGER_BRANCH="${{ github.ref_name }}"
+          COMMIT_SHORT=$(git log -1 --format="%h" "origin/$TRIGGER_BRANCH")
+          COMMIT_DATE=$(git log -1 --format="%Y%m%d-%H%M" "origin/$TRIGGER_BRANCH")
           BINARY_DIR="${COMMIT_DATE}-${COMMIT_SHORT}"
           
           mkdir -p "${BINARY_DIR}"
@@ -259,8 +261,10 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            COMMIT_SHORT=$(git log -1 --format="%h" origin/main)
-            COMMIT_MSG=$(git log -1 --format="%s" origin/main)
+            # Use the branch that triggered this workflow
+            TRIGGER_BRANCH="${{ github.ref_name }}"
+            COMMIT_SHORT=$(git log -1 --format="%h" "origin/$TRIGGER_BRANCH")
+            COMMIT_MSG=$(git log -1 --format="%s" "origin/$TRIGGER_BRANCH")
             git commit -m "Add binaries for commit $COMMIT_SHORT: $COMMIT_MSG"
             git push origin binaries
             echo "✅ Binaries pushed to binaries branch"
