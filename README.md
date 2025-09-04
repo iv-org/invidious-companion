@@ -4,15 +4,21 @@ Companion for Invidious which handle all the video stream retrieval from YouTube
 
 ## Installation
 
-### Pre-built binaries
+### Pre-built binaries (Rolling Release)
 
-Pre-built binaries are available for download from the [GitHub Releases](https://github.com/iv-org/invidious-companion/releases) page. Binaries are provided for:
+Pre-built binaries are automatically generated for every commit and are available in the [`binaries`](https://github.com/iv-org/invidious-companion/tree/binaries) branch. Binaries are provided for:
 
 - **Linux**: `x86_64` and `aarch64` (ARM64)
 - **macOS**: Intel (`x86_64`) and Apple Silicon (`aarch64`) 
 - **Windows**: `x86_64`
 
-Download the appropriate binary for your platform, extract it, and run it directly.
+To download:
+1. Visit the [`binaries`](https://github.com/iv-org/invidious-companion/tree/binaries) branch
+2. Navigate to the latest directory (organized by date and commit)
+3. Download the appropriate binary archive for your platform
+4. Extract and run the binary
+
+The 20 most recent builds are kept available in the binaries branch.
 
 ### Build from source
 

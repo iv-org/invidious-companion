@@ -1,16 +1,14 @@
-name: Release Binaries
+name: Rolling Release Binaries
 
 on:
-  release:
-    types: [published]
   push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'  # Semantic version tags
-      - 'v[0-9]+.[0-9]+.[0-9]+'  # Version tags with 'v' prefix
+    branches:
+      - main
+      - master
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
-  build-and-release:
+  build-rolling-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -39,14 +37,15 @@ jobs:
         id: binary-name
         run: |
           echo "Building for target: ${{ matrix.target }}"
+          SHORT_COMMIT=$(git rev-parse --short HEAD)
           case "${{ matrix.target }}" in
             *-windows-*)
               echo "name=invidious_companion.exe" >> $GITHUB_OUTPUT
-              echo "archive_name=invidious_companion-${{ matrix.target }}.zip" >> $GITHUB_OUTPUT
+              echo "archive_name=invidious_companion-${{ matrix.target }}-${SHORT_COMMIT}.zip" >> $GITHUB_OUTPUT
               ;;
             *)
               echo "name=invidious_companion" >> $GITHUB_OUTPUT
-              echo "archive_name=invidious_companion-${{ matrix.target }}.tar.gz" >> $GITHUB_OUTPUT
+              echo "archive_name=invidious_companion-${{ matrix.target }}-${SHORT_COMMIT}.tar.gz" >> $GITHUB_OUTPUT
               ;;
           esac
           echo "Binary name: $(cat $GITHUB_OUTPUT | grep '^name=' | cut -d= -f2)"
@@ -90,9 +89,159 @@ jobs:
               ;;
           esac
 
-      - name: Upload to release
-        uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
+      - name: Upload artifact for binaries job
+        uses: actions/upload-artifact@v4
         with:
-          files: ./${{ steps.binary-name.outputs.archive_name }}
+          name: binary-${{ matrix.target }}
+          path: |
+            ${{ steps.binary-name.outputs.archive_name }}
+          retention-days: 1
+
+  manage-binaries:
+    needs: build-rolling-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./binaries
+
+      - name: Setup git for binaries branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create or switch to binaries branch
+        run: |
+          # Check if binaries branch exists remotely
+          if git ls-remote --heads origin binaries | grep -q binaries; then
+            echo "Binaries branch exists, checking it out"
+            git fetch origin binaries:binaries
+            git checkout binaries
+          else
+            echo "Creating new binaries branch"
+            git checkout --orphan binaries
+            git rm -rf .
+            echo "# Rolling Release Binaries" > README.md
+            echo "" >> README.md
+            echo "This branch contains pre-compiled binaries for invidious-companion." >> README.md
+            echo "Binaries are automatically built from each commit to the main branch." >> README.md
+            echo "" >> README.md
+            echo "## Latest Binaries" >> README.md
+            echo "" >> README.md
+            git add README.md
+            git commit -m "Initialize binaries branch"
+          fi
+
+      - name: Add new binaries
+        run: |
+          # Create timestamp-based directory
+          COMMIT_SHORT=$(git log -1 --format="%h" origin/main)
+          COMMIT_DATE=$(git log -1 --format="%Y%m%d-%H%M" origin/main)
+          BINARY_DIR="${COMMIT_DATE}-${COMMIT_SHORT}"
+          
+          mkdir -p "${BINARY_DIR}"
+          
+          # Move all downloaded binaries to the new directory
+          find ./binaries -name "*.tar.gz" -o -name "*.zip" | while read -r file; do
+            if [ -f "$file" ]; then
+              cp "$file" "${BINARY_DIR}/"
+              echo "Added: ${BINARY_DIR}/$(basename "$file")"
+            fi
+          done
+          
+          # Clean up artifacts directory
+          rm -rf ./binaries
+
+      - name: Clean up old binaries (keep latest 20)
+        run: |
+          # Count current directories (excluding . and ..)
+          TOTAL_DIRS=$(find . -maxdepth 1 -type d -name "*-*" | wc -l)
+          echo "Total binary directories: $TOTAL_DIRS"
+          
+          if [ "$TOTAL_DIRS" -gt 20 ]; then
+            # Get directories sorted by modification time (oldest first)
+            # Remove oldest directories to keep only 20 latest
+            DIRS_TO_REMOVE=$((TOTAL_DIRS - 20))
+            echo "Removing $DIRS_TO_REMOVE old binary directories"
+            
+            find . -maxdepth 1 -type d -name "*-*" -printf "%T@ %p\n" | \
+              sort -n | \
+              head -n $DIRS_TO_REMOVE | \
+              cut -d' ' -f2- | \
+              while read -r dir; do
+                echo "Removing old directory: $dir"
+                rm -rf "$dir"
+              done
+          fi
+
+      - name: Update README with latest binaries
+        run: |
+          # Generate new README.md with current binaries
+          echo "# Rolling Release Binaries" > README.md
+          echo "" >> README.md
+          echo "This branch contains pre-compiled binaries for invidious-companion." >> README.md
+          echo "Binaries are automatically built from each commit to the main branch." >> README.md
+          echo "" >> README.md
+          echo "## Latest Binaries" >> README.md
+          echo "" >> README.md
+          echo "The binaries are organized by build date and commit hash. Each directory contains binaries for all supported platforms:" >> README.md
+          echo "" >> README.md
+          
+          # List directories in reverse chronological order (newest first)
+          find . -maxdepth 1 -type d -name "*-*" -printf "%T@ %p\n" | \
+            sort -nr | \
+            cut -d' ' -f2- | \
+            head -20 | \
+            while read -r dir; do
+              dirname=$(basename "$dir")
+              echo "### $dirname" >> README.md
+              echo "" >> README.md
+              if [ -d "$dir" ]; then
+                find "$dir" -type f \( -name "*.tar.gz" -o -name "*.zip" \) | \
+                  sort | \
+                  while read -r file; do
+                    filename=$(basename "$file")
+                    echo "- [$filename]($file)" >> README.md
+                  done
+              fi
+              echo "" >> README.md
+            done
+          
+          echo "" >> README.md
+          echo "## Platform Support" >> README.md
+          echo "" >> README.md
+          echo "- **Linux**: \`x86_64\` and \`aarch64\` (ARM64) - \`.tar.gz\` archives" >> README.md
+          echo "- **macOS**: Intel (\`x86_64\`) and Apple Silicon (\`aarch64\`) - \`.tar.gz\` archives" >> README.md
+          echo "- **Windows**: \`x86_64\` - \`.zip\` archives" >> README.md
+          echo "" >> README.md
+          echo "## Installation" >> README.md
+          echo "" >> README.md
+          echo "1. Navigate to the appropriate directory above (latest is recommended)" >> README.md
+          echo "2. Download the archive for your platform" >> README.md
+          echo "3. Extract the archive to get the \`invidious_companion\` binary" >> README.md
+          echo "4. Make the binary executable (Linux/macOS): \`chmod +x invidious_companion\`" >> README.md
+          echo "5. Run the binary: \`./invidious_companion\`" >> README.md
+          echo "" >> README.md
+
+      - name: Commit and push binaries
+        run: |
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            COMMIT_SHORT=$(git log -1 --format="%h" origin/main)
+            COMMIT_MSG=$(git log -1 --format="%s" origin/main)
+            git commit -m "Add binaries for commit $COMMIT_SHORT: $COMMIT_MSG"
+            git push origin binaries
+            echo "✅ Binaries pushed to binaries branch"
+          fi
