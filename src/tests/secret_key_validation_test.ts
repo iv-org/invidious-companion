@@ -30,7 +30,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
             } catch (error) {
                 assert(
                     false,
-                    `Key "${key}" should be valid but config parsing failed: ${error.message}`,
+                    `Key "${key}" should be valid but config parsing failed: ${error instanceof Error ? error.message : String(error)}`,
                 );
             }
         }
@@ -63,12 +63,12 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
             } catch (error) {
                 // Verify it's a config parsing error with the right message
                 assert(
-                    error.message.includes("Failed to parse configuration"),
-                    `Should get config parsing error, got: ${error.message}`,
+                    error instanceof Error && error.message.includes("Failed to parse configuration"),
+                    `Should get config parsing error, got: ${error instanceof Error ? error.message : String(error)}`,
                 );
 
                 // Check that the error contains expected validation message content
-                const errorStr = error.toString();
+                const errorStr = error instanceof Error ? error.toString() : String(error);
                 assert(
                     errorStr.includes(
                         "SERVER_SECRET_KEY contains invalid characters",
@@ -103,12 +103,12 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
             } catch (error) {
                 // Verify it's a config parsing error
                 assert(
-                    error.message.includes("Failed to parse configuration"),
-                    `Should get config parsing error, got: ${error.message}`,
+                    error instanceof Error && error.message.includes("Failed to parse configuration"),
+                    `Should get config parsing error, got: ${error instanceof Error ? error.message : String(error)}`,
                 );
 
                 // Check that the error mentions length requirement
-                const errorStr = error.toString();
+                const errorStr = error instanceof Error ? error.toString() : String(error);
                 assert(
                     errorStr.includes("exactly 16 character") ||
                         errorStr.includes(
@@ -128,7 +128,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
             await parseConfig();
             assert(false, "Should have failed with special character key");
         } catch (error) {
-            const errorStr = error.toString();
+            const errorStr = error instanceof Error ? error.toString() : String(error);
 
             // Check that the error message contains validation details
             assert(
@@ -147,7 +147,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
             await parseConfig();
             assert(false, "Should have failed with short key");
         } catch (error) {
-            const errorStr = error.toString();
+            const errorStr = error instanceof Error ? error.toString() : String(error);
             assert(
                 errorStr.includes("exactly 16 character") ||
                     errorStr.includes(
@@ -172,7 +172,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
                     "Should have failed with short key containing special chars",
                 );
             } catch (error) {
-                const errorStr = error.toString();
+                const errorStr = error instanceof Error ? error.toString() : String(error);
                 // Should get length error since it's checked first
                 assert(
                     errorStr.includes("exactly 16 character") ||
@@ -197,7 +197,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
                 "Should have failed with missing/empty SERVER_SECRET_KEY",
             );
         } catch (error) {
-            const errorStr = error.toString();
+            const errorStr = error instanceof Error ? error.toString() : String(error);
             assert(
                 errorStr.includes("exactly 16 character") ||
                     errorStr.includes(
