@@ -3,7 +3,7 @@
  * This test verifies that SERVER_SECRET_KEY validation properly rejects special characters
  * when the actual config is parsed
  */
-import { assert, assertEquals, assertRejects } from "./deps.ts";
+import { assert, assertEquals } from "./deps.ts";
 import { parseConfig } from "../lib/helpers/config.ts";
 
 Deno.test("Secret key validation in Invidious companion config", async (t) => {
