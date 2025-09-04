@@ -6,10 +6,10 @@ Deno.test({
         const config = {
             cache: {
                 enabled: false,
-                directory: "/nonexistent/path"
-            }
+                directory: "/nonexistent/path",
+            },
         };
-        
+
         // Should not throw when cache is disabled
         checkCacheDirectoryPermissions(config);
     },
@@ -21,10 +21,10 @@ Deno.test({
         const config = {
             cache: {
                 enabled: true,
-                directory: "/tmp"
-            }
+                directory: "/tmp",
+            },
         };
-        
+
         // Should not throw for /tmp which should be writable
         checkCacheDirectoryPermissions(config);
     },
@@ -36,10 +36,10 @@ Deno.test({
         const config = {
             cache: {
                 enabled: true,
-                directory: "/nonexistent/path"
-            }
+                directory: "/nonexistent/path",
+            },
         };
-        
+
         // Should throw for nonexistent parent directory
         try {
             checkCacheDirectoryPermissions(config);
@@ -50,7 +50,9 @@ Deno.test({
             }
             // Expected error - check it contains helpful information
             if (!err.message.includes("does not exist")) {
-                throw new Error(`Expected error message to mention directory doesn't exist, got: ${err.message}`);
+                throw new Error(
+                    `Expected error message to mention directory doesn't exist, got: ${err.message}`,
+                );
             }
         }
     },

@@ -43,7 +43,7 @@ export function checkCacheDirectoryPermissions(config: Config): void {
             } catch (err) {
                 throw new Error(
                     `Cannot create youtubei.js cache directory '${youtubeiJsDir}'. ` +
-                    `Check directory permissions. Original error: ${err.message}`,
+                        `Check directory permissions. Original error: ${err.message}`,
                 );
             }
         }
@@ -56,19 +56,25 @@ export function checkCacheDirectoryPermissions(config: Config): void {
         } catch (err) {
             throw new Error(
                 `Cannot write to youtubei.js cache directory '${youtubeiJsDir}'. ` +
-                `This usually indicates a permission issue. ` +
-                `Ensure the directory is writable by the application user. ` +
-                `For Docker containers, check volume mount permissions. ` +
-                `Original error: ${err.message}`,
+                    `This usually indicates a permission issue. ` +
+                    `Ensure the directory is writable by the application user. ` +
+                    `For Docker containers, check volume mount permissions. ` +
+                    `Original error: ${err.message}`,
             );
         }
 
-        console.log(`[INFO] Cache directory '${youtubeiJsDir}' is accessible and writable`);
+        console.log(
+            `[INFO] Cache directory '${youtubeiJsDir}' is accessible and writable`,
+        );
     } catch (err) {
         console.log(`[ERROR] Cache directory check failed: ${err.message}`);
         console.log(`[ERROR] Common solutions:`);
-        console.log(`[ERROR] - For Docker: Ensure the mounted volume has correct permissions (chmod 777 or appropriate ownership)`);
-        console.log(`[ERROR] - For bare metal: Ensure the process user can write to '${youtubeiJsDir}'`);
+        console.log(
+            `[ERROR] - For Docker: Ensure the mounted volume has correct permissions (chmod 777 or appropriate ownership)`,
+        );
+        console.log(
+            `[ERROR] - For bare metal: Ensure the process user can write to '${youtubeiJsDir}'`,
+        );
         console.log(`[ERROR] - Check SELinux/AppArmor policies if applicable`);
         throw err;
     }
