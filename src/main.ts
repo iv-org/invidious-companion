@@ -24,7 +24,8 @@ if (args._version_date && args._version_commit) {
 try {
     checkCacheDirectoryPermissions(config);
 } catch (err) {
-    console.log(`[FATAL] ${err.message}`);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.log(`[FATAL] ${errorMessage}`);
     Deno.exit(1);
 }
 

@@ -41,9 +41,12 @@ export function checkCacheDirectoryPermissions(config: Config): void {
             try {
                 Deno.mkdirSync(youtubeiJsDir, { recursive: true });
             } catch (err) {
+                const errorMessage = err instanceof Error
+                    ? err.message
+                    : String(err);
                 throw new Error(
                     `Cannot create youtubei.js cache directory '${youtubeiJsDir}'. ` +
-                        `Check directory permissions. Original error: ${err.message}`,
+                        `Check directory permissions. Original error: ${errorMessage}`,
                 );
             }
         }
@@ -54,12 +57,15 @@ export function checkCacheDirectoryPermissions(config: Config): void {
             Deno.writeTextFileSync(testFile, "test");
             Deno.removeSync(testFile);
         } catch (err) {
+            const errorMessage = err instanceof Error
+                ? err.message
+                : String(err);
             throw new Error(
                 `Cannot write to youtubei.js cache directory '${youtubeiJsDir}'. ` +
                     `This usually indicates a permission issue. ` +
                     `Ensure the directory is writable by the application user. ` +
                     `For Docker containers, check volume mount permissions. ` +
-                    `Original error: ${err.message}`,
+                    `Original error: ${errorMessage}`,
             );
         }
 
@@ -67,7 +73,8 @@ export function checkCacheDirectoryPermissions(config: Config): void {
             `[INFO] Cache directory '${youtubeiJsDir}' is accessible and writable`,
         );
     } catch (err) {
-        console.log(`[ERROR] Cache directory check failed: ${err.message}`);
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.log(`[ERROR] Cache directory check failed: ${errorMessage}`);
         console.log(`[ERROR] Common solutions:`);
         console.log(
             `[ERROR] - For Docker: Ensure the mounted volume has correct permissions (chmod 777 or appropriate ownership)`,
