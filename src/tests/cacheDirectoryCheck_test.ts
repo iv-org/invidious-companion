@@ -63,10 +63,10 @@ Deno.test({
     fn() {
         const config = createMockConfig({
             enabled: true,
-            directory: "/tmp",
+            directory: "/var/tmp",
         });
 
-        // Should not throw for /tmp which should be writable
+        // Should not throw for /var/tmp which should be writable
         checkCacheDirectoryPermissions(config);
     },
 });
