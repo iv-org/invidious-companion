@@ -1,10 +1,14 @@
 import { checkCacheDirectoryPermissions } from "../lib/helpers/cacheDirectoryCheck.ts";
 import { ConfigSchema } from "../lib/helpers/config.ts";
 
+// Set required environment variable for secret key (16 characters required)
+Deno.env.set("SERVER_SECRET_KEY", "aaaaaaaaaaaaaaaa");
+
 function createMockConfig(
     cacheConfig: { enabled: boolean; directory: string },
 ) {
     // Use minimal config - let ConfigSchema provide defaults for everything except cache
+    // The SERVER_SECRET_KEY environment variable is set above to satisfy the 16-character requirement
     return ConfigSchema.parse({
         cache: cacheConfig,
     });
