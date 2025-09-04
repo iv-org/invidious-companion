@@ -8,7 +8,6 @@ import invidiousRouteDashManifest from "./invidious_routes/dashManifest.ts";
 import invidiousCaptionsApi from "./invidious_routes/captions.ts";
 import getDownloadHandler from "./invidious_routes/download.ts";
 import videoPlaybackProxy from "./videoPlaybackProxy.ts";
-import health from "./health.ts";
 import type { Config } from "../lib/helpers/config.ts";
 import metrics from "./metrics.ts";
 
@@ -41,7 +40,6 @@ export const routes = (
     app.route("/api/manifest/dash/id", invidiousRouteDashManifest);
     app.route("/api/v1/captions", invidiousCaptionsApi);
     app.route("/videoplayback", videoPlaybackProxy);
-    app.route("/healthz", health);
     if (config.server.enable_metrics) {
         app.route("/metrics", metrics);
     }

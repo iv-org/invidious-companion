@@ -85,7 +85,8 @@ latestVersion.get("/", async (c) => {
                 queryParams.set("enc", "true");
                 queryParams.set("data", encryptedParams);
             }
-            urlToRedirect = itagUrlParsed.pathname + "?" +
+            urlToRedirect = config.server.base_path + itagUrlParsed.pathname +
+                "?" +
                 queryParams.toString();
         }
 
