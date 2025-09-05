@@ -19,6 +19,15 @@ To download:
 
 The latest builds are always available in the `latest` release and are updated automatically with each new commit.
 
+#### Finding Old Versions
+
+If you need a specific version built from a previous commit, you can find older versions in the GitHub Actions artifacts:
+
+1. Go to the [Actions tab](https://github.com/iv-org/invidious-companion/actions/workflows/release-binaries.yaml)
+2. Click on the workflow run for the specific commit you're interested in
+3. Scroll down to the "Artifacts" section to download the binaries for that commit
+4. Note that artifacts are kept for 90 days before being automatically deleted
+
 ### Build from source
 
 ## Requirements

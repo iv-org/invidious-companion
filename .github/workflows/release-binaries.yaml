@@ -37,15 +37,14 @@ jobs:
         id: binary-name
         run: |
           echo "Building for target: ${{ matrix.target }}"
-          SHORT_COMMIT=$(git rev-parse --short HEAD)
           case "${{ matrix.target }}" in
             *-windows-*)
               echo "name=invidious_companion.exe" >> $GITHUB_OUTPUT
-              echo "archive_name=invidious_companion-${{ matrix.target }}-${SHORT_COMMIT}.zip" >> $GITHUB_OUTPUT
+              echo "archive_name=invidious_companion-${{ matrix.target }}.zip" >> $GITHUB_OUTPUT
               ;;
             *)
               echo "name=invidious_companion" >> $GITHUB_OUTPUT
-              echo "archive_name=invidious_companion-${{ matrix.target }}-${SHORT_COMMIT}.tar.gz" >> $GITHUB_OUTPUT
+              echo "archive_name=invidious_companion-${{ matrix.target }}.tar.gz" >> $GITHUB_OUTPUT
               ;;
           esac
           echo "Binary name: $(cat $GITHUB_OUTPUT | grep '^name=' | cut -d= -f2)"
