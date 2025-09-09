@@ -12,9 +12,29 @@ export const ConfigSchema = z.object({
             Deno.env.get("SERVER_UNIX_SOCKET_PATH") ||
                 "/tmp/invidious-companion.sock",
         ),
-        base_path: z.string().default(
-            Deno.env.get("SERVER_BASE_PATH") || "/companion",
-        ),
+        base_path: z.string()
+            .default(Deno.env.get("SERVER_BASE_PATH") || "/companion")
+            .refine(
+                (path) => path.startsWith("/"),
+                {
+                    message:
+                        "SERVER_BASE_PATH must start with a forward slash (/). Example: '/companion'",
+                },
+            )
+            .refine(
+                (path) => !path.endsWith("/") || path === "/",
+                {
+                    message:
+                        "SERVER_BASE_PATH must not end with a forward slash (/) unless it's the root path. Example: '/companion' not '/companion/'",
+                },
+            )
+            .refine(
+                (path) => !path.includes("//"),
+                {
+                    message:
+                        "SERVER_BASE_PATH must not contain double slashes (//). Example: '/companion' not '//companion' or '/comp//anion'",
+                },
+            ),
         secret_key: z.string().length(16).default(
             Deno.env.get("SERVER_SECRET_KEY") || "",
         ),
