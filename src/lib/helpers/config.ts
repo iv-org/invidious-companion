@@ -45,7 +45,6 @@ export const ConfigSchema = z.object({
                         "SERVER_BASE_PATH must not contain double slashes (//). Example: '/companion' not '//companion' or '/comp//anion'",
                 },
             ),
-        ),
         verify_requests: z.boolean().default(
             Deno.env.get("SERVER_VERIFY_REQUESTS") === "true" || false,
         ),
