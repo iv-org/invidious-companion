@@ -12,16 +12,6 @@ export const ConfigSchema = z.object({
             Deno.env.get("SERVER_UNIX_SOCKET_PATH") ||
                 "/tmp/invidious-companion.sock",
         ),
-        secret_key: z.preprocess(
-            (val) =>
-                val === undefined
-                    ? Deno.env.get("SERVER_SECRET_KEY") || ""
-                    : val,
-            z.string().length(16).regex(
-                /^[a-zA-Z0-9]+$/,
-                "SERVER_SECRET_KEY contains invalid characters. Only alphanumeric characters (a-z, A-Z, 0-9) are allowed. Please generate a valid key using 'pwgen 16 1' or ensure your key contains only letters and numbers.",
-            ),
-        ).default(undefined),
         base_path: z.string()
             .default(Deno.env.get("SERVER_BASE_PATH") || "/companion")
             .refine(
@@ -45,6 +35,16 @@ export const ConfigSchema = z.object({
                         "SERVER_BASE_PATH must not contain double slashes (//). Example: '/companion' not '//companion' or '/comp//anion'",
                 },
             ),
+        secret_key: z.preprocess(
+            (val) =>
+                val === undefined
+                    ? Deno.env.get("SERVER_SECRET_KEY") || ""
+                    : val,
+            z.string().length(16).regex(
+                /^[a-zA-Z0-9]+$/,
+                "SERVER_SECRET_KEY contains invalid characters. Only alphanumeric characters (a-z, A-Z, 0-9) are allowed. Please generate a valid key using 'pwgen 16 1' or ensure your key contains only letters and numbers.",
+            ),
+        ).default(undefined),
         verify_requests: z.boolean().default(
             Deno.env.get("SERVER_VERIFY_REQUESTS") === "true" || false,
         ),
