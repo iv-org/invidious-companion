@@ -10,6 +10,8 @@
 #####
 
 # [server]
+# log_level = "info" # env variable: SERVER_LOG_LEVEL
+# colorize_logs = false # env variable: SERVER_COLORIZE_LOGS
 # port = 8282 # env variable: PORT
 # host = "127.0.0.1" # env variable: HOST
 # # Listens to a unix socket on instead of a TCP socket
