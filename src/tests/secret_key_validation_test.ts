@@ -10,9 +10,6 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
     // Clean up any existing environment variables that might interfere
     Deno.env.delete("SERVER_SECRET_KEY");
 
-    // Disable PO token generation for testing to avoid network calls
-    Deno.env.set("JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED", "false");
-
     await t.step("accepts valid alphanumeric keys", async () => {
         const validKeys = [
             "aaaaaaaaaaaaaaaa", // all lowercase
@@ -236,6 +233,5 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
 
     await t.step("cleanup", () => {
         Deno.env.delete("SERVER_SECRET_KEY");
-        Deno.env.delete("JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED");
     });
 });

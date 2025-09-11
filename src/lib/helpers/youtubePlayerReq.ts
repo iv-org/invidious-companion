@@ -43,7 +43,7 @@ export const youtubePlayerReq = async (
     innertubeClient: Innertube,
     videoId: string,
     config: Config,
-    tokenMinter: TokenMinter | undefined,
+    tokenMinter: TokenMinter,
 ): Promise<ApiResponse> => {
     const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
 
@@ -52,7 +52,7 @@ export const youtubePlayerReq = async (
         innertubeClientUsed = "TV";
     }
 
-    const contentPoToken = tokenMinter ? await tokenMinter(videoId) : "";
+    const contentPoToken = await tokenMinter(videoId);
 
     const youtubePlayerResponse = await callWatchEndpoint(
         videoId,
