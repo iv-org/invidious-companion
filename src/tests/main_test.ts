@@ -12,14 +12,14 @@ Deno.test({
     name: "Checking if Invidious companion works",
     async fn(t) {
         const controller = new AbortController();
-        const port = 8282;
-        const baseUrl = `http://localhost:${port.toString()}`;
+        const baseUrl =
+            `http://${config.server.host}:${config.server.port.toString()}${config.server.base_path}`;
         const headers = { Authorization: "Bearer aaaaaaaaaaaaaaaa" };
 
         await run(
             controller.signal,
-            port,
-            "localhost",
+            config.server.port,
+            config.server.host,
         );
 
         await t.step(

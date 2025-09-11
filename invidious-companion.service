@@ -1,0 +1,44 @@
+[Unit]
+Description=invidious-companion (companion for Invidious which handle all the video stream retrieval from YouTube servers)
+After=syslog.target
+After=network.target
+
+[Service]
+RestartSec=2s
+Type=simple
+
+User=invidious
+Group=invidious
+
+# Security hardening - balanced approach for Deno applications
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+
+# Filesystem access
+BindReadOnlyPaths=/home/invidious/invidious-companion
+BindPaths=/home/invidious/tmp
+BindPaths=/var/tmp/youtubei.js
+
+WorkingDirectory=/home/invidious/invidious-companion
+ExecStart=/home/invidious/invidious-companion/invidious_companion
+
+Environment=SERVER_USE_UNIX_SOCKET=true
+Environment=SERVER_UNIX_SOCKET_PATH=/home/invidious/tmp/invidious-companion.sock
+Environment=SERVER_SECRET_KEY=CHANGE_ME
+Environment=CACHE_DIRECTORY=/var/tmp/youtubei.js
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

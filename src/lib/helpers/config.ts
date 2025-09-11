@@ -22,6 +22,30 @@ export const ConfigSchema = z.object({
                 "SERVER_SECRET_KEY contains invalid characters. Only alphanumeric characters (a-z, A-Z, 0-9) are allowed. Please generate a valid key using 'pwgen 16 1' or ensure your key contains only letters and numbers.",
             ),
         ).default(undefined),
+        base_path: z.string()
+            .default(Deno.env.get("SERVER_BASE_PATH") || "/companion")
+            .refine(
+                (path) => path.startsWith("/"),
+                {
+                    message:
+                        "SERVER_BASE_PATH must start with a forward slash (/). Example: '/companion'",
+                },
+            )
+            .refine(
+                (path) => !path.endsWith("/") || path === "/",
+                {
+                    message:
+                        "SERVER_BASE_PATH must not end with a forward slash (/) unless it's the root path. Example: '/companion' not '/companion/'",
+                },
+            )
+            .refine(
+                (path) => !path.includes("//"),
+                {
+                    message:
+                        "SERVER_BASE_PATH must not contain double slashes (//). Example: '/companion' not '//companion' or '/comp//anion'",
+                },
+            ),
+        ),
         verify_requests: z.boolean().default(
             Deno.env.get("SERVER_VERIFY_REQUESTS") === "true" || false,
         ),
