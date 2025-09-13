@@ -241,7 +241,7 @@ export class Metrics {
 
         const error = {
             thisHelpsProtectCommunity: false,
-            thisVideoMayBeInnapropiate: false,
+            thisVideoMayBeInappropriate: false,
             vpnProxy: false,
             generic: false,
         };
@@ -252,7 +252,7 @@ export class Metrics {
             // Youtube blockage
                 "This helps protect our community": "thisHelpsProtectCommunity",
             // Age restricted videos
-                "This video may be inappropriate for some users": "thisVideoMayBeInnapropiate",
+                "This video may be inappropriate for some users": "thisVideoMayBeInappropriate",
             // VPN/Proxy
                 "To continue, turn off your VPN/Proxy. This will allow YouTube to locate the best content.": "vpnProxy",
             // Content not available (error that generally appears when companion is not able to generate a potoken)
