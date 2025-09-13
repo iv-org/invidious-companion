@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { miscRoutes, companionRoutes } from "./routes/index.ts";
+import { companionRoutes, miscRoutes } from "./routes/index.ts";
 import { Innertube } from "youtubei.js";
 import { poTokenGenerate, type TokenMinter } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
@@ -143,7 +143,7 @@ app.use("*", async (c, next) => {
     c.set("metrics", metrics);
     await next();
 });
-miscRoutes(app, config)
+miscRoutes(app, config);
 
 app.route("/", companionApp);
 
