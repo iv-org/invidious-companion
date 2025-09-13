@@ -10,8 +10,9 @@ import getDownloadHandler from "./invidious_routes/download.ts";
 import videoPlaybackProxy from "./videoPlaybackProxy.ts";
 import type { Config } from "../lib/helpers/config.ts";
 import metrics from "./metrics.ts";
+import health from "./health.ts";
 
-export const routes = (
+export const companionRoutes = (
     app: Hono,
     config: Config,
 ) => {
@@ -40,6 +41,13 @@ export const routes = (
     app.route("/api/manifest/dash/id", invidiousRouteDashManifest);
     app.route("/api/v1/captions", invidiousCaptionsApi);
     app.route("/videoplayback", videoPlaybackProxy);
+};
+
+export const miscRoutes = (
+    app: Hono,
+    config: Config,
+) => {
+    app.route("/healthz", health);
     if (config.server.enable_metrics) {
         app.route("/metrics", metrics);
     }

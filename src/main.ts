@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { routes } from "./routes/index.ts";
+import { miscRoutes, companionRoutes } from "./routes/index.ts";
 import { Innertube } from "youtubei.js";
 import { poTokenGenerate, type TokenMinter } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
@@ -11,7 +11,6 @@ import { existsSync } from "@std/fs/exists";
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
 import { Metrics } from "./lib/helpers/metrics.ts";
-import health from "./routes/health.ts";
 
 const args = parseArgs(Deno.args);
 
@@ -138,9 +137,14 @@ companionApp.use("*", async (c, next) => {
     c.set("metrics", metrics);
     await next();
 });
-routes(companionApp, config);
+companionRoutes(companionApp, config);
 
-app.route("/healthz", health);
+app.use("*", async (c, next) => {
+    c.set("metrics", metrics);
+    await next();
+});
+miscRoutes(app, config)
+
 app.route("/", companionApp);
 
 // This cannot be changed since companion restricts the
