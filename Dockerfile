@@ -12,6 +12,9 @@ ARG DENO_DIR='/deno-dir' \
     HOST='0.0.0.0' \
     PORT='8282'
 
+# sha256 checksums for binaries
+ARG THC_SHA256='cb1797948015da46c222764a99ee30c06a6a9a30f5b87f212a28ea3c6d07610d' \
+    TINI_SHA256='93dcc18adc78c65a028a84799ecf8ad40c936fdfc5f2a57b1acda5a8117fa82c'
 
 # we can use these aliases and let dependabot remain simple
 # inspired by:
@@ -35,11 +38,12 @@ RUN DEBIAN_FRONTEND='noninteractive' && export DEBIAN_FRONTEND && \
 
 # Download tiny-health-checker from GitHub
 FROM debian-curl AS thc-download
-ARG GH_BASE_URL THC_VERSION
+ARG GH_BASE_URL THC_VERSION THC_SHA256
 RUN arch="$(uname -m)" && \
     gh_url() { printf -- "${GH_BASE_URL}/%s/releases/download/%s/%s\n" "$@" ; } && \
     URL="$(gh_url dmikusa/tiny-health-checker v${THC_VERSION} tiny-health-checker-${arch}-unknown-linux-musl.tar.xz)" && \
     curl -fsSL --output /tiny-health-checker-${arch}-unknown-linux-musl.tar.xz "${URL}" && \
+    echo "${THC_SHA256}  /tiny-health-checker-${arch}-unknown-linux-musl.tar.xz" | sha256sum -c && \
     tar -xvf /tiny-health-checker-${arch}-unknown-linux-musl.tar.xz && \
     mv /tiny-health-checker-${arch}-unknown-linux-musl/thc /thc && \
     chmod -v 00555 /thc
@@ -52,11 +56,13 @@ COPY --from=thc-download /thc /thc
 
 # Download tini from GitHub
 FROM debian-curl AS tini-download
-ARG GH_BASE_URL TINI_VERSION
+ARG GH_BASE_URL TINI_VERSION TINI_SHA256
 RUN arch="$(dpkg --print-architecture)" && \
     gh_url() { printf -- "${GH_BASE_URL}/%s/releases/download/%s/%s\n" "$@" ; } && \
     URL="$(gh_url krallin/tini v${TINI_VERSION} tini-${arch})" && \
-    curl -fsSL --output /tini "${URL}" && chmod -v 00555 /tini
+    curl -fsSL --output /tini "${URL}" && \
+    echo "${TINI_SHA256}  /tini" | sha256sum -c && \
+    chmod -v 00555 /tini
 
 # Cache the tini binary as a layer
 FROM scratch AS tini-bin
