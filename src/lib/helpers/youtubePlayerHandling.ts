@@ -120,7 +120,9 @@ export const youtubePlayerParsing = async ({
                             metrics?.playerErrors.labels({
                                 error: err.message,
                             }).inc();
-                            throw `[ERROR] Got error '${err.message}' for video id '${video.basic_info.id}'`;
+                            throw new Error(
+                                `[ERROR] Got error '${err.message}' for video id '${video.basic_info.id}'`,
+                            );
                         }
                     }
 
