@@ -14,7 +14,7 @@
     "youtubei.js/Utils": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v15.1.1-deno/deno/src/utils/Utils.ts",
     "youtubei.js/NavigationEndpoint": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v15.1.1-deno/deno/src/parser/classes/NavigationEndpoint.ts",
     "youtubei.js/PlayerCaptionsTracklist": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v15.1.1-deno/deno/src/parser/classes/PlayerCaptionsTracklist.ts",
-    "jsdom": "npm:jsdom@26.0.0",
+    "jsdom": "npm:jsdom@27.0.0",
     "bgutils": "https://esm.sh/bgutils-js@3.2.0",
     "estree": "https://esm.sh/@types/estree@1.0.6",
     "youtubePlayerReq": "./src/lib/helpers/youtubePlayerReq.ts",
