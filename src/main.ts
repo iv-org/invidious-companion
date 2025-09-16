@@ -12,11 +12,14 @@ import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
 import { Metrics } from "./lib/helpers/metrics.ts";
 
+import { Logger, LogLevel } from "./lib/helpers/logger.ts";
+const logger = config.server.log_level != LogLevel[7] ? new Logger(config.server.log_level, config.server.colorize_logs) : undefined;
+
 const args = parseArgs(Deno.args);
 
 if (args._version_date && args._version_commit) {
-    console.log(
-        `[INFO] Using Invidious companion version ${args._version_date}-${args._version_commit}`,
+    logger?.info(
+        `Using Invidious companion version ${args._version_date}-${args._version_commit}`,
     );
 }
 
@@ -55,11 +58,11 @@ const innertubeClientCookies = config.youtube_session.cookies;
 
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
-        console.log("[INFO] job po_token is active.");
+        logger?.info("job po_token is active.");
         // Don't fetch fetch player yet for po_token
         innertubeClientFetchPlayer = false;
     } else if (!innertubeClientJobPoTokenEnabled) {
-        console.log("[INFO] job po_token is NOT active.");
+        logger?.info("job po_token is NOT active.");
     }
 }
 
@@ -78,6 +81,7 @@ if (!innertubeClientOauthEnabled) {
                 poTokenGenerate,
                 config,
                 metrics,
+                logger,
             ),
             { minTimeout: 1_000, maxTimeout: 60_000, multiplier: 5, jitter: 0 },
         ));
@@ -92,6 +96,7 @@ if (!innertubeClientOauthEnabled) {
                     ({ innertubeClient, tokenMinter } = await poTokenGenerate(
                         config,
                         metrics,
+                        logger,
                     ));
                 } catch (err) {
                     metrics?.potokenGenerationFailure.inc();
@@ -111,17 +116,17 @@ if (!innertubeClientOauthEnabled) {
 } else if (innertubeClientOauthEnabled) {
     // Fired when waiting for the user to authorize the sign in attempt.
     innertubeClient.session.on("auth-pending", (data) => {
-        console.log(
-            `[INFO] [OAUTH] Go to ${data.verification_url} in your browser and enter code ${data.user_code} to authenticate.`,
+        logger?.info(
+            `[OAUTH] Go to ${data.verification_url} in your browser and enter code ${data.user_code} to authenticate.`,
         );
     });
     // Fired when authentication is successful.
     innertubeClient.session.on("auth", () => {
-        console.log("[INFO] [OAUTH] Sign in successful!");
+        logger?.info("[OAUTH] Sign in successful!");
     });
     // Fired when the access token expires.
     innertubeClient.session.on("update-credentials", async () => {
-        console.log("[INFO] [OAUTH] Credentials updated.");
+        logger?.info("[OAUTH] Credentials updated.");
         await innertubeClient.session.oauth.cacheCredentials();
     });
 
@@ -202,13 +207,13 @@ if (import.meta.main) {
     run(signal, config.server.port, config.server.host);
 
     Deno.addSignalListener("SIGTERM", () => {
-        console.log("Caught SIGINT, shutting down...");
+        logger?.info("Caught SIGINT, shutting down...");
         controller.abort();
         Deno.exit(0);
     });
 
     Deno.addSignalListener("SIGINT", () => {
-        console.log("Caught SIGINT, shutting down...");
+        logger?.info("Caught SIGINT, shutting down...");
         controller.abort();
         Deno.exit(0);
     });
