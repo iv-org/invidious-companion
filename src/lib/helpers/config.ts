@@ -3,6 +3,12 @@ import { parse } from "@std/toml";
 
 export const ConfigSchema = z.object({
     server: z.object({
+        log_level: z.string().default(
+            Deno.env.get("SERVER_LOG_LEVEL") || "info",
+        ),
+        colorize_logs: z.boolean().default(
+            Deno.env.get("SERVER_COLORIZE_LOGS") === "true" || false,
+        ),
         port: z.number().default(Number(Deno.env.get("PORT")) || 8282),
         host: z.string().default(Deno.env.get("HOST") || "127.0.0.1"),
         use_unix_socket: z.boolean().default(
