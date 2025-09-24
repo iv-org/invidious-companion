@@ -6,11 +6,11 @@ import { USER_AGENT } from "bgutils";
 import { retry } from "@std/async";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
 import { parseArgs } from "@std/cli/parse-args";
-import { existsSync } from "@std/fs/exists";
 
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
 import { Metrics } from "./lib/helpers/metrics.ts";
+import { checkCacheDirectoryPermissions } from "./lib/helpers/cacheDirectoryCheck.ts";
 
 const args = parseArgs(Deno.args);
 
@@ -18,6 +18,15 @@ if (args._version_date && args._version_commit) {
     console.log(
         `[INFO] Using Invidious companion version ${args._version_date}-${args._version_commit}`,
     );
+}
+
+// Check cache directory permissions early to provide helpful error messages
+try {
+    checkCacheDirectoryPermissions(config);
+} catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.log(`[FATAL] ${errorMessage}`);
+    Deno.exit(1);
 }
 
 let getFetchClientLocation = "getFetchClient";
@@ -154,9 +163,14 @@ const udsPath = config.server.unix_socket_path;
 export function run(signal: AbortSignal, port: number, hostname: string) {
     if (config.server.use_unix_socket) {
         try {
-            if (existsSync(udsPath)) {
-                // Delete the unix domain socket manually before starting the server
-                Deno.removeSync(udsPath);
+            try {
+                const stat = Deno.statSync(udsPath);
+                if (stat.isFile || stat.isSocket) {
+                    // Delete the unix domain socket manually before starting the server
+                    Deno.removeSync(udsPath);
+                }
+            } catch {
+                // File doesn't exist, which is fine
             }
         } catch (err) {
             console.log(
