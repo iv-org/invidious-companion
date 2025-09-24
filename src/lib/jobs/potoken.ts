@@ -1,4 +1,5 @@
-import { Innertube } from "youtubei.js";
+import { IBrowseResponse, Innertube } from "youtubei.js";
+import TabbedFeed from "youtubei.js/TabbedFeed";
 import {
     youtubePlayerParsing,
     youtubeVideoInfo,
@@ -149,9 +150,11 @@ async function checkToken({
     const fetchImpl = getFetchClient(config);
 
     let trendingTabs: string[];
+    let trending: TabbedFeed<IBrowseResponse>;
 
     try {
-        trendingTabs = (await instantiatedInnertubeClient.getTrending()).tabs;
+        trending = await instantiatedInnertubeClient.getTrending();
+        trendingTabs = trending.tabs;
     } catch (err) {
         console.log("Failed to get trending tabs, will retry", { err });
         throw err;
@@ -162,8 +165,7 @@ async function checkToken({
             console.log(
                 `[INFO] Trying trending page '${tabName}' to get a valid PO token`,
             );
-            const feed = await (await instantiatedInnertubeClient.getTrending())
-                .getTabByName(tabName);
+            const feed = await trending.getTabByName(tabName);
             // get all videos and shuffle them randomly to avoid using the same trending video over and over
             const videos = feed.videos
                 .filter((video) => video.type === "Video")
@@ -177,7 +179,6 @@ async function checkToken({
                     `no videos with id found in ${tabName} trending`,
                 );
             }
-
             const youtubePlayerResponseJson = await youtubePlayerParsing({
                 innertubeClient: instantiatedInnertubeClient,
                 videoId: video.id,
