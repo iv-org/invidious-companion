@@ -99,6 +99,8 @@ if (isWorker) {
                     fetchImpl,
                     innertubeClientCookies:
                         message.config.youtube_session.cookies,
+                    innertubeClientPlayerId:
+                        message.config.youtube_session.player_id,
                 });
                 minter = generatedMinter;
                 postMessage({
@@ -132,9 +134,10 @@ if (isWorker) {
 }
 
 async function setup(
-    { fetchImpl, innertubeClientCookies }: {
+    { fetchImpl, innertubeClientCookies, innertubeClientPlayerId }: {
         fetchImpl: FetchFunction;
         innertubeClientCookies: string;
+        innertubeClientPlayerId: string;
     },
 ) {
     const innertubeClient = await Innertube.create({
@@ -143,6 +146,7 @@ async function setup(
         user_agent: USER_AGENT,
         retrieve_player: false,
         cookie: innertubeClientCookies || undefined,
+        player_id: innertubeClientPlayerId || undefined,
     });
 
     const visitorData = innertubeClient.session.context.client.visitorData;

@@ -101,6 +101,7 @@ export const poTokenGenerate = (
                     fetch: getFetchClient(config),
                     generate_session_locally: true,
                     cookie: config.youtube_session.cookies || undefined,
+                    player_id: config.youtube_session.player_id || undefined,
                 });
                 const minter = createMinter(worker);
                 // check token from minter

@@ -70,3 +70,6 @@
 # [youtube_session]
 # oauth_enabled = false # env variable: YOUTUBE_SESSION_OAUTH_ENABLED
 # cookies = "" # env variable: YOUTUBE_SESSION_COOKIES
+# # Hardcoded player ID. Useful when youtube changes their player making
+# # Invidious companion unable to get the signature decipher algorithm
+# player_id = "" # env variable: YOUTUBE_SESSION_PLAYER_ID

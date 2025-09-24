@@ -52,6 +52,12 @@ const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
 const innertubeClientJobPoTokenEnabled =
     config.jobs.youtube_session.po_token_enabled;
 const innertubeClientCookies = config.youtube_session.cookies;
+const innertubeClientPlayerId = config.youtube_session.player_id;
+if (innertubeClientPlayerId) {
+    console.log(
+        `[WARN] using hardcoded player id '${innertubeClientPlayerId}', this may cause issues when trying to play a video`,
+    );
+}
 
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
@@ -69,6 +75,7 @@ innertubeClient = await Innertube.create({
     fetch: getFetchClient(config),
     cookie: innertubeClientCookies || undefined,
     user_agent: USER_AGENT,
+    player_id: innertubeClientPlayerId || undefined,
 });
 
 if (!innertubeClientOauthEnabled) {
@@ -104,6 +111,7 @@ if (!innertubeClientOauthEnabled) {
                     retrieve_player: innertubeClientFetchPlayer,
                     user_agent: USER_AGENT,
                     cookie: innertubeClientCookies || undefined,
+                    player_id: innertubeClientPlayerId || undefined,
                 });
             }
         },

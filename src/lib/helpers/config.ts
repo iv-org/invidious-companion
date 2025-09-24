@@ -125,6 +125,9 @@ export const ConfigSchema = z.object({
         cookies: z.string().default(
             Deno.env.get("YOUTUBE_SESSION_COOKIES") || "",
         ),
+        player_id: z.string().default(
+            Deno.env.get("YOUTUBE_SESSION_PLAYER_ID") || "",
+        ),
     }).strict().default({}),
 }).strict();
 
