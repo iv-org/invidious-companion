@@ -6,6 +6,7 @@ import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils";
 import type { WebPoSignalOutput } from "bgutils";
 import { JSDOM } from "jsdom";
 import { Innertube } from "youtubei.js";
+import { PLAYER_ID } from "../../constants.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -143,6 +144,7 @@ async function setup(
         user_agent: USER_AGENT,
         retrieve_player: false,
         cookie: innertubeClientCookies || undefined,
+        player_id: PLAYER_ID,
     });
 
     const visitorData = innertubeClient.session.context.client.visitorData;

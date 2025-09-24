@@ -19,6 +19,7 @@ if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
 const { getFetchClient } = await import(getFetchClientLocation);
 
 import { InputMessage, OutputMessageSchema } from "./worker.ts";
+import { PLAYER_ID } from "../../constants.ts";
 
 interface TokenGeneratorWorker extends Omit<Worker, "postMessage"> {
     postMessage(message: InputMessage): void;
@@ -101,6 +102,7 @@ export const poTokenGenerate = (
                     fetch: getFetchClient(config),
                     generate_session_locally: true,
                     cookie: config.youtube_session.cookies || undefined,
+                    player_id: PLAYER_ID,
                 });
                 const minter = createMinter(worker);
                 // check token from minter
