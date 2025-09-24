@@ -6,4 +6,4 @@
 // in Youtube.JS.
 //
 // Current player ID taken from https://github.com/yt-dlp/yt-dlp/pull/14398
-export const PLAYER_ID = "0004de42"
+export const PLAYER_ID = "0004de42";
