@@ -64,11 +64,13 @@ export async function handleTranscripts(
 
         const start_ms = createTemporalDuration(Number(line.start_ms)).round({
             largestUnit: "year",
+            relativeTo: Temporal.PlainDateTime.from("2022-01-01"),
             //@ts-ignore see above
         }).toLocaleString("en-US", timestampFormatOptions);
 
         const end_ms = createTemporalDuration(Number(line.end_ms)).round({
             largestUnit: "year",
+            relativeTo: Temporal.PlainDateTime.from("2022-01-01"),
             //@ts-ignore see above
         }).toLocaleString("en-US", timestampFormatOptions);
         const timestamp = `${start_ms} --> ${end_ms}`;
