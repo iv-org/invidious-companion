@@ -63,7 +63,11 @@ latestVersion.get("/", async (c) => {
             res: new Response("No itag found."),
         });
     } else if (selectedItagFormat) {
-        const itagUrl = selectedItagFormat[0].url as string;
+        // Always offer original audio if possible
+        // This may be changed due to https://github.com/iv-org/invidious/issues/5501
+        const itagUrl = selectedItagFormat.find((itag) =>
+            itag.is_original
+        )?.url as string || selectedItagFormat[0].url as string;
         const itagUrlParsed = new URL(itagUrl);
         let queryParams = new URLSearchParams(itagUrlParsed.search);
         let urlToRedirect = itagUrlParsed.toString();
