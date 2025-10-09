@@ -75,14 +75,25 @@ innertubeClient = await Innertube.create({
 
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
-        ({ innertubeClient, tokenMinter } = await retry(
+        // Initialize tokenMinter in background to not block server startup
+        console.log("[INFO] Starting PO token generation in background...");
+        retry(
             poTokenGenerate.bind(
                 poTokenGenerate,
                 config,
                 metrics,
             ),
             { minTimeout: 1_000, maxTimeout: 60_000, multiplier: 5, jitter: 0 },
-        ));
+        ).then((result) => {
+            innertubeClient = result.innertubeClient;
+            tokenMinter = result.tokenMinter;
+            console.log(
+                "[INFO] PO token generation completed, tokenMinter is now available",
+            );
+        }).catch((err) => {
+            console.error("[ERROR] Failed to initialize PO token:", err);
+            metrics?.potokenGenerationFailure.inc();
+        });
     }
     Deno.cron(
         "regenerate youtube session",
