@@ -29,7 +29,7 @@ Deno.test("Video ID validation", async (t) => {
             "short", // Too short
             "thisistoolongtobeavalidvideoid", // Too long
             "exactly10c", // 10 characters (too short)
-            "exactly12ch", // 12 characters (too long)
+            "exactly12chr", // 12 characters (too long)
             "jNQXAC9IVR", // 10 characters
             "jNQXAC9IVRwX", // 12 characters
             "jNQX AC9IVRw", // Contains space

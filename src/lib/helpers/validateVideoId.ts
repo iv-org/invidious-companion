@@ -7,6 +7,11 @@
  * @returns true if the video ID is valid, false otherwise
  */
 export const validateVideoId = (videoId: string): boolean => {
+    // Handle null, undefined, or non-string values
+    if (!videoId || typeof videoId !== "string") {
+        return false;
+    }
+
     // YouTube video IDs are exactly 11 characters
     if (videoId.length !== 11) {
         return false;
