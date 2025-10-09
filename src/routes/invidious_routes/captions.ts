@@ -21,12 +21,22 @@ captionsHandler.get("/:videoId", async (c) => {
     const { videoId } = c.req.param();
     const config = c.get("config");
     const metrics = c.get("metrics");
+    const tokenMinter = c.get("tokenMinter");
 
     const check = c.req.query("check");
 
     if (!validateVideoId(videoId)) {
         throw new HTTPException(400, {
             res: new Response("Invalid video ID format."),
+        });
+    }
+    
+    // Check if tokenMinter is ready (only needed when PO token is enabled)
+    if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
+        throw new HTTPException(503, {
+            res: new Response(
+                "Companion is starting. Please wait until a valid potoken is found.",
+            ),
         });
     }
 
@@ -49,7 +59,7 @@ captionsHandler.get("/:videoId", async (c) => {
         videoId,
         config,
         metrics,
-        tokenMinter: c.get("tokenMinter"),
+        tokenMinter: tokenMinter!,
     });
 
     const videoInfo = youtubeVideoInfo(

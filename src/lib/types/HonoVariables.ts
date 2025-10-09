@@ -6,6 +6,6 @@ import { Metrics } from "../helpers/metrics.ts";
 export type HonoVariables = {
     innertubeClient: Innertube;
     config: Config;
-    tokenMinter: TokenMinter;
+    tokenMinter: TokenMinter | undefined;
     metrics: Metrics | undefined;
 };

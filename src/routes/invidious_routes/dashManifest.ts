@@ -19,6 +19,16 @@ dashManifest.get("/:videoId", async (c) => {
     const innertubeClient = c.get("innertubeClient");
     const config = c.get("config");
     const metrics = c.get("metrics");
+    const tokenMinter = c.get("tokenMinter");
+
+    // Check if tokenMinter is ready (only needed when PO token is enabled)
+    if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
+        throw new HTTPException(503, {
+            res: new Response(
+                "Companion is starting. Please wait until a valid potoken is found.",
+            ),
+        });
+    }
 
     if (!validateVideoId(videoId)) {
         throw new HTTPException(400, {
@@ -42,7 +52,7 @@ dashManifest.get("/:videoId", async (c) => {
         innertubeClient,
         videoId,
         config,
-        tokenMinter: c.get("tokenMinter"),
+        tokenMinter: tokenMinter!,
         metrics,
     });
     const videoInfo = youtubeVideoInfo(

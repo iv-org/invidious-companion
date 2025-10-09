@@ -46,7 +46,7 @@ const companionApp = new Hono({
 }).basePath(config.server.base_path);
 const metrics = config.server.enable_metrics ? new Metrics() : undefined;
 
-let tokenMinter: TokenMinter;
+let tokenMinter: TokenMinter | undefined;
 let innertubeClient: Innertube;
 let innertubeClientFetchPlayer = true;
 const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
