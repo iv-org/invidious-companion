@@ -186,6 +186,11 @@ async function setup(
         .private_do_not_access_or_else_trusted_resource_url_wrapped_value;
     const bgScriptResponse = await fetchImpl(
         `https:${interpreterUrl}`,
+        {
+            headers: {
+                "user-agent": USER_AGENT,
+            },
+        },
     );
     const interpreterJavascript = await bgScriptResponse.text();
 

@@ -6,6 +6,7 @@ import {
 } from "../helpers/youtubePlayerHandling.ts";
 import type { Config } from "../helpers/config.ts";
 import { Metrics } from "../helpers/metrics.ts";
+import { USER_AGENT } from "bgutils";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -200,6 +201,9 @@ async function checkToken({
             }
             const result = await fetchImpl(validFormat?.url, {
                 method: "HEAD",
+                headers: {
+                    "user-agent": USER_AGENT,
+                },
             });
             if (result.status !== 200) {
                 throw new Error(

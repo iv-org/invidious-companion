@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import { encodeRFC5987ValueChars } from "../lib/helpers/encodeRFC5987ValueChars.ts";
 import { decryptQuery } from "../lib/helpers/encryptQuery.ts";
 import { StreamingApi } from "hono/utils/stream";
+import { USER_AGENT } from "bgutils";
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
@@ -91,18 +92,8 @@ videoPlaybackProxy.get("/", async (c) => {
         "accept-language": "en-us,en;q=0.5",
         "origin": "https://www.youtube.com",
         "referer": "https://www.youtube.com",
+        "user-agent": USER_AGENT,
     };
-
-    if (client == "ANDROID") {
-        headersToSend["user-agent"] =
-            "com.google.android.youtube/1537338816 (Linux; U; Android 13; en_US; ; Build/TQ2A.230505.002; Cronet/113.0.5672.24)";
-    } else if (client == "IOS") {
-        headersToSend["user-agent"] =
-            "com.google.ios.youtube/19.32.8 (iPhone14,5; U; CPU iOS 17_6 like Mac OS X;)";
-    } else {
-        headersToSend["user-agent"] =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
-    }
 
     const fetchClient = await getFetchClient(config);
 
