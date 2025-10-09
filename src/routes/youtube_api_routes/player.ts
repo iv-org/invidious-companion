@@ -15,13 +15,23 @@ player.post("/player", async (c) => {
 
     // Check if tokenMinter is ready (only needed when PO token is enabled)
     if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
-        return c.json(
-            {
-                error: TOKEN_MINTER_NOT_READY_MESSAGE,
-                status: "SERVICE_UNAVAILABLE",
+        return c.json({
+            playabilityStatus: {
+                status: "ERROR",
+                reason: TOKEN_MINTER_NOT_READY_MESSAGE,
+                errorScreen: {
+                    playerErrorMessageRenderer: {
+                        reason: {
+                            simpleText: TOKEN_MINTER_NOT_READY_MESSAGE,
+                        },
+                        subreason: {
+                            simpleText:
+                                "The service is initializing. Please try again in a few moments.",
+                        },
+                    },
+                },
             },
-            503,
-        );
+        });
     }
 
     if (jsonReq.videoId) {
