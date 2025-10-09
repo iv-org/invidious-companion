@@ -54,6 +54,12 @@ const innertubeClientJobPoTokenEnabled =
     config.jobs.youtube_session.po_token_enabled;
 const innertubeClientCookies = config.youtube_session.cookies;
 
+// Promise that resolves when tokenMinter initialization is complete (for tests)
+let tokenMinterReadyResolve: (() => void) | undefined;
+export const tokenMinterReady = new Promise<void>((resolve) => {
+    tokenMinterReadyResolve = resolve;
+});
+
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
         console.log("[INFO] job po_token is active.");
@@ -90,10 +96,15 @@ if (!innertubeClientOauthEnabled) {
             console.log(
                 "[INFO] PO token generation completed, tokenMinter is now available",
             );
+            tokenMinterReadyResolve?.();
         }).catch((err) => {
             console.error("[ERROR] Failed to initialize PO token:", err);
             metrics?.potokenGenerationFailure.inc();
+            tokenMinterReadyResolve?.();
         });
+    } else {
+        // If PO token is not enabled, resolve immediately
+        tokenMinterReadyResolve?.();
     }
     Deno.cron(
         "regenerate youtube session",
@@ -142,6 +153,8 @@ if (!innertubeClientOauthEnabled) {
     // Attempt to sign in and then cache the credentials
     await innertubeClient.session.signIn();
     await innertubeClient.session.oauth.cacheCredentials();
+    // Resolve promise for tests
+    tokenMinterReadyResolve?.();
 }
 
 companionApp.use("*", async (c, next) => {

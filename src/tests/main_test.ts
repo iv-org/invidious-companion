@@ -1,5 +1,5 @@
 Deno.env.set("SERVER_SECRET_KEY", "aaaaaaaaaaaaaaaa");
-const { run } = await import("../main.ts");
+const { run, tokenMinterReady } = await import("../main.ts");
 
 const { parseConfig } = await import("../lib/helpers/config.ts");
 const config = await parseConfig();
@@ -21,6 +21,9 @@ Deno.test({
             config.server.port,
             config.server.host,
         );
+
+        // Wait for tokenMinter to be ready before running tests
+        await tokenMinterReady;
 
         await t.step(
             "Check if it can get an OK playabilityStatus on /youtubei/v1/player",
