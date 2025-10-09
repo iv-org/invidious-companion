@@ -2,7 +2,7 @@
  * Validates a YouTube video ID format
  * YouTube video IDs are 11 characters long and contain alphanumeric characters, hyphens, and underscores
  * Reference: https://webapps.stackexchange.com/questions/54443/format-for-id-of-youtube-video
- * 
+ *
  * @param videoId - The video ID to validate
  * @returns true if the video ID is valid, false otherwise
  */
