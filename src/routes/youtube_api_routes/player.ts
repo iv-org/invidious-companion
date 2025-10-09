@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { youtubePlayerParsing } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { HTTPException } from "hono/http-exception";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
+import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 
 const player = new Hono();
 
@@ -16,8 +17,7 @@ player.post("/player", async (c) => {
     if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
         return c.json(
             {
-                error:
-                    "Companion is starting. Please wait until a valid potoken is found.",
+                error: TOKEN_MINTER_NOT_READY_MESSAGE,
                 status: "SERVICE_UNAVAILABLE",
             },
             503,

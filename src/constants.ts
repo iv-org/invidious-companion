@@ -7,3 +7,7 @@
 //
 // Current player ID taken from https://github.com/yt-dlp/yt-dlp/pull/14398
 export const PLAYER_ID = "0004de42";
+
+// Error message shown when tokenMinter is not yet ready
+export const TOKEN_MINTER_NOT_READY_MESSAGE =
+    "Companion is starting. Please wait until a valid potoken is found.";
