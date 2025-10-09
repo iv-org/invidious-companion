@@ -8,6 +8,7 @@ import {
 import type { CaptionTrackData } from "youtubei.js/PlayerCaptionsTracklist";
 import { handleTranscripts } from "../../lib/helpers/youtubeTranscriptsHandling.ts";
 import { HTTPException } from "hono/http-exception";
+import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 
 interface AvailableCaption {
     label: string;
@@ -22,6 +23,12 @@ captionsHandler.get("/:videoId", async (c) => {
     const metrics = c.get("metrics");
 
     const check = c.req.query("check");
+
+    if (!validateVideoId(videoId)) {
+        throw new HTTPException(400, {
+            res: new Response("Invalid video ID format."),
+        });
+    }
 
     if (config.server.verify_requests && check == undefined) {
         throw new HTTPException(400, {

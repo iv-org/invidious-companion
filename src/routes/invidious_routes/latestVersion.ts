@@ -6,6 +6,7 @@ import {
 } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
+import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 
 const latestVersion = new Hono();
 
@@ -16,6 +17,12 @@ latestVersion.get("/", async (c) => {
     if (!id || !itag) {
         throw new HTTPException(400, {
             res: new Response("Please specify the itag and video ID."),
+        });
+    }
+
+    if (!validateVideoId(id)) {
+        throw new HTTPException(400, {
+            res: new Response("Invalid video ID format."),
         });
     }
 

@@ -2,6 +2,7 @@ import type { Context, Hono } from "hono";
 import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 
 const DownloadWidgetSchema = z.union([
     z.object({ label: z.string(), ext: z.string() }).strict(),
@@ -18,6 +19,12 @@ export default function getDownloadHandler(app: Hono) {
         if (videoId == undefined) {
             throw new HTTPException(400, {
                 res: new Response("Please specify the video ID"),
+            });
+        }
+
+        if (!validateVideoId(videoId)) {
+            throw new HTTPException(400, {
+                res: new Response("Invalid video ID format."),
             });
         }
 
