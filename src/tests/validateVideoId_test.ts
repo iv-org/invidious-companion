@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "./deps.ts";
+import { assertEquals } from "./deps.ts";
 import { validateVideoId } from "../lib/helpers/validateVideoId.ts";
 
 Deno.test("Video ID validation", async (t) => {
