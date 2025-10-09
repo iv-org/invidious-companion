@@ -7,6 +7,7 @@ import {
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 import { HTTPException } from "hono/http-exception";
 import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
+import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 
 const dashManifest = new Hono();
 
@@ -18,6 +19,12 @@ dashManifest.get("/:videoId", async (c) => {
     const innertubeClient = c.get("innertubeClient");
     const config = c.get("config");
     const metrics = c.get("metrics");
+
+    if (!validateVideoId(videoId)) {
+        throw new HTTPException(400, {
+            res: new Response("Invalid video ID format."),
+        });
+    }
 
     if (config.server.verify_requests && check == undefined) {
         throw new HTTPException(400, {
