@@ -31,7 +31,7 @@ captionsHandler.get("/:videoId", async (c) => {
             res: new Response("Invalid video ID format."),
         });
     }
-    
+
     // Check if tokenMinter is ready (only needed when PO token is enabled)
     if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
         throw new HTTPException(503, {

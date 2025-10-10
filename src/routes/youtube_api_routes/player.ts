@@ -25,8 +25,7 @@ player.post("/player", async (c) => {
                             simpleText: TOKEN_MINTER_NOT_READY_MESSAGE,
                         },
                         subreason: {
-                            simpleText:
-                                TOKEN_MINTER_NOT_READY_MESSAGE,
+                            simpleText: TOKEN_MINTER_NOT_READY_MESSAGE,
                         },
                     },
                 },
