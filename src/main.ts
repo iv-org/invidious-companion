@@ -93,9 +93,6 @@ if (!innertubeClientOauthEnabled) {
         ).then((result) => {
             innertubeClient = result.innertubeClient;
             tokenMinter = result.tokenMinter;
-            console.log(
-                "[INFO] PO token generation completed, tokenMinter is now available",
-            );
             tokenMinterReadyResolve?.();
         }).catch((err) => {
             console.error("[ERROR] Failed to initialize PO token:", err);

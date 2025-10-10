@@ -10,4 +10,4 @@ export const PLAYER_ID = "0004de42";
 
 // Error message shown when tokenMinter is not yet ready
 export const TOKEN_MINTER_NOT_READY_MESSAGE =
-    "Companion is starting. Please wait until a valid potoken is found.";
+    "Companion is starting. Please wait until a valid potoken is found. If this process takes too long, please consult: https://docs.invidious.io/youtube-errors-explained/#po-token-initialization-taking-too-much-time-to-complete";

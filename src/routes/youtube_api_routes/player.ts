@@ -26,7 +26,7 @@ player.post("/player", async (c) => {
                         },
                         subreason: {
                             simpleText:
-                                "The service is initializing. Please try again in a few moments.",
+                                TOKEN_MINTER_NOT_READY_MESSAGE,
                         },
                     },
                 },
