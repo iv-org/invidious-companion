@@ -7,6 +7,7 @@ import {
 import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
+import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 
 const latestVersion = new Hono();
 
@@ -29,6 +30,14 @@ latestVersion.get("/", async (c) => {
     const innertubeClient = c.get("innertubeClient");
     const config = c.get("config");
     const metrics = c.get("metrics");
+    const tokenMinter = c.get("tokenMinter");
+
+    // Check if tokenMinter is ready (only needed when PO token is enabled)
+    if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
+        throw new HTTPException(503, {
+            res: new Response(TOKEN_MINTER_NOT_READY_MESSAGE),
+        });
+    }
 
     if (config.server.verify_requests && check == undefined) {
         throw new HTTPException(400, {
@@ -46,7 +55,7 @@ latestVersion.get("/", async (c) => {
         innertubeClient,
         videoId: id,
         config,
-        tokenMinter: c.get("tokenMinter"),
+        tokenMinter: tokenMinter!,
         metrics,
     });
     const videoInfo = youtubeVideoInfo(

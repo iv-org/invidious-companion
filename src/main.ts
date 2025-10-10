@@ -46,13 +46,19 @@ const companionApp = new Hono({
 }).basePath(config.server.base_path);
 const metrics = config.server.enable_metrics ? new Metrics() : undefined;
 
-let tokenMinter: TokenMinter;
+let tokenMinter: TokenMinter | undefined;
 let innertubeClient: Innertube;
 let innertubeClientFetchPlayer = true;
 const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
 const innertubeClientJobPoTokenEnabled =
     config.jobs.youtube_session.po_token_enabled;
 const innertubeClientCookies = config.youtube_session.cookies;
+
+// Promise that resolves when tokenMinter initialization is complete (for tests)
+let tokenMinterReadyResolve: (() => void) | undefined;
+export const tokenMinterReady = new Promise<void>((resolve) => {
+    tokenMinterReadyResolve = resolve;
+});
 
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
@@ -75,14 +81,27 @@ innertubeClient = await Innertube.create({
 
 if (!innertubeClientOauthEnabled) {
     if (innertubeClientJobPoTokenEnabled) {
-        ({ innertubeClient, tokenMinter } = await retry(
+        // Initialize tokenMinter in background to not block server startup
+        console.log("[INFO] Starting PO token generation in background...");
+        retry(
             poTokenGenerate.bind(
                 poTokenGenerate,
                 config,
                 metrics,
             ),
             { minTimeout: 1_000, maxTimeout: 60_000, multiplier: 5, jitter: 0 },
-        ));
+        ).then((result) => {
+            innertubeClient = result.innertubeClient;
+            tokenMinter = result.tokenMinter;
+            tokenMinterReadyResolve?.();
+        }).catch((err) => {
+            console.error("[ERROR] Failed to initialize PO token:", err);
+            metrics?.potokenGenerationFailure.inc();
+            tokenMinterReadyResolve?.();
+        });
+    } else {
+        // If PO token is not enabled, resolve immediately
+        tokenMinterReadyResolve?.();
     }
     Deno.cron(
         "regenerate youtube session",
@@ -131,6 +150,8 @@ if (!innertubeClientOauthEnabled) {
     // Attempt to sign in and then cache the credentials
     await innertubeClient.session.signIn();
     await innertubeClient.session.oauth.cacheCredentials();
+    // Resolve promise for tests
+    tokenMinterReadyResolve?.();
 }
 
 companionApp.use("*", async (c, next) => {
