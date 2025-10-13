@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { companionRoutes, miscRoutes } from "./routes/index.ts";
-import { Innertube } from "youtubei.js";
+import { Innertube, Platform } from "youtubei.js";
 import { poTokenGenerate, type TokenMinter } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
 import { retry } from "@std/async";
@@ -12,6 +12,7 @@ import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
 import { Metrics } from "./lib/helpers/metrics.ts";
 import { PLAYER_ID } from "./constants.ts";
+import { jsInterpreter } from "./lib/helpers/jsInterpreter.ts";
 
 const args = parseArgs(Deno.args);
 
@@ -69,6 +70,8 @@ if (!innertubeClientOauthEnabled) {
         console.log("[INFO] job po_token is NOT active.");
     }
 }
+
+Platform.shim.eval = jsInterpreter;
 
 innertubeClient = await Innertube.create({
     enable_session_cache: false,

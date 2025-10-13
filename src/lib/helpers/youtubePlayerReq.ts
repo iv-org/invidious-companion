@@ -28,7 +28,8 @@ function callWatchEndpoint(
                     vis: 0,
                     splay: false,
                     lactMilliseconds: "-1",
-                    signatureTimestamp: innertubeClient.session.player?.sts,
+                    signatureTimestamp: innertubeClient.session.player
+                        ?.signature_timestamp,
                 },
             },
             serviceIntegrityDimensions: {
