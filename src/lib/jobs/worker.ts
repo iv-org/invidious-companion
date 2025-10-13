@@ -193,12 +193,6 @@ async function setup(
         new Function(interpreterJavascript)();
     } else throw new Error("Could not load VM");
 
-    // Botguard currently surfaces a "Not implemented" error here, due to the environment
-    // not having a valid Canvas API in JSDOM. At the time of writing, this doesn't cause
-    // any issues as the Canvas check doesn't appear to be an enforced element of the checks
-    console.log(
-        '[INFO] the "Not implemented: HTMLCanvasElement.prototype.getContext" error is normal. Please do not open a bug report about it.',
-    );
     const botguard = await BG.BotGuardClient.create({
         program: challengeResponse.bg_challenge.program,
         globalName: challengeResponse.bg_challenge.global_name,
