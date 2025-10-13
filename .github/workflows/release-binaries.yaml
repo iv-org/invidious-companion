@@ -51,7 +51,8 @@ jobs:
             --include ./src/lib/helpers/youtubePlayerReq.ts \
             --include ./src/lib/helpers/getFetchClient.ts \
             --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 \
-            --allow-net --allow-env --allow-read --allow-sys=hostname \
+            --allow-net --allow-env --allow-sys=hostname \
+            --allow-read=.,/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
             --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock \
             --target=${{ matrix.target }} \
             --output ${{ steps.binary-name.outputs.name }} \

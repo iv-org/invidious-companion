@@ -78,7 +78,7 @@ export const youtubePlayerParsing = async ({
                 !clientNameUsed?.value.includes("ANDROID")
             ) {
                 for (const [index, format] of streamingData.formats.entries()) {
-                    videoData.streamingData.formats[index].url = format
+                    videoData.streamingData.formats[index].url = await format
                         .decipher(
                             innertubeClient.session.player,
                         );
@@ -109,7 +109,7 @@ export const youtubePlayerParsing = async ({
                         .entries()
                 ) {
                     videoData.streamingData.adaptiveFormats[index].url =
-                        adaptive_format
+                        await adaptive_format
                             .decipher(
                                 innertubeClient.session.player,
                             );
