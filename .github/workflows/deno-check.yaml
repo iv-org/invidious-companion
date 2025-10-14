@@ -18,7 +18,7 @@ jobs:
           deno-version: v2.x
 
       - name: Verify formatting
-        run: deno fmt --check src/**
+        run: deno task format
 
       - name: Verify typing
         run: deno task check
