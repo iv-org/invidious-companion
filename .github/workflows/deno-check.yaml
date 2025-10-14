@@ -21,10 +21,10 @@ jobs:
         run: deno fmt --check src/**
 
       - name: Verify typing
-        run: deno check src/**
+        run: deno task check
       
       - name: Run linter
-        run: deno lint
+        run: deno task lint
 
       - name: Install and run tor
         uses: tor-actions/setup-tor@main
