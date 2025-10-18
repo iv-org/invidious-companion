@@ -16,7 +16,6 @@ export const getFetchClient = (config: Config): {
 } => {
     const proxyAddress = config.networking.proxy;
     const ipv6Block = config.networking.ipv6_block;
-    const ipv6Subnet = config.networking.ipv6_subnet;
 
     // If proxy or IPv6 rotation is configured, create a custom HTTP client
     // IPv6 rotation generates a unique localAddress for each request to help
@@ -35,10 +34,7 @@ export const getFetchClient = (config: Config): {
             }
 
             if (ipv6Block) {
-                clientOptions.localAddress = generateRandomIPv6(
-                    ipv6Block,
-                    ipv6Subnet,
-                );
+                clientOptions.localAddress = generateRandomIPv6(ipv6Block);
             }
 
             const client = Deno.createHttpClient(clientOptions);

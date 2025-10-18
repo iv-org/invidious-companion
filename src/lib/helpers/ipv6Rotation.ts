@@ -3,21 +3,17 @@
  *
  * This module provides IPv6 address rotation functionality to help avoid
  * "Please login" errors from YouTube by sending each request from a unique
- * IPv6 address within a configured subnet.
+ * IPv6 address within a configured IPv6 block.
  *
  * Setup instructions: https://gist.github.com/unixfox/2a9dbcb23d8f69c4582f7c85a849d5cc#linux-setup
  */
 
 /**
- * Generate a random IPv6 address within the specified subnet
+ * Generate a random IPv6 address within the specified IPv6 block
  * @param ipv6Block - The IPv6 block in CIDR notation (e.g., "2001:db8::/32")
- * @param subnetBits - The subnet size in bits (default: 48)
- * @returns A random IPv6 address within the specified subnet
+ * @returns A random IPv6 address within the specified IPv6 block
  */
-export function generateRandomIPv6(
-    ipv6Block: string,
-    subnetBits: number = 48,
-): string {
+export function generateRandomIPv6(ipv6Block: string): string {
     // Parse the IPv6 block
     const [baseAddress, blockSize] = ipv6Block.split("/");
     const blockBits = parseInt(blockSize, 10);
@@ -26,21 +22,15 @@ export function generateRandomIPv6(
         throw new Error("Invalid IPv6 block size");
     }
 
-    if (subnetBits < blockBits || subnetBits > 128) {
-        throw new Error(
-            `Subnet bits (${subnetBits}) must be between block size (${blockBits}) and 128`,
-        );
-    }
-
     // Expand IPv6 address to full form
     const expandedBase = expandIPv6(baseAddress);
 
     // Convert to binary representation
     const baseBytes = ipv6ToBytes(expandedBase);
 
-    // Generate random bits for the host part
-    for (let i = Math.floor(subnetBits / 8); i < 16; i++) {
-        const bitOffset = Math.max(0, subnetBits - i * 8);
+    // Randomize all bits after the block prefix
+    for (let i = Math.floor(blockBits / 8); i < 16; i++) {
+        const bitOffset = Math.max(0, blockBits - i * 8);
         if (bitOffset === 0) {
             // Fully random byte
             baseBytes[i] = Math.floor(Math.random() * 256);

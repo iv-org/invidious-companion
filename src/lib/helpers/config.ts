@@ -68,9 +68,6 @@ export const ConfigSchema = z.object({
         ipv6_block: z.string().nullable().default(
             Deno.env.get("NETWORKING_IPV6_BLOCK") || null,
         ),
-        ipv6_subnet: z.number().min(1).max(128).optional().default(
-            Number(Deno.env.get("NETWORKING_IPV6_SUBNET")) || 48,
-        ),
         fetch: z.object({
             timeout_ms: z.number().default(
                 Number(Deno.env.get("NETWORKING_FETCH_TIMEOUT_MS")) || 30_000,
