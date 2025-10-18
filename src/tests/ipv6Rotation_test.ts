@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals, assertThrows } from "./deps.ts";
 import { generateRandomIPv6 } from "../lib/helpers/ipv6Rotation.ts";
 
 Deno.test("generateRandomIPv6 - generates valid IPv6 addresses", () => {
