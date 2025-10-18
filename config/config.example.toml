@@ -31,6 +31,10 @@
  
 # [networking]
 # #proxy = "" # env variable: PROXY
+# # IPv6 rotation settings - allows sending requests with unique IPv6 addresses
+# # This requires IPv6 setup: https://gist.github.com/unixfox/2a9dbcb23d8f69c4582f7c85a849d5cc#linux-setup
+# #ipv6_block = "2001:db8::/32" # env variable: NETWORKING_IPV6_BLOCK
+# #ipv6_subnet = 48 # env variable: NETWORKING_IPV6_SUBNET (default: 48)
 # # Enable YouTube new video format UMP
 
 # [networking.videoplayback]

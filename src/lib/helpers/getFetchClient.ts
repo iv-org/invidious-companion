@@ -1,5 +1,6 @@
 import { retry, type RetryOptions } from "@std/async";
 import type { Config } from "./config.ts";
+import { generateRandomIPv6 } from "./ipv6Rotation.ts";
 
 type FetchInputParameter = Parameters<typeof fetch>[0];
 type FetchInitParameterWithClient =
@@ -14,16 +15,30 @@ export const getFetchClient = (config: Config): {
     ): FetchReturn;
 } => {
     const proxyAddress = config.networking.proxy;
-    if (proxyAddress) {
+    const ipv6Block = config.networking.ipv6_block;
+    const ipv6Subnet = config.networking.ipv6_subnet;
+
+    if (proxyAddress || ipv6Block) {
         return async (
             input: FetchInputParameter,
             init?: RequestInit,
         ) => {
-            const client = Deno.createHttpClient({
-                proxy: {
+            const clientOptions: Deno.CreateHttpClientOptions = {};
+
+            if (proxyAddress) {
+                clientOptions.proxy = {
                     url: proxyAddress,
-                },
-            });
+                };
+            }
+
+            if (ipv6Block) {
+                clientOptions.localAddress = generateRandomIPv6(
+                    ipv6Block,
+                    ipv6Subnet,
+                );
+            }
+
+            const client = Deno.createHttpClient(clientOptions);
             const fetchRes = await fetchShim(config, input, {
                 client,
                 headers: init?.headers,
