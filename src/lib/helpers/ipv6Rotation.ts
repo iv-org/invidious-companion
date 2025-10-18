@@ -1,4 +1,14 @@
 /**
+ * IPv6 Rotation Utility
+ *
+ * This module provides IPv6 address rotation functionality to help avoid
+ * "Please login" errors from YouTube by sending each request from a unique
+ * IPv6 address within a configured subnet.
+ *
+ * Setup instructions: https://gist.github.com/unixfox/2a9dbcb23d8f69c4582f7c85a849d5cc#linux-setup
+ */
+
+/**
  * Generate a random IPv6 address within the specified subnet
  * @param ipv6Block - The IPv6 block in CIDR notation (e.g., "2001:db8::/32")
  * @param subnetBits - The subnet size in bits (default: 48)

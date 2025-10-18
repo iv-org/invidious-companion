@@ -18,6 +18,9 @@ export const getFetchClient = (config: Config): {
     const ipv6Block = config.networking.ipv6_block;
     const ipv6Subnet = config.networking.ipv6_subnet;
 
+    // If proxy or IPv6 rotation is configured, create a custom HTTP client
+    // IPv6 rotation generates a unique localAddress for each request to help
+    // avoid YouTube's "Please login" errors
     if (proxyAddress || ipv6Block) {
         return async (
             input: FetchInputParameter,
