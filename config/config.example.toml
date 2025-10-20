@@ -32,12 +32,12 @@
 # [networking]
 # #proxy = "" # env variable: PROXY
 # # IPv6 rotation settings - allows sending requests with unique IPv6 addresses
-# # This requires IPv6 setup: https://gist.github.com/unixfox/2a9dbcb23d8f69c4582f7c85a849d5cc#linux-setup
+# # This requires IPv6 setup: https://github.com/iv-org/invidious-companion/wiki/How-to-send-IPv6-requests-with-a-new-IPv6-address-for-each-request-on-a-server-with-a-whole-IPv6-range
 # # Randomizes all bits after the block prefix (e.g., /32 randomizes bits 33-128)
 # #ipv6_block = "2001:db8::/32" # env variable: NETWORKING_IPV6_BLOCK
-# # Enable YouTube new video format UMP
 
 # [networking.videoplayback]
+# # Enable YouTube new video format UMP
 # ump = false # env variable: NETWORKING_VIDEOPLAYBACK_UMP
 # # size of chunks to request from google servers for rate limiting reductions
 # video_fetch_chunk_size_mb = 5 # env variable: NETWORKING_VIDEOPLAYBACK_VIDEO_FETCH_CHUNK_SIZE_MB
