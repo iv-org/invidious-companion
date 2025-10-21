@@ -43,7 +43,7 @@ export const youtubePlayerParsing = async ({
     if (videoCached != null && cacheEnabled) {
         return JSON.parse(new TextDecoder().decode(decompress(videoCached)));
     } else {
-        const youtubePlayerResponse = await youtubePlayerReq(
+        const { response: youtubePlayerResponse, contentPoToken } = await youtubePlayerReq(
             innertubeClient,
             videoId,
             config,
@@ -90,6 +90,12 @@ export const youtubePlayerParsing = async ({
                         delete videoData.streamingData.formats[index]
                             .signatureCipher;
                     }
+                    
+                    // Replace pot query parameter with contentPoToken
+                    const url = new URL(videoData.streamingData.formats[index].url);
+                    url.searchParams.set("pot", contentPoToken);
+                    videoData.streamingData.formats[index].url = url.toString();
+                    
                     if (
                         videoData.streamingData.formats[index].url.includes(
                             "alr=yes",
@@ -121,6 +127,12 @@ export const youtubePlayerParsing = async ({
                         delete videoData.streamingData.adaptiveFormats[index]
                             .signatureCipher;
                     }
+
+                    // Replace pot query parameter with contentPoToken
+                    const url = new URL(videoData.streamingData.adaptiveFormats[index].url);
+                    url.searchParams.set("pot", contentPoToken);
+                    videoData.streamingData.adaptiveFormats[index].url = url.toString();
+                    
                     if (
                         videoData.streamingData.adaptiveFormats[index].url
                             .includes("alr=yes")
