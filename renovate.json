@@ -1,0 +1,84 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":automergeDigest",
+    ":automergePatch"
+  ],
+  "timezone": "UTC",
+  "schedule": [
+    "every weekday before 6am"
+  ],
+  "assignees": ["unixfox"],
+  "reviewers": ["unixfox"],
+  "packageRules": [
+    {
+      "description": "Deno Standard Library updates - auto-merge patch updates",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["@std/**"],
+      "automerge": true,
+      "automergeType": "pr",
+      "matchUpdateTypes": ["patch"]
+    },
+    {
+      "description": "Group Deno Standard Library updates",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["@std/**"],
+      "groupName": "Deno Standard Library"
+    },
+    {
+      "description": "Hono framework updates",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["@hono/hono"],
+      "groupName": "Hono Framework"
+    },
+    {
+      "description": "YouTube.js related dependencies",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["youtubei.js/**", "@luanrt/**"],
+      "groupName": "YouTube.js ecosystem"
+    },
+    {
+      "description": "CDN-hosted dependencies",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["esm.sh/**", "cdn.jsdelivr.net/**", "deno.land/**"],
+      "groupName": "CDN dependencies"
+    },
+    {
+      "description": "NPM dependencies via Deno",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["npm:**"],
+      "groupName": "NPM dependencies"
+    },
+    {
+      "description": "Docker updates - auto-merge patch",
+      "matchManagers": ["dockerfile"],
+      "automerge": true,
+      "automergeType": "pr",
+      "matchUpdateTypes": ["patch"]
+    },
+    {
+      "description": "GitHub Actions - auto-merge patch",
+      "matchManagers": ["github-actions"],
+      "automerge": true,
+      "automergeType": "pr",
+      "matchUpdateTypes": ["patch"]
+    }
+  ],
+  "deno": {
+    "enabled": true
+  },
+  "dockerfile": {
+    "enabled": true
+  },
+  "github-actions": {
+    "enabled": true
+  },
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/target/**"
+  ]
+}
