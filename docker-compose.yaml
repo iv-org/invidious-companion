@@ -12,6 +12,11 @@ services:
       - ALL
     read_only: true
     user: 10001:10001
+    environment:
+      # YouTube video ID used for PO token generation validation
+      # It is HIGHLY RECOMMENDED to change this to a different video ID
+      # to avoid potential rate limiting or detection issues
+      - PO_TOKEN_VIDEO_ID=jNQXAC9IVRw
     # cache for youtube library
     volumes:
       - /var/tmp/youtubei.js:/var/tmp/youtubei.js:rw

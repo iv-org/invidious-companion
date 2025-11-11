@@ -70,6 +70,10 @@
 # po_token_enabled = true # env variable: JOBS_YOUTUBE_SESSION_PO_TOKEN_ENABLED
 # # frequency of PO token refresh in cron format
 # frequency = "*/5 * * * *" # env variable: JOBS_YOUTUBE_SESSION_FREQUENCY
+# # YouTube video ID used for PO token validation
+# # It is HIGHLY RECOMMENDED to change this to a different video ID
+# # to avoid potential rate limiting or detection issues
+# po_token_video_id = "jNQXAC9IVRw" # env variable: PO_TOKEN_VIDEO_ID
  
 # [youtube_session]
 # oauth_enabled = false # env variable: YOUTUBE_SESSION_OAUTH_ENABLED

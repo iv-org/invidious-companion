@@ -1,5 +1,4 @@
-import { IBrowseResponse, Innertube } from "youtubei.js";
-import TabbedFeed from "youtubei.js/TabbedFeed";
+import { Innertube } from "youtubei.js";
 import {
     youtubePlayerParsing,
     youtubeVideoInfo,
@@ -112,6 +111,7 @@ export const poTokenGenerate = (
                     config,
                     integrityTokenBasedMinter: minter,
                     metrics,
+                    videoId: config.jobs.youtube_session.po_token_video_id,
                 });
                 console.log("[INFO] Successfully generated PO token");
                 const numberToKill = workers.length - 1;
@@ -141,79 +141,49 @@ async function checkToken({
     config,
     integrityTokenBasedMinter,
     metrics,
+    videoId = "jNQXAC9IVRw",
 }: {
     instantiatedInnertubeClient: Innertube;
     config: Config;
     integrityTokenBasedMinter: TokenMinter;
     metrics: Metrics | undefined;
+    videoId?: string;
 }) {
     const fetchImpl = getFetchClient(config);
 
-    let trendingTabs: string[];
-    let trending: TabbedFeed<IBrowseResponse>;
-
     try {
-        trending = await instantiatedInnertubeClient.getTrending();
-        trendingTabs = trending.tabs;
-    } catch (err) {
-        console.log("Failed to get trending tabs, will retry", { err });
-        throw err;
-    }
-
-    for (const [index, tabName] of trendingTabs.entries()) {
-        try {
-            console.log(
-                `[INFO] Trying trending page '${tabName}' to get a valid PO token`,
+        console.log(
+            `[INFO] Trying to get a valid PO token using video ID: ${videoId}`,
+        );
+        const youtubePlayerResponseJson = await youtubePlayerParsing({
+            innertubeClient: instantiatedInnertubeClient,
+            videoId: videoId,
+            config,
+            tokenMinter: integrityTokenBasedMinter,
+            metrics,
+            overrideCache: true,
+        });
+        const videoInfo = youtubeVideoInfo(
+            instantiatedInnertubeClient,
+            youtubePlayerResponseJson,
+        );
+        const validFormat = videoInfo.streaming_data
+            ?.adaptive_formats[0];
+        if (!validFormat) {
+            throw new Error(
+                "failed to find valid video with adaptive format to check token against",
             );
-            const feed = await trending.getTabByName(tabName);
-            // get all videos and shuffle them randomly to avoid using the same trending video over and over
-            const videos = feed.videos
-                .filter((video) => video.type === "Video")
-                .map((value) => ({ value, sort: Math.random() }))
-                .sort((a, b) => a.sort - b.sort)
-                .map(({ value }) => value);
-
-            const video = videos.find((video) => "id" in video);
-            if (!video) {
-                throw new Error(
-                    `no videos with id found in ${tabName} trending`,
-                );
-            }
-            const youtubePlayerResponseJson = await youtubePlayerParsing({
-                innertubeClient: instantiatedInnertubeClient,
-                videoId: video.id,
-                config,
-                tokenMinter: integrityTokenBasedMinter,
-                metrics,
-                overrideCache: true,
-            });
-            const videoInfo = youtubeVideoInfo(
-                instantiatedInnertubeClient,
-                youtubePlayerResponseJson,
-            );
-            const validFormat = videoInfo.streaming_data
-                ?.adaptive_formats[0];
-            if (!validFormat) {
-                throw new Error(
-                    "failed to find valid video with adaptive format to check token against",
-                );
-            }
-            const result = await fetchImpl(validFormat?.url, {
-                method: "HEAD",
-            });
-            if (result.status !== 200) {
-                throw new Error(
-                    `did not get a 200 when checking video, got ${result.status} instead`,
-                );
-            } else {
-                break;
-            }
-        } catch (err) {
-            console.log("Failed to get valid PO token, will retry", { err });
-            if (index === trendingTabs.length - 1) {
-                throw err;
-            }
-            continue;
         }
+        const result = await fetchImpl(validFormat?.url, {
+            method: "HEAD",
+        });
+        if (result.status !== 200) {
+            throw new Error(
+                `did not get a 200 when checking video, got ${result.status} instead`,
+            );
+        }
+    } catch (err) {
+        console.log("Failed to get valid PO token", { err });
+        throw err;
     }
 }
