@@ -150,11 +150,17 @@ async function checkToken({
 
     try {
         console.log("[INFO] Searching for videos to validate PO token");
-        const searchResults = await instantiatedInnertubeClient.search("news");
+        const searchResults = await instantiatedInnertubeClient.search("news", {
+            type: "video",
+            upload_date: "week",
+            duration: "medium",
+        });
 
         // Get all videos that have an id property and shuffle them randomly
         const videos = searchResults.videos
-            .filter((video) => video.type === "Video" && "id" in video && video.id)
+            .filter((video) =>
+                video.type === "Video" && "id" in video && video.id
+            )
             .map((value) => ({ value, sort: Math.random() }))
             .sort((a, b) => a.sort - b.sort)
             .map(({ value }) => value);
@@ -171,11 +177,15 @@ async function checkToken({
             try {
                 // Type guard to ensure video has an id property
                 if (!("id" in video) || !video.id) {
-                    console.log(`[WARN] Video at index ${attempt} has no valid ID, trying next video`);
+                    console.log(
+                        `[WARN] Video at index ${attempt} has no valid ID, trying next video`,
+                    );
                     continue;
                 }
 
-                console.log(`[INFO] Validating PO token with video: ${video.id}`);
+                console.log(
+                    `[INFO] Validating PO token with video: ${video.id}`,
+                );
 
                 const youtubePlayerResponseJson = await youtubePlayerParsing({
                     innertubeClient: instantiatedInnertubeClient,
@@ -191,9 +201,12 @@ async function checkToken({
                     youtubePlayerResponseJson,
                 );
 
-                const validFormat = videoInfo.streaming_data?.adaptive_formats[0];
+                const validFormat = videoInfo.streaming_data
+                    ?.adaptive_formats[0];
                 if (!validFormat) {
-                    console.log(`[WARN] No valid format found for video ${video.id}, trying next video`);
+                    console.log(
+                        `[WARN] No valid format found for video ${video.id}, trying next video`,
+                    );
                     continue;
                 }
 
@@ -202,17 +215,28 @@ async function checkToken({
                 });
 
                 if (result.status !== 200) {
-                    console.log(`[WARN] Got status ${result.status} for video ${video.id}, trying next video`);
+                    console.log(
+                        `[WARN] Got status ${result.status} for video ${video.id}, trying next video`,
+                    );
                     continue;
                 } else {
-                    console.log(`[INFO] Successfully validated PO token with video: ${video.id}`);
+                    console.log(
+                        `[INFO] Successfully validated PO token with video: ${video.id}`,
+                    );
                     return; // Success
                 }
             } catch (err) {
-                const videoId = ("id" in video && video.id) ? video.id : "unknown";
-                console.log(`[WARN] Failed to validate with video ${videoId}:`, { err });
+                const videoId = ("id" in video && video.id)
+                    ? video.id
+                    : "unknown";
+                console.log(
+                    `[WARN] Failed to validate with video ${videoId}:`,
+                    { err },
+                );
                 if (attempt === maxAttempts - 1) {
-                    throw new Error("Failed to validate PO token with any available videos");
+                    throw new Error(
+                        "Failed to validate PO token with any available videos",
+                    );
                 }
                 continue;
             }
