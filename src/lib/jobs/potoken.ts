@@ -1,5 +1,4 @@
-import { IBrowseResponse, Innertube } from "youtubei.js";
-import TabbedFeed from "youtubei.js/TabbedFeed";
+import { Innertube } from "youtubei.js";
 import {
     youtubePlayerParsing,
     youtubeVideoInfo,
@@ -149,71 +148,101 @@ async function checkToken({
 }) {
     const fetchImpl = getFetchClient(config);
 
-    let trendingTabs: string[];
-    let trending: TabbedFeed<IBrowseResponse>;
-
     try {
-        trending = await instantiatedInnertubeClient.getTrending();
-        trendingTabs = trending.tabs;
-    } catch (err) {
-        console.log("Failed to get trending tabs, will retry", { err });
-        throw err;
-    }
+        console.log("[INFO] Searching for videos to validate PO token");
+        const searchResults = await instantiatedInnertubeClient.search("news", {
+            type: "video",
+            upload_date: "week",
+            duration: "medium",
+        });
 
-    for (const [index, tabName] of trendingTabs.entries()) {
-        try {
-            console.log(
-                `[INFO] Trying trending page '${tabName}' to get a valid PO token`,
-            );
-            const feed = await trending.getTabByName(tabName);
-            // get all videos and shuffle them randomly to avoid using the same trending video over and over
-            const videos = feed.videos
-                .filter((video) => video.type === "Video")
-                .map((value) => ({ value, sort: Math.random() }))
-                .sort((a, b) => a.sort - b.sort)
-                .map(({ value }) => value);
+        // Get all videos that have an id property and shuffle them randomly
+        const videos = searchResults.videos
+            .filter((video) =>
+                video.type === "Video" && "id" in video && video.id
+            )
+            .map((value) => ({ value, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(({ value }) => value);
 
-            const video = videos.find((video) => "id" in video);
-            if (!video) {
-                throw new Error(
-                    `no videos with id found in ${tabName} trending`,
-                );
-            }
-            const youtubePlayerResponseJson = await youtubePlayerParsing({
-                innertubeClient: instantiatedInnertubeClient,
-                videoId: video.id,
-                config,
-                tokenMinter: integrityTokenBasedMinter,
-                metrics,
-                overrideCache: true,
-            });
-            const videoInfo = youtubeVideoInfo(
-                instantiatedInnertubeClient,
-                youtubePlayerResponseJson,
-            );
-            const validFormat = videoInfo.streaming_data
-                ?.adaptive_formats[0];
-            if (!validFormat) {
-                throw new Error(
-                    "failed to find valid video with adaptive format to check token against",
-                );
-            }
-            const result = await fetchImpl(validFormat?.url, {
-                method: "HEAD",
-            });
-            if (result.status !== 200) {
-                throw new Error(
-                    `did not get a 200 when checking video, got ${result.status} instead`,
-                );
-            } else {
-                break;
-            }
-        } catch (err) {
-            console.log("Failed to get valid PO token, will retry", { err });
-            if (index === trendingTabs.length - 1) {
-                throw err;
-            }
-            continue;
+        if (videos.length === 0) {
+            throw new Error("No videos with valid IDs found in search results");
         }
+
+        // Try up to 3 random videos to validate the token
+        const maxAttempts = Math.min(3, videos.length);
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            const video = videos[attempt];
+
+            try {
+                // Type guard to ensure video has an id property
+                if (!("id" in video) || !video.id) {
+                    console.log(
+                        `[WARN] Video at index ${attempt} has no valid ID, trying next video`,
+                    );
+                    continue;
+                }
+
+                console.log(
+                    `[INFO] Validating PO token with video: ${video.id}`,
+                );
+
+                const youtubePlayerResponseJson = await youtubePlayerParsing({
+                    innertubeClient: instantiatedInnertubeClient,
+                    videoId: video.id,
+                    config,
+                    tokenMinter: integrityTokenBasedMinter,
+                    metrics,
+                    overrideCache: true,
+                });
+
+                const videoInfo = youtubeVideoInfo(
+                    instantiatedInnertubeClient,
+                    youtubePlayerResponseJson,
+                );
+
+                const validFormat = videoInfo.streaming_data
+                    ?.adaptive_formats[0];
+                if (!validFormat) {
+                    console.log(
+                        `[WARN] No valid format found for video ${video.id}, trying next video`,
+                    );
+                    continue;
+                }
+
+                const result = await fetchImpl(validFormat?.url, {
+                    method: "HEAD",
+                });
+
+                if (result.status !== 200) {
+                    console.log(
+                        `[WARN] Got status ${result.status} for video ${video.id}, trying next video`,
+                    );
+                    continue;
+                } else {
+                    console.log(
+                        `[INFO] Successfully validated PO token with video: ${video.id}`,
+                    );
+                    return; // Success
+                }
+            } catch (err) {
+                const videoId = ("id" in video && video.id)
+                    ? video.id
+                    : "unknown";
+                console.log(
+                    `[WARN] Failed to validate with video ${videoId}:`,
+                    { err },
+                );
+                if (attempt === maxAttempts - 1) {
+                    throw new Error(
+                        "Failed to validate PO token with any available videos",
+                    );
+                }
+                continue;
+            }
+        }
+    } catch (err) {
+        console.log("Failed to validate PO token using search method", { err });
+        throw err;
     }
 }
