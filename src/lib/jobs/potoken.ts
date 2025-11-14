@@ -149,11 +149,24 @@ async function checkToken({
     const fetchImpl = getFetchClient(config);
 
     try {
-        console.log("[INFO] Searching for videos to validate PO token");
-        const searchResults = await instantiatedInnertubeClient.search("news", {
+        // Randomize search parameters to avoid detection patterns
+        const searchQueries = [
+            "news", "music", "gaming", "tech", "education", "science", "entertainment", "sports",
+            "cooking", "travel", "fitness", "art", "movies", "comedy", "documentary", "tutorial",
+            "review", "vlog", "podcast", "interview", "nature", "animals", "history", "diy"
+        ];
+        const uploadDateOptions = ["hour", "today", "week", "month"] as const;
+        const durationOptions = ["medium", "long"] as const;
+
+        const searchQuery = searchQueries[Math.floor(Math.random() * searchQueries.length)];
+        const uploadDate = uploadDateOptions[Math.floor(Math.random() * uploadDateOptions.length)];
+        const duration = durationOptions[Math.floor(Math.random() * durationOptions.length)];
+
+        console.log(`[INFO] Searching for videos to validate PO token (query: "${searchQuery}", upload_date: "${uploadDate}", duration: "${duration}")`);
+        const searchResults = await instantiatedInnertubeClient.search(searchQuery, {
             type: "video",
-            upload_date: "week",
-            duration: "medium",
+            upload_date: uploadDate,
+            duration: duration,
         });
 
         // Get all videos that have an id property and shuffle them randomly

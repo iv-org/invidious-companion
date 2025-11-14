@@ -111,6 +111,11 @@ if (!innertubeClientOauthEnabled) {
         config.jobs.youtube_session.frequency,
         { backoffSchedule: [5_000, 15_000, 60_000, 180_000] },
         async () => {
+            // Add random jitter (0-60 seconds) to avoid synchronized requests across instances
+            const jitterMs = Math.floor(Math.random() * 60_000);
+            console.log(`[INFO] Adding ${jitterMs}ms jitter before regenerating session`);
+            await new Promise(resolve => setTimeout(resolve, jitterMs));
+
             if (innertubeClientJobPoTokenEnabled) {
                 try {
                     ({ innertubeClient, tokenMinter } = await poTokenGenerate(
