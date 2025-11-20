@@ -91,7 +91,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.ref_name }}
+          tag: release-${{ github.ref_name }}
           removeArtifacts: true
           allowUpdates: true
           artifacts: artifacts/**
