@@ -8,6 +8,7 @@
     "jsr:@std/encoding@1.0.7": "1.0.7",
     "jsr:@std/fs@1.0.14": "1.0.14",
     "jsr:@std/toml@1.0.2": "1.0.2",
+    "npm:@types/node@*": "24.2.0",
     "npm:meriyah@6.1.4": "6.1.4"
   },
   "jsr": {
@@ -37,8 +38,17 @@
     }
   },
   "npm": {
+    "@types/node@24.2.0": {
+      "integrity": "sha512-3xyG3pMCq3oYCNg7/ZP+E1ooTaGB4cG8JWRsqqOYQdbWNY4zbaV0Ennrd7stjiJEFZCaybcIgpTjJWHRfBSIDw==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
     "meriyah@6.1.4": {
       "integrity": "sha512-Sz8FzjzI0kN13GK/6MVEsVzMZEPvOhnmmI1lU5+/1cGOiK3QUahntrNNtdVeihrO7t9JpoH75iMNXg6R6uWflQ=="
+    },
+    "undici-types@7.10.0": {
+      "integrity": "sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag=="
     }
   },
   "redirects": {
@@ -52,6 +62,16 @@
     "https://esm.sh/@csstools/css-tokenizer@^3.0.3?target=denonext": "https://esm.sh/@csstools/css-tokenizer@3.0.4?target=denonext",
     "https://esm.sh/@csstools/css-tokenizer@^3.0.4?target=denonext": "https://esm.sh/@csstools/css-tokenizer@3.0.4?target=denonext",
     "https://esm.sh/@opentelemetry/api@^1.4.0?target=denonext": "https://esm.sh/@opentelemetry/api@1.9.0?target=denonext",
+    "https://esm.sh/@types/debug@~4.1.12/index.d.ts": "https://esm.sh/@types/debug@4.1.12/index.d.ts",
+    "https://esm.sh/@types/is-potential-custom-element-name@~1.0.0/index.d.ts": "https://esm.sh/@types/is-potential-custom-element-name@1.0.0/index.d.ts",
+    "https://esm.sh/@types/nwsapi@~2.2.7/index.d.ts": "https://esm.sh/@types/nwsapi@2.2.7/index.d.ts",
+    "https://esm.sh/@types/punycode@~2.1.4/index.d.ts": "https://esm.sh/@types/punycode@2.1.4/index.d.ts",
+    "https://esm.sh/@types/safer-buffer@~2.1.3/index.d.ts": "https://esm.sh/@types/safer-buffer@2.1.3/index.d.ts",
+    "https://esm.sh/@types/symbol-tree@~3.2.5/index.d.ts": "https://esm.sh/@types/symbol-tree@3.2.5/index.d.ts",
+    "https://esm.sh/@types/tdigest@~0.1.5/index.d.ts": "https://esm.sh/@types/tdigest@0.1.5/index.d.ts",
+    "https://esm.sh/@types/tr46@~5.0.1/index.d.ts": "https://esm.sh/@types/tr46@5.0.1/index.d.ts",
+    "https://esm.sh/@types/webidl-conversions@~7.0.3/index.d.ts": "https://esm.sh/@types/webidl-conversions@7.0.3/index.d.ts",
+    "https://esm.sh/@types/ws@~8.18.1/X-ZWJ1ZmZlcnV0aWwsdXRmLTgtdmFsaWRhdGU/index.d.mts": "https://esm.sh/@types/ws@8.18.1/X-ZWJ1ZmZlcnV0aWwsdXRmLTgtdmFsaWRhdGU/index.d.mts",
     "https://esm.sh/agent-base@^7.1.0?target=denonext": "https://esm.sh/agent-base@7.1.4?target=denonext",
     "https://esm.sh/agent-base@^7.1.2?target=denonext": "https://esm.sh/agent-base@7.1.4?target=denonext",
     "https://esm.sh/cssstyle@^4.2.1?target=denonext": "https://esm.sh/cssstyle@4.6.0?target=denonext",
@@ -687,6 +707,10 @@
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/misc.ts": "7f8d468445f5e58ff5fb61f78ba2bf38447e77400b4975b255c69b4c1cc1ad7a",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/nodes.ts": "bcf879cc6a4f526cb1c333f68551888446a8e61b85923c7e06996ed764cae9e1",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/parser.ts": "2f70a25bd6bd524da94404d482e95e10325a6c47faae3d42624fe18a7d1e2e02",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/types/CommandEndpoints.ts": "4e09e63c0f19959f642045eb178c389e9561667ed5a877040c99b74f4220ffe7",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/types/ParsedResponse.ts": "9066b5064a347759b11ee1f596b66acc2523d54b4855b5faf2ae13827021809a",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/types/RawResponse.ts": "1b014ddedb55e2229e8b41591065e96bbbd669a26aa3b037b33efbae69266715",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/types/index.ts": "007247905143a2c8fe5c1bb02470f126f9107af5ea2649c1035489587aff97d1",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/youtube/AccountInfo.ts": "55db92aea54b21ff7d21741e5b76ebbb365bd157e47913200426cf25da7dcf80",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/youtube/Channel.ts": "157735bfa0101b3c38ccd4287424151f01d95fe8fc8a53f0d4ce837584035dee",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/youtube/Comments.ts": "de5684f3c20bd3890435bd959f7d515ea989356ec6802d04af9b0de68d6a1595",
@@ -726,6 +750,14 @@
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/platform/jsruntime/default.ts": "0354bd04f0c24bd659d83ecb929365f53288e45d599e9d47188dea649d9bf236",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/platform/lib.ts": "b1ef65da57cc2acfa278a6468d7a6e045f96f43f8bfebabb2dd683ee23e047dd",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/platform/polyfills/web-crypto.ts": "ae20ed00dea9eafca9ba590f4fa440299cbd57288add788c59cb19f3455ae6d1",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/types/Cache.ts": "06cd238bce7c9657055151587e36ee445e8236d54d27272124ced10ea7be0da4",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/types/DashOptions.ts": "cf694c112ab97d778b3df735ddc76fd16fd5ae0d49943e2cc580f1f986f63da6",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/types/FormatUtils.ts": "a877e6d3e84651d5de882a3e6cba7ac82ac4c64d315be64c072776cf2a9eeb72",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/types/GetVideoInfoOptions.ts": "f6bbc11dbf9ee5677e1a55b3064f50d716e9336aa8d4c4a32c164e64576c1beb",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/types/Misc.ts": "971702ea50befc95a46c818595a09af53e38c6d7dd691cec6297c6e06b0002f7",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/types/PlatformShim.ts": "24e8c48ad6754ba64bf95327317dbcc5450c6092e87e7bc06e92f757b22ed4c4",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/types/StreamingInfoOptions.ts": "e709c0f53e0361370ba455f811fc97825ba35739b2b2766b0c13bc32f8cbf264",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/types/index.ts": "16ec980101e06859f4269f8abd1bc3372dd2a9deea200dbc8396d821449738cc",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/utils/BinarySerializer.ts": "1f99ec65ec2d52a299fe70b2b8d868bd4ca1d4750d5b360220f81015936180ba",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/utils/Cache.ts": "fd90c88da32e9283adf065475a5cb4e680b5152a6bc06dd8a3dc9349358cab35",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/utils/Constants.ts": "477ec062b9c497fdeb53dc03247ca7a3ffba94df5bd57765db82304bd749e6f8",
@@ -777,6 +809,7 @@
     "https://deno.land/x/zod@v3.24.2/index.ts": "d27aabd973613985574bc31f39e45cb5d856aa122ef094a9f38a463b8ef1a268",
     "https://deno.land/x/zod@v3.24.2/locales/en.ts": "a7a25cd23563ccb5e0eed214d9b31846305ddbcdb9c5c8f508b108943366ab4c",
     "https://deno.land/x/zod@v3.24.2/mod.ts": "ec6e2b1255c1a350b80188f97bd0a6bac45801bb46fc48f50b9763aa66046039",
+    "https://deno.land/x/zod@v3.24.2/standard-schema.ts": "4abb2e7bd784fb95d219584673971bb317e74fb4fd0c74c196b558ba46df4456",
     "https://deno.land/x/zod@v3.24.2/types.ts": "91f825106bcf5b2ba08daa108283aadc32c0ac332f09c9a90db3d88b142476a3",
     "https://esm.sh/@asamuzakjp/css-color@3.2.0/denonext/css-color.mjs": "5a7c2124bfb224efba4158a1a38e8b618256d6e1fd809e93b83d96daa5a25a96",
     "https://esm.sh/@asamuzakjp/css-color@3.2.0?target=denonext": "67bce3fe2d3c1373f13f35065aa7f528f361b398fa2455fc982e265fb4691a46",
