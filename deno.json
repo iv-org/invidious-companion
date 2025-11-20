@@ -17,7 +17,7 @@
     "youtubei.js/NavigationEndpoint": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/classes/NavigationEndpoint.ts",
     "youtubei.js/PlayerCaptionsTracklist": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/parser/classes/PlayerCaptionsTracklist.ts",
     "youtubei.js/TabbedFeed": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v16.0.0-deno/deno/src/core/mixins/TabbedFeed.ts",
-    "jsdom": "https://esm.sh/jsdom@26.1.0?external=canvas,bufferutil,utf-8-validate",
+    "jsdom": "npm:jsdom@26.1.0",
     "bgutils": "https://esm.sh/bgutils-js@3.2.0",
     "estree": "https://esm.sh/@types/estree@1.0.6",
     "youtubePlayerReq": "./src/lib/helpers/youtubePlayerReq.ts",
