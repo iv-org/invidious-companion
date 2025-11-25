@@ -1019,7 +1019,7 @@
     "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wire/text-format.mjs": "9c8e39da4c3cbc0618e93219f7def9356774198a005d3da92870aaa41a2eebd3",
     "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wire/varint.mjs": "148131cfbd4bebfa7aed5c4131a3c76c1a72ee95daaf3acb392ddf755e9a8bf5",
     "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/dist/esm/wkt/wrappers.mjs": "2fdb6acdda91c53c238b51c5ea6ef8def5b4e9871f93c439ab835c0a9f1e6070",
-    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/wire.mjs": "791ca43f39084f37fabf37bcd77c788861bce7cc3d0d8528dc61ec9559956f46",
+    "https://esm.sh/@bufbuild/protobuf@2.0.0/denonext/wire.mjs": "6a6e0ea3c95cdc3b4dd4118c4ef7fa81f677591c2cf8a8fa8e4c991a72f86a16",
     "https://esm.sh/@bufbuild/protobuf@2.0.0/wire": "eb1be07dad5823fc419cc9e6f62077a70962ce42facb1a5240b7d5c3674e852f",
     "https://esm.sh/@csstools/color-helpers@5.1.0/denonext/color-helpers.mjs": "e41a79a8b8770e970eaec926edbc0f801808da289e078f99a2b3eba2879d52de",
     "https://esm.sh/@csstools/color-helpers@5.1.0?target=denonext": "75a3bf1901e7315eb57ce8d57304625cc471384d534fd9c54a61ce6426fa54c8",
