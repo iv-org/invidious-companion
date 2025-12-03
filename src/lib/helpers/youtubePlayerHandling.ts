@@ -77,60 +77,83 @@ export const youtubePlayerParsing = async ({
                 !clientNameUsed?.value.includes("IOS") &&
                 !clientNameUsed?.value.includes("ANDROID")
             ) {
-                for (const [index, format] of streamingData.formats.entries()) {
-                    videoData.streamingData.formats[index].url = await format
-                        .decipher(
-                            innertubeClient.session.player,
-                        );
-                    if (
-                        videoData.streamingData.formats[index]
-                            .signatureCipher !==
-                            undefined
-                    ) {
-                        delete videoData.streamingData.formats[index]
-                            .signatureCipher;
-                    }
-                    if (
-                        videoData.streamingData.formats[index].url.includes(
-                            "alr=yes",
-                        )
-                    ) {
-                        videoData.streamingData.formats[index].url.replace(
-                            "alr=yes",
-                            "alr=no",
-                        );
-                    } else {
-                        videoData.streamingData.formats[index].url += "&alr=no";
-                    }
-                }
-                for (
-                    const [index, adaptive_format] of streamingData
-                        .adaptive_formats
-                        .entries()
-                ) {
-                    videoData.streamingData.adaptiveFormats[index].url =
-                        await adaptive_format
+                try {
+                    for (const [index, format] of streamingData.formats.entries()) {
+                        videoData.streamingData.formats[index].url = await format
                             .decipher(
                                 innertubeClient.session.player,
                             );
-                    if (
-                        videoData.streamingData.adaptiveFormats[index]
-                            .signatureCipher !==
-                            undefined
-                    ) {
-                        delete videoData.streamingData.adaptiveFormats[index]
-                            .signatureCipher;
+                        if (
+                            videoData.streamingData.formats[index]
+                                .signatureCipher !==
+                                undefined
+                        ) {
+                            delete videoData.streamingData.formats[index]
+                                .signatureCipher;
+                        }
+                        if (
+                            videoData.streamingData.formats[index].url.includes(
+                                "alr=yes",
+                            )
+                        ) {
+                            videoData.streamingData.formats[index].url =
+                                videoData.streamingData.formats[index].url.replace(
+                                    "alr=yes",
+                                    "alr=no",
+                                );
+                        } else {
+                            videoData.streamingData.formats[index].url += "&alr=no";
+                        }
                     }
-                    if (
-                        videoData.streamingData.adaptiveFormats[index].url
-                            .includes("alr=yes")
+                    for (
+                        const [index, adaptive_format] of streamingData
+                            .adaptive_formats
+                            .entries()
                     ) {
-                        videoData.streamingData.adaptiveFormats[index].url
-                            .replace("alr=yes", "alr=no");
-                    } else {
-                        videoData.streamingData.adaptiveFormats[index].url +=
-                            "&alr=no";
+                        videoData.streamingData.adaptiveFormats[index].url =
+                            await adaptive_format
+                                .decipher(
+                                    innertubeClient.session.player,
+                                );
+                        if (
+                            videoData.streamingData.adaptiveFormats[index]
+                                .signatureCipher !==
+                                undefined
+                        ) {
+                            delete videoData.streamingData.adaptiveFormats[index]
+                                .signatureCipher;
+                        }
+                        if (
+                            videoData.streamingData.adaptiveFormats[index].url
+                                .includes("alr=yes")
+                        ) {
+                            videoData.streamingData.adaptiveFormats[index].url =
+                                videoData.streamingData.adaptiveFormats[index].url
+                                    .replace("alr=yes", "alr=no");
+                        } else {
+                            videoData.streamingData.adaptiveFormats[index].url +=
+                                "&alr=no";
+                        }
                     }
+                } catch (error) {
+                    // If decipher fails, return a proper error response
+                    const errorMessage = error instanceof Error ? error.message : "Unknown error during URL deciphering";
+                    return {
+                        playabilityStatus: {
+                            status: "ERROR",
+                            reason: errorMessage,
+                            errorScreen: {
+                                playerErrorMessageRenderer: {
+                                    reason: {
+                                        simpleText: errorMessage,
+                                    },
+                                    subreason: {
+                                        simpleText: errorMessage,
+                                    },
+                                },
+                            },
+                        },
+                    };
                 }
             }
         }
