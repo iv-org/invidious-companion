@@ -3,6 +3,7 @@ import { generateRandomString } from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
 import type { TokenMinter } from "../jobs/potoken.ts";
 import { Metrics } from "../helpers/metrics.ts";
+import { DECIPHER_ERROR_MESSAGE } from "../../constants.ts";
 let youtubePlayerReqLocation = "youtubePlayerReq";
 if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -77,60 +78,84 @@ export const youtubePlayerParsing = async ({
                 !clientNameUsed?.value.includes("IOS") &&
                 !clientNameUsed?.value.includes("ANDROID")
             ) {
-                for (const [index, format] of streamingData.formats.entries()) {
-                    videoData.streamingData.formats[index].url = await format
-                        .decipher(
-                            innertubeClient.session.player,
-                        );
-                    if (
-                        videoData.streamingData.formats[index]
-                            .signatureCipher !==
-                            undefined
-                    ) {
-                        delete videoData.streamingData.formats[index]
-                            .signatureCipher;
-                    }
-                    if (
-                        videoData.streamingData.formats[index].url.includes(
-                            "alr=yes",
-                        )
-                    ) {
-                        videoData.streamingData.formats[index].url.replace(
-                            "alr=yes",
-                            "alr=no",
-                        );
-                    } else {
-                        videoData.streamingData.formats[index].url += "&alr=no";
-                    }
-                }
-                for (
-                    const [index, adaptive_format] of streamingData
-                        .adaptive_formats
-                        .entries()
-                ) {
-                    videoData.streamingData.adaptiveFormats[index].url =
-                        await adaptive_format
+                try {
+                    for (const [index, format] of streamingData.formats.entries()) {
+                        videoData.streamingData.formats[index].url = await format
                             .decipher(
                                 innertubeClient.session.player,
                             );
-                    if (
-                        videoData.streamingData.adaptiveFormats[index]
-                            .signatureCipher !==
-                            undefined
-                    ) {
-                        delete videoData.streamingData.adaptiveFormats[index]
-                            .signatureCipher;
+                        if (
+                            videoData.streamingData.formats[index]
+                                .signatureCipher !==
+                                undefined
+                        ) {
+                            delete videoData.streamingData.formats[index]
+                                .signatureCipher;
+                        }
+                        if (
+                            videoData.streamingData.formats[index].url.includes(
+                                "alr=yes",
+                            )
+                        ) {
+                            videoData.streamingData.formats[index].url.replace(
+                                "alr=yes",
+                                "alr=no",
+                            );
+                        } else {
+                            videoData.streamingData.formats[index].url += "&alr=no";
+                        }
                     }
-                    if (
-                        videoData.streamingData.adaptiveFormats[index].url
-                            .includes("alr=yes")
+                    for (
+                        const [index, adaptive_format] of streamingData
+                            .adaptive_formats
+                            .entries()
                     ) {
-                        videoData.streamingData.adaptiveFormats[index].url
-                            .replace("alr=yes", "alr=no");
-                    } else {
-                        videoData.streamingData.adaptiveFormats[index].url +=
-                            "&alr=no";
+                        videoData.streamingData.adaptiveFormats[index].url =
+                            await adaptive_format
+                                .decipher(
+                                    innertubeClient.session.player,
+                                );
+                        if (
+                            videoData.streamingData.adaptiveFormats[index]
+                                .signatureCipher !==
+                                undefined
+                        ) {
+                            delete videoData.streamingData.adaptiveFormats[index]
+                                .signatureCipher;
+                        }
+                        if (
+                            videoData.streamingData.adaptiveFormats[index].url
+                                .includes("alr=yes")
+                        ) {
+                            videoData.streamingData.adaptiveFormats[index].url
+                                .replace("alr=yes", "alr=no");
+                        } else {
+                            videoData.streamingData.adaptiveFormats[index].url +=
+                                "&alr=no";
+                        }
                     }
+                } catch (error) {
+                    // If decipher fails, return a proper error response
+                    if (error instanceof Error && error.message.includes("No valid URL to decipher")) {
+                        return {
+                            playabilityStatus: {
+                                status: "ERROR",
+                                reason: DECIPHER_ERROR_MESSAGE,
+                                errorScreen: {
+                                    playerErrorMessageRenderer: {
+                                        reason: {
+                                            simpleText: DECIPHER_ERROR_MESSAGE,
+                                        },
+                                        subreason: {
+                                            simpleText: DECIPHER_ERROR_MESSAGE,
+                                        },
+                                    },
+                                },
+                            },
+                        };
+                    }
+                    // Re-throw other errors
+                    throw error;
                 }
             }
         }
