@@ -3,10 +3,6 @@ import { generateRandomString } from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
 import type { TokenMinter } from "../jobs/potoken.ts";
 import { Metrics } from "../helpers/metrics.ts";
-import {
-    DECIPHER_ERROR_MESSAGE,
-    DECIPHER_ERROR_SUBREASON,
-} from "../../constants.ts";
 let youtubePlayerReqLocation = "youtubePlayerReq";
 if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -141,17 +137,18 @@ export const youtubePlayerParsing = async ({
                     }
                 } catch (error) {
                     // If decipher fails, return a proper error response
+                    const errorMessage = error instanceof Error ? error.message : "Unknown error during URL deciphering";
                     return {
                         playabilityStatus: {
                             status: "ERROR",
-                            reason: DECIPHER_ERROR_MESSAGE,
+                            reason: errorMessage,
                             errorScreen: {
                                 playerErrorMessageRenderer: {
                                     reason: {
-                                        simpleText: DECIPHER_ERROR_MESSAGE,
+                                        simpleText: errorMessage,
                                     },
                                     subreason: {
-                                        simpleText: DECIPHER_ERROR_SUBREASON,
+                                        simpleText: errorMessage,
                                     },
                                 },
                             },
