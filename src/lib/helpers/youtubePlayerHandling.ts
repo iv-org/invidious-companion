@@ -141,26 +141,22 @@ export const youtubePlayerParsing = async ({
                     }
                 } catch (error) {
                     // If decipher fails, return a proper error response
-                    if (error instanceof Error && error.message.includes("No valid URL to decipher")) {
-                        return {
-                            playabilityStatus: {
-                                status: "ERROR",
-                                reason: DECIPHER_ERROR_MESSAGE,
-                                errorScreen: {
-                                    playerErrorMessageRenderer: {
-                                        reason: {
-                                            simpleText: DECIPHER_ERROR_MESSAGE,
-                                        },
-                                        subreason: {
-                                            simpleText: DECIPHER_ERROR_SUBREASON,
-                                        },
+                    return {
+                        playabilityStatus: {
+                            status: "ERROR",
+                            reason: DECIPHER_ERROR_MESSAGE,
+                            errorScreen: {
+                                playerErrorMessageRenderer: {
+                                    reason: {
+                                        simpleText: DECIPHER_ERROR_MESSAGE,
+                                    },
+                                    subreason: {
+                                        simpleText: DECIPHER_ERROR_SUBREASON,
                                     },
                                 },
                             },
-                        };
-                    }
-                    // Re-throw other errors
-                    throw error;
+                        },
+                    };
                 }
             }
         }
