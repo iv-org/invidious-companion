@@ -97,10 +97,11 @@ export const youtubePlayerParsing = async ({
                                 "alr=yes",
                             )
                         ) {
-                            videoData.streamingData.formats[index].url.replace(
-                                "alr=yes",
-                                "alr=no",
-                            );
+                            videoData.streamingData.formats[index].url =
+                                videoData.streamingData.formats[index].url.replace(
+                                    "alr=yes",
+                                    "alr=no",
+                                );
                         } else {
                             videoData.streamingData.formats[index].url += "&alr=no";
                         }
@@ -127,8 +128,9 @@ export const youtubePlayerParsing = async ({
                             videoData.streamingData.adaptiveFormats[index].url
                                 .includes("alr=yes")
                         ) {
-                            videoData.streamingData.adaptiveFormats[index].url
-                                .replace("alr=yes", "alr=no");
+                            videoData.streamingData.adaptiveFormats[index].url =
+                                videoData.streamingData.adaptiveFormats[index].url
+                                    .replace("alr=yes", "alr=no");
                         } else {
                             videoData.streamingData.adaptiveFormats[index].url +=
                                 "&alr=no";
