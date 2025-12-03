@@ -12,4 +12,6 @@ export const TOKEN_MINTER_NOT_READY_MESSAGE =
 
 // Error message shown when URL deciphering fails
 export const DECIPHER_ERROR_MESSAGE =
-    "Unable to decipher video URL. This may be due to YouTube changes. Please check for updates to the companion.";
+    "Unable to decipher video URL";
+export const DECIPHER_ERROR_SUBREASON =
+    "This may be due to YouTube changes. Please check for updates to the companion or report the issue if it persists.";

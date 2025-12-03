@@ -3,7 +3,10 @@ import { generateRandomString } from "youtubei.js/Utils";
 import { compress, decompress } from "brotli";
 import type { TokenMinter } from "../jobs/potoken.ts";
 import { Metrics } from "../helpers/metrics.ts";
-import { DECIPHER_ERROR_MESSAGE } from "../../constants.ts";
+import {
+    DECIPHER_ERROR_MESSAGE,
+    DECIPHER_ERROR_SUBREASON,
+} from "../../constants.ts";
 let youtubePlayerReqLocation = "youtubePlayerReq";
 if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -149,7 +152,7 @@ export const youtubePlayerParsing = async ({
                                             simpleText: DECIPHER_ERROR_MESSAGE,
                                         },
                                         subreason: {
-                                            simpleText: DECIPHER_ERROR_MESSAGE,
+                                            simpleText: DECIPHER_ERROR_SUBREASON,
                                         },
                                     },
                                 },
