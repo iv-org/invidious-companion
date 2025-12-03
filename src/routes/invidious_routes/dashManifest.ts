@@ -71,7 +71,7 @@ dashManifest.get("/:videoId", async (c) => {
         videoInfo.streaming_data.adaptive_formats = videoInfo
             .streaming_data.adaptive_formats
             .filter((i) =>
-                i.has_video === false || i.mime_type.includes("mp4")
+                i.mime_type.includes("mp4")
             );
 
         const player_response = videoInfo.page[0];
