@@ -21,7 +21,7 @@ ARG THC_AMD64_SHA256='cb1797948015da46c222764a99ee30c06a6a9a30f5b87f212a28ea3c6d
 # we can use these aliases and let dependabot remain simple
 # inspired by:
 # https://github.com/dependabot/dependabot-core/issues/2057#issuecomment-1351660410
-FROM alpine:3.22 AS dependabot-alpine
+FROM alpine:3.23 AS dependabot-alpine
 FROM debian:13-slim AS dependabot-debian
 
 # Retrieve the deno binary from the repository
