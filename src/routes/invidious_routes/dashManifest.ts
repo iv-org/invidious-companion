@@ -19,8 +19,9 @@ function fixDashManifest(xml: string): string {
     const doc = dom.window.document;
 
     // Remove SupplementalProperty elements that cause issues in some players
-    doc.querySelectorAll('SupplementalProperty[schemeIdUri^="urn:mpeg:mpegB:"]')
-        .forEach((el) => el.remove());
+    for (const el of doc.querySelectorAll('SupplementalProperty[schemeIdUri^="urn:mpeg:mpegB:"]')) {
+        el.remove();
+    }
 
     const period = doc.querySelector("Period");
     if (period) {
