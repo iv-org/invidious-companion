@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { FormatUtils } from "youtubei.js";
+import { JSDOM } from "jsdom";
 import {
     youtubePlayerParsing,
     youtubeVideoInfo,
@@ -14,11 +15,12 @@ import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 // 1. Remove problematic SupplementalProperty elements.
 // 2. Split video AdaptationSets by codec family to prevent MEDIA_ERR_DECODE.
 function fixDashManifest(xml: string): string {
-    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    const dom = new JSDOM(xml, { contentType: "application/xml" });
+    const doc = dom.window.document;
 
     // Remove SupplementalProperty elements that cause issues in some players
     doc.querySelectorAll('SupplementalProperty[schemeIdUri^="urn:mpeg:mpegB:"]')
-        .forEach((el) => el.remove());
+        .forEach((el: Element) => el.remove());
 
     const period = doc.querySelector("Period");
     if (period) {
@@ -32,14 +34,13 @@ function fixDashManifest(xml: string): string {
             const reps = [...set.querySelectorAll("Representation")];
             const byCodec = Map.groupBy(
                 reps,
-                (r) => r.getAttribute("codecs")?.split(".")[0] ?? "",
+                (r: Element) => r.getAttribute("codecs")?.split(".")[0] ?? "",
             );
 
             if (byCodec.size <= 1) continue;
 
             let isFirst = true;
             for (const [, groupReps] of byCodec) {
-                // Use the existing set for the first group, clone for others
                 const currentSet = isFirst
                     ? set
                     : set.cloneNode(true) as Element;
@@ -48,13 +49,12 @@ function fixDashManifest(xml: string): string {
                     period.insertBefore(currentSet, set.nextSibling);
                 }
 
-                // Update codec attribute and filter representations
                 currentSet.setAttribute(
                     "codecs",
                     groupReps[0].getAttribute("codecs") ?? "",
                 );
                 const keepIds = new Set(
-                    groupReps.map((r) => r.getAttribute("id")),
+                    groupReps.map((r: Element) => r.getAttribute("id")),
                 );
 
                 for (const r of currentSet.querySelectorAll("Representation")) {
@@ -66,7 +66,7 @@ function fixDashManifest(xml: string): string {
         }
     }
 
-    return new XMLSerializer().serializeToString(doc);
+    return dom.serialize();
 }
 
 const dashManifest = new Hono();
