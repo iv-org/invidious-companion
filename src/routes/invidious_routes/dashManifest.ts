@@ -20,7 +20,7 @@ function fixDashManifest(xml: string): string {
 
     // Remove SupplementalProperty elements that cause issues in some players
     doc.querySelectorAll('SupplementalProperty[schemeIdUri^="urn:mpeg:mpegB:"]')
-        .forEach((el: Element) => el.remove());
+        .forEach((el) => el.remove());
 
     const period = doc.querySelector("Period");
     if (period) {
@@ -34,7 +34,7 @@ function fixDashManifest(xml: string): string {
             const reps = [...set.querySelectorAll("Representation")];
             const byCodec = Map.groupBy(
                 reps,
-                (r: Element) => r.getAttribute("codecs")?.split(".")[0] ?? "",
+                (r) => r.getAttribute("codecs")?.split(".")[0] ?? "",
             );
 
             if (byCodec.size <= 1) continue;
@@ -43,7 +43,7 @@ function fixDashManifest(xml: string): string {
             for (const [, groupReps] of byCodec) {
                 const currentSet = isFirst
                     ? set
-                    : set.cloneNode(true) as Element;
+                    : set.cloneNode(true);
                 if (!isFirst) {
                     currentSet.setAttribute("id", String(nextId++));
                     period.insertBefore(currentSet, set.nextSibling);
@@ -54,7 +54,7 @@ function fixDashManifest(xml: string): string {
                     groupReps[0].getAttribute("codecs") ?? "",
                 );
                 const keepIds = new Set(
-                    groupReps.map((r: Element) => r.getAttribute("id")),
+                    groupReps.map((r) => r.getAttribute("id")),
                 );
 
                 for (const r of currentSet.querySelectorAll("Representation")) {
