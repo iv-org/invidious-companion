@@ -10,6 +10,103 @@ import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 
+// Extract codec family from a codecs string (e.g., "avc1.4d401f" -> "avc1")
+function getCodecFamily(codecs: string): string {
+    if (codecs.startsWith("avc1") || codecs.startsWith("avc3")) return "avc";
+    if (codecs.startsWith("hev1") || codecs.startsWith("hvc1")) return "hevc";
+    if (codecs.startsWith("vp09") || codecs.startsWith("vp9")) return "vp9";
+    if (codecs.startsWith("av01") || codecs.startsWith("av1")) return "av1";
+    if (codecs.startsWith("mp4a")) return "mp4a";
+    if (codecs.startsWith("opus")) return "opus";
+    return codecs.split(".")[0];
+}
+
+// Split video AdaptationSets by codec family to prevent codec switching issues
+function splitAdaptationSetsByCodec(dashXml: string): string {
+    // Match video AdaptationSets (contentType="video")
+    const videoAdaptationSetRegex =
+        /<AdaptationSet[^>]*contentType="video"[^>]*>([\s\S]*?)<\/AdaptationSet>/gi;
+
+    let maxId = 0;
+    // Find the highest existing AdaptationSet id
+    const idMatches = dashXml.matchAll(/<AdaptationSet[^>]*id="(\d+)"/gi);
+    for (const match of idMatches) {
+        const id = parseInt(match[1], 10);
+        if (id > maxId) maxId = id;
+    }
+
+    return dashXml.replace(videoAdaptationSetRegex, (fullMatch) => {
+        // Extract all Representation elements
+        const representationRegex =
+            /<Representation[^>]*>([\s\S]*?)<\/Representation>/gi;
+        const representations: { xml: string; codecs: string }[] = [];
+
+        let repMatch;
+        while ((repMatch = representationRegex.exec(fullMatch)) !== null) {
+            const repXml = repMatch[0];
+            // Extract codecs attribute from Representation
+            const codecsMatch = repXml.match(/codecs="([^"]+)"/);
+            const codecs = codecsMatch ? codecsMatch[1] : "unknown";
+            representations.push({ xml: repXml, codecs });
+        }
+
+        // Group representations by codec family
+        const codecGroups = new Map<string, string[]>();
+        for (const rep of representations) {
+            const family = getCodecFamily(rep.codecs);
+            if (!codecGroups.has(family)) {
+                codecGroups.set(family, []);
+            }
+            codecGroups.get(family)!.push(rep.xml);
+        }
+
+        // If only one codec family, return unchanged
+        if (codecGroups.size <= 1) {
+            return fullMatch;
+        }
+
+        // Extract AdaptationSet attributes (everything before first child element)
+        const adaptationSetOpenTag = fullMatch.match(
+            /<AdaptationSet[^>]*>/,
+        )?.[0];
+        if (!adaptationSetOpenTag) {
+            return fullMatch;
+        }
+
+        // Extract non-Representation children (like ContentProtection, Role, etc.)
+        const nonRepChildren: string[] = [];
+        const nonRepRegex =
+            /<(?!Representation|\/AdaptationSet)[A-Z][^>]*(?:\/>|>[\s\S]*?<\/[^>]+>)/gi;
+        let nonRepMatch;
+        while ((nonRepMatch = nonRepRegex.exec(fullMatch)) !== null) {
+            // Exclude Representation elements
+            if (!nonRepMatch[0].startsWith("<Representation")) {
+                nonRepChildren.push(nonRepMatch[0]);
+            }
+        }
+
+        // Create separate AdaptationSets for each codec family
+        const newAdaptationSets: string[] = [];
+        for (const [codecFamily, reps] of codecGroups) {
+            maxId++;
+            // Update the id and codecs in the AdaptationSet tag
+            let newOpenTag = adaptationSetOpenTag
+                .replace(/id="\d+"/, `id="${maxId}"`)
+                .replace(
+                    /codecs="[^"]+"/,
+                    `codecs="${reps[0].match(/codecs="([^"]+)"/)?.[1] || ""}"`,
+                );
+
+            const newAdaptationSet = `${newOpenTag}\n${
+                nonRepChildren.join("\n")
+            }\n${reps.join("\n")}\n</AdaptationSet>`;
+            newAdaptationSets.push(newAdaptationSet);
+        }
+
+        return newAdaptationSets.join("\n");
+    });
+}
+
 const dashManifest = new Hono();
 
 dashManifest.get("/:videoId", async (c) => {
@@ -70,9 +167,7 @@ dashManifest.get("/:videoId", async (c) => {
         // video.js only support MP4 not WEBM
         videoInfo.streaming_data.adaptive_formats = videoInfo
             .streaming_data.adaptive_formats
-            .filter((i) =>
-                i.mime_type.includes("mp4")
-            );
+            .filter((i) => i.mime_type.includes("mp4"));
 
         const player_response = videoInfo.page[0];
         // TODO: fix include storyboards in DASH manifest file
@@ -125,7 +220,16 @@ dashManifest.get("/:videoId", async (c) => {
             captions,
             undefined,
         );
-        return c.body(dashFile);
+        // Remove SupplementalProperty elements that cause issues in some players
+        const supPropRe =
+            /<SupplementalProperty schemeIdUri="urn:mpeg:mpegB:[^>]*\/>/gi;
+        let modDashFile = dashFile.replace(supPropRe, "");
+
+        // Split video AdaptationSets by codec family to prevent codec switching
+        // within the same AdaptationSet (which causes MEDIA_ERR_DECODE in Chromium)
+        modDashFile = splitAdaptationSetsByCodec(modDashFile);
+
+        return c.body(modDashFile);
     }
 });
 
