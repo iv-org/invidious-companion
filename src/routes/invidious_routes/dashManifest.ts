@@ -10,60 +10,62 @@ import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 
-// Split video AdaptationSets by codec family to prevent MEDIA_ERR_DECODE in Chromium
-function splitAdaptationSetsByCodec(dashXml: string): string {
-    const doc = new DOMParser().parseFromString(dashXml, "application/xml");
+// Fix DASH manifest for Chromium compatibility.
+// 1. Remove problematic SupplementalProperty elements.
+// 2. Split video AdaptationSets by codec family to prevent MEDIA_ERR_DECODE.
+function fixDashManifest(xml: string): string {
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+
+    // Remove SupplementalProperty elements that cause issues in some players
+    doc.querySelectorAll('SupplementalProperty[schemeIdUri^="urn:mpeg:mpegB:"]')
+        .forEach((el) => el.remove());
+
     const period = doc.querySelector("Period");
-    if (!period) return dashXml;
+    if (period) {
+        let nextId = doc.querySelectorAll("AdaptationSet").length;
 
-    let maxId = Math.max(...[...doc.querySelectorAll("AdaptationSet")]
-        .map((a) => parseInt(a.getAttribute("id") || "0", 10)));
+        for (
+            const set of period.querySelectorAll(
+                'AdaptationSet[contentType="video"]',
+            )
+        ) {
+            const reps = [...set.querySelectorAll("Representation")];
+            const byCodec = Map.groupBy(
+                reps,
+                (r) => r.getAttribute("codecs")?.split(".")[0] ?? "",
+            );
 
-    for (
-        const adaptSet of [
-            ...period.querySelectorAll('AdaptationSet[contentType="video"]'),
-        ]
-    ) {
-        const reps = [...adaptSet.querySelectorAll("Representation")];
-        const byCodec = Map.groupBy(
-            reps,
-            (r) => (r.getAttribute("codecs") || "").split(".")[0],
-        );
+            if (byCodec.size <= 1) continue;
 
-        if (byCodec.size <= 1) continue;
+            let isFirst = true;
+            for (const [, groupReps] of byCodec) {
+                // Use the existing set for the first group, clone for others
+                const currentSet = isFirst
+                    ? set
+                    : set.cloneNode(true) as Element;
+                if (!isFirst) {
+                    currentSet.setAttribute("id", String(nextId++));
+                    period.insertBefore(currentSet, set.nextSibling);
+                }
 
-        // Clone AdaptationSet for each codec family, keeping first in place
-        let first = true;
-        for (const [codec, codecReps] of byCodec) {
-            if (first) {
-                // Keep original, just remove other codec reps
-                reps.filter((r) => !codecReps.includes(r)).forEach((r) =>
-                    r.remove()
-                );
-                adaptSet.setAttribute(
+                // Update codec attribute and filter representations
+                currentSet.setAttribute(
                     "codecs",
-                    codecReps[0]?.getAttribute("codecs") || "",
+                    groupReps[0].getAttribute("codecs") ?? "",
                 );
-                first = false;
-            } else {
-                const clone = adaptSet.cloneNode(true) as Element;
-                clone.setAttribute("id", String(++maxId));
-                clone.setAttribute(
-                    "codecs",
-                    codecReps[0]?.getAttribute("codecs") || "",
+                const keepIds = new Set(
+                    groupReps.map((r) => r.getAttribute("id")),
                 );
-                // Remove reps not in this codec group
-                [...clone.querySelectorAll("Representation")]
-                    .filter((r) =>
-                        !codecReps.some((cr) =>
-                            cr.getAttribute("id") === r.getAttribute("id")
-                        )
-                    )
-                    .forEach((r) => r.remove());
-                period.insertBefore(clone, adaptSet.nextSibling);
+
+                for (const r of currentSet.querySelectorAll("Representation")) {
+                    if (!keepIds.has(r.getAttribute("id"))) r.remove();
+                }
+
+                isFirst = false;
             }
         }
     }
+
     return new XMLSerializer().serializeToString(doc);
 }
 
@@ -180,16 +182,7 @@ dashManifest.get("/:videoId", async (c) => {
             captions,
             undefined,
         );
-        // Remove SupplementalProperty elements that cause issues in some players
-        const supPropRe =
-            /<SupplementalProperty schemeIdUri="urn:mpeg:mpegB:[^>]*\/>/gi;
-        let modDashFile = dashFile.replace(supPropRe, "");
-
-        // Split video AdaptationSets by codec family to prevent codec switching
-        // within the same AdaptationSet (which causes MEDIA_ERR_DECODE in Chromium)
-        modDashFile = splitAdaptationSetsByCodec(modDashFile);
-
-        return c.body(modDashFile);
+        return c.body(fixDashManifest(dashFile));
     }
 });
 
