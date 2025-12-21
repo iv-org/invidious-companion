@@ -4,7 +4,7 @@
 //
 // Two-part fix based on investigation by MMaster in issue #172:
 // 1. Filter adaptive formats BEFORE DASH generation using legacy Invidious unique_res behavior
-//    (one format per height, first codec encountered after sorting by height/fps desc)
+//    (one format per height, after sorting by codec priority, width desc, fps desc)
 // 2. Remove SupplementalProperty elements that cause color transfer issues
 
 import type { Misc } from "youtubei.js";
@@ -30,14 +30,15 @@ function getFormatCodecPriority(fmt: Misc.Format): number {
 /**
  * Filter and sort adaptive formats to prevent codec switching issues.
  * Uses legacy Invidious behavior (unique_res):
- * - Sorts by preferred codec, then height desc, then fps desc
+ * - Sorts by preferred codec, then width desc, then fps desc
  * - Keeps only the first format per height (best codec, highest fps)
  * - Preserves all audio formats
  */
 export function filterAdaptiveFormats(
     formats: Misc.Format[],
 ): Misc.Format[] {
-    // Sort: audio first, then by codec preference, height desc, fps desc
+    // Sort: audio first, then by codec preference, width desc, fps desc
+    // (legacy sorts by {width, fps} descending, then filters by height)
     const sorted = [...formats].sort((a, b) => {
         // Audio first
         if (a.has_video !== b.has_video) {
@@ -46,9 +47,9 @@ export function filterAdaptiveFormats(
         // Preferred codec first
         const codecDiff = getFormatCodecPriority(a) - getFormatCodecPriority(b);
         if (codecDiff !== 0) return codecDiff;
-        // Higher height first
-        if ((a.height || 0) !== (b.height || 0)) {
-            return (b.height || 0) - (a.height || 0);
+        // Higher width first (legacy behavior)
+        if ((a.width || 0) !== (b.width || 0)) {
+            return (b.width || 0) - (a.width || 0);
         }
         // Higher fps first
         return (b.fps || 0) - (a.fps || 0);
