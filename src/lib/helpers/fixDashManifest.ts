@@ -3,7 +3,8 @@
 // different codec families mid-stream.
 //
 // Two-part fix based on investigation by MMaster in issue #172:
-// 1. Filter adaptive formats BEFORE DASH generation to keep only one codec per height+fps
+// 1. Filter adaptive formats BEFORE DASH generation using legacy Invidious unique_res behavior
+//    (one format per height, first codec encountered after sorting by height/fps desc)
 // 2. Remove SupplementalProperty elements that cause color transfer issues
 
 import type { Misc } from "youtubei.js";
@@ -27,59 +28,42 @@ function getFormatCodecPriority(fmt: Misc.Format): number {
 }
 
 /**
- * Calculate sort value for a format.
- * Sorts by: audio first, then preferred codec, then higher height, then fps close to 30.
- */
-function getFormatSortValue(fmt: Misc.Format): number {
-    // Audio first
-    if (fmt.has_video === false) return 0;
-
-    // No height is treated like height 1 to be after all other heights
-    const heightVal = 100000 - (fmt.height ? fmt.height : 1);
-
-    let fpsVal = 0.0;
-    if (!fmt.fps) {
-        // No fps is worst
-        fpsVal = 5.0;
-    } else if (fmt.fps < 24) {
-        // fps lower than 24 is worse (higher is better)
-        fpsVal = 5.0 - fmt.fps / 100; // (fps 24) 4.76 => (fps 0) 5.0
-    } else if (fmt.fps < 40) {
-        // fps between 24 and 40 is ideal (higher is better)
-        fpsVal = 0.4 - fmt.fps / 100; // (fps 40) 0.0 => (fps 24) 0.16
-    } else {
-        // fps higher than 40 is worse than around 30 (higher is worse)
-        fpsVal = 0.0 + fmt.fps / 100; // (fps 40) 0.4 => (fps 120) 1.2
-    }
-
-    return getFormatCodecPriority(fmt) * 100000 + heightVal + fpsVal;
-}
-
-/**
  * Filter and sort adaptive formats to prevent codec switching issues.
- * - Sorts by codec preference, height, and fps
- * - Keeps only one format per height+fps combination (the most preferred codec)
+ * Uses legacy Invidious behavior (unique_res):
+ * - Sorts by preferred codec, then height desc, then fps desc
+ * - Keeps only the first format per height (best codec, highest fps)
  * - Preserves all audio formats
  */
 export function filterAdaptiveFormats(
     formats: Misc.Format[],
 ): Misc.Format[] {
-    // Sort: audio first, then by codec preference, height desc, fps preference
-    const sorted = [...formats].sort(
-        (a, b) => getFormatSortValue(a) - getFormatSortValue(b),
-    );
+    // Sort: audio first, then by codec preference, height desc, fps desc
+    const sorted = [...formats].sort((a, b) => {
+        // Audio first
+        if (a.has_video !== b.has_video) {
+            return a.has_video ? 1 : -1;
+        }
+        // Preferred codec first
+        const codecDiff = getFormatCodecPriority(a) - getFormatCodecPriority(b);
+        if (codecDiff !== 0) return codecDiff;
+        // Higher height first
+        if ((a.height || 0) !== (b.height || 0)) {
+            return (b.height || 0) - (a.height || 0);
+        }
+        // Higher fps first
+        return (b.fps || 0) - (a.fps || 0);
+    });
 
-    // Filter out duplicates by height+fps, keeping only the first (most preferred codec)
-    const seen = new Set<string>();
+    // Filter by height only, taking the first codec encountered (legacy unique_res behavior)
+    const seen = new Set<number>();
     return sorted.filter((fmt) => {
         // Keep all audio
         if (fmt.has_video === false) return true;
         // Keep formats without height info
         if (!fmt.height) return true;
-        // Use height+fps as the unique key
-        const key = `${fmt.height}@${fmt.fps || 0}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
+        // Use height only as the unique key (legacy behavior)
+        if (seen.has(fmt.height)) return false;
+        seen.add(fmt.height);
         return true;
     });
 }
