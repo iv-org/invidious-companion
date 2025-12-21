@@ -145,9 +145,6 @@ videoPlaybackProxy.get("/", async (c) => {
     // into chunks and stream the response back to the client to avoid rate limiting
     const { readable, writable } = new TransformStream();
     const stream = new StreamingApi(writable, readable);
-    stream.onAbort(() => {
-        console.log("[INFO] Video stream aborted by client");
-    });
     const googleVideoUrl = new URL(location);
     const getChunk = async (start: number, end: number) => {
         googleVideoUrl.searchParams.set(
@@ -191,17 +188,9 @@ videoPlaybackProxy.get("/", async (c) => {
         }
         chunk = chunk.then(() => getChunk(startByte, endByte));
     }
-    chunk
-        .then(() => {
-            stream.close();
-        })
-        .catch((error) => {
-            console.error(
-                "[ERROR] Failed to fetch video chunk from Google servers:",
-                error,
-            );
-            stream.abort();
-        });
+    chunk.catch(() => {
+        stream.abort();
+    });
     // =================== REQUEST CHUNKING =======================
 
     const headersForResponse: Record<string, string> = {
