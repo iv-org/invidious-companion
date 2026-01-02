@@ -241,6 +241,10 @@ async function checkToken({
                 continue;
             }
         }
+        // If we reach here, all attempts failed without throwing an exception
+        throw new Error(
+            "Failed to validate PO token: all validation attempts returned non-200 status codes",
+        );
     } catch (err) {
         console.log("Failed to validate PO token using search method", { err });
         throw err;
