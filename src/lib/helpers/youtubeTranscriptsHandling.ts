@@ -1,6 +1,7 @@
 import { Innertube } from "youtubei.js";
 import type { CaptionTrackData } from "youtubei.js/PlayerCaptionsTracklist";
 import { HTTPException } from "hono/http-exception";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 function createTemporalDuration(milliseconds: number) {
     return new Temporal.Duration(
@@ -24,11 +25,56 @@ const ESCAPE_SUBSTITUTIONS = {
     "\u00A0": "&nbsp;",
 };
 
+function shiftVttToCenter(vtt: string): string {
+  const lines = vtt.split('\n');
+  const updatedLines: string[] = [];
+  const timingRegex = /^((?:\d{1,2}:)?\d{2}:\d{2}\.\d{3} --> (?:\d{1,2}:)?\d{2}:\d{2}\.\d{3})(.*)$/;
+
+  for (const line of lines) {
+    const match = line.match(timingRegex);
+    if (match) {
+      updatedLines.push(match[1]);
+    } else {
+      updatedLines.push(line);
+    }
+  }
+
+  return updatedLines.join('\n');
+}
+
 export async function handleTranscripts(
     innertubeClient: Innertube,
     videoId: string,
     selectedCaption: CaptionTrackData,
+    poToken?: string,
+    clientName?: string,
 ) {
+  if (poToken && clientName) {
+    const baseUrl = selectedCaption.base_url;
+    let url = `${baseUrl}&fmt=vtt&potc=1&pot=${poToken}&c=${clientName}`;
+
+    const urlObj = new URL(url);
+
+    const response = await innertubeClient.session.http.fetch(urlObj, { method: "GET" });
+
+    if (!response.ok) {
+      throw new HTTPException(response.status as ContentfulStatusCode, {
+        res: new Response("Failed to fetch captions."),
+      });
+    }
+
+    let vttText = await response.text();
+
+    if (!vttText.startsWith("WEBVTT")) {
+      throw new HTTPException(404, {
+        res: new Response("No valid captions found."),
+      });
+    }
+
+    vttText = shiftVttToCenter(vttText);
+
+    return vttText;
+  } else {
     const lines: string[] = ["WEBVTT"];
 
     const info = await innertubeClient.getInfo(videoId);
@@ -87,4 +133,5 @@ export async function handleTranscripts(
     });
 
     return lines.join("\n\n");
+  }
 }
