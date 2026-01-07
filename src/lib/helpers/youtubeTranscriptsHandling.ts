@@ -51,7 +51,7 @@ export async function handleTranscripts(
 ) {
   if (poToken && clientName) {
     const baseUrl = selectedCaption.base_url;
-    let url = `${baseUrl}&fmt=vtt&potc=1&pot=${poToken}&c=${clientName}`;
+    const url = `${baseUrl}&fmt=vtt&potc=1&pot=${poToken}&c=${clientName}`;
 
     const urlObj = new URL(url);
 
