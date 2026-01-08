@@ -30,6 +30,7 @@
 # directory = "/var/tmp" # env variable: CACHE_DIRECTORY
  
 # [networking]
+## Proxy type supported: https://docs.deno.com/api/deno/~/Deno.Proxy
 # #proxy = "" # env variable: PROXY
 # # IPv6 rotation settings - allows sending requests with unique IPv6 addresses
 # # This requires IPv6 setup: https://github.com/iv-org/invidious-companion/wiki/How-to-send-IPv6-requests-with-a-new-IPv6-address-for-each-request-on-a-server-with-a-whole-IPv6-range
