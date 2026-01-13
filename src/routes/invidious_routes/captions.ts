@@ -104,10 +104,17 @@ captionsHandler.get("/:videoId", async (c) => {
 
     if (filterSelected.length == 0) throw new HTTPException(404);
 
+    let poToken: string | undefined;
+    let clientName: string | undefined;
+    if (tokenMinter) {
+      poToken = await tokenMinter(videoId);
+      clientName = innertubeClient.session.context.client.clientName;
+    }
+
     c.header("Content-Type", "text/vtt; charset=UTF-8");
     c.header("Access-Control-Allow-Origin", "*");
     return c.body(
-        await handleTranscripts(innertubeClient, videoId, filterSelected[0]),
+        await handleTranscripts(innertubeClient, videoId, filterSelected[0], poToken, clientName),
     );
 });
 
