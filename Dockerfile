@@ -25,7 +25,7 @@ FROM alpine:3.23 AS dependabot-alpine
 FROM debian:13-slim AS dependabot-debian
 
 # Retrieve the deno binary from the repository
-FROM denoland/deno:bin-2.6.4 AS deno-bin
+FROM denoland/deno:bin-2.6.5 AS deno-bin
 
 
 # Stage for creating the non-privileged user
