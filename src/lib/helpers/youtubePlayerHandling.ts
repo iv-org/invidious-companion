@@ -31,7 +31,7 @@ export const youtubePlayerParsing = async ({
     innertubeClient: Innertube;
     videoId: string;
     config: Config;
-    tokenMinter: TokenMinter;
+    tokenMinter: TokenMinter | undefined;
     metrics: Metrics | undefined;
     overrideCache?: boolean;
 }): Promise<object> => {

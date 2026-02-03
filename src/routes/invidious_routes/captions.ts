@@ -32,8 +32,10 @@ captionsHandler.get("/:videoId", async (c) => {
         });
     }
 
-    // Check if tokenMinter is ready (only needed when PO token is enabled)
-    if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
+    // Check if tokenMinter is ready (only needed when PO token is enabled and OAuth is not)
+    if (config.jobs.youtube_session.po_token_enabled &&
+        !config.youtube_session.oauth_enabled &&
+        !tokenMinter) {
         throw new HTTPException(503, {
             res: new Response(TOKEN_MINTER_NOT_READY_MESSAGE),
         });
