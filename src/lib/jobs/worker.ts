@@ -102,6 +102,10 @@ if (isWorker) {
                         message.config.youtube_session.cookies,
                 });
                 minter = generatedMinter;
+                console.log("\n\n=== YOUTUBE TOKENS GENERATED ===")
+                console.log("poToken:", sessionPoToken);
+                console.log("visitorData:", visitorData);
+                console.log("=================================\n\n");
                 postMessage({
                     type: "initialised",
                     sessionPoToken,
