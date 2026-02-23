@@ -8,6 +8,10 @@ import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 import { HTTPException } from "hono/http-exception";
 import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
+import {
+    filterAdaptiveFormats,
+    fixDashManifest,
+} from "../../lib/helpers/fixDashManifest.ts";
 import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 
 const dashManifest = new Hono();
@@ -67,12 +71,15 @@ dashManifest.get("/:videoId", async (c) => {
     c.header("content-type", "application/dash+xml");
 
     if (videoInfo.streaming_data) {
-        // video.js only support MP4 not WEBM
+        // video.js only supports MP4 not WEBM
         videoInfo.streaming_data.adaptive_formats = videoInfo
             .streaming_data.adaptive_formats
-            .filter((i) =>
-                i.mime_type.includes("mp4")
-            );
+            .filter((i) => i.mime_type.includes("mp4"));
+
+        // Filter to one codec per height to prevent MEDIA_ERR_DECODE
+        videoInfo.streaming_data.adaptive_formats = filterAdaptiveFormats(
+            videoInfo.streaming_data.adaptive_formats,
+        );
 
         const player_response = videoInfo.page[0];
         // TODO: fix include storyboards in DASH manifest file
@@ -125,7 +132,7 @@ dashManifest.get("/:videoId", async (c) => {
             captions,
             undefined,
         );
-        return c.body(dashFile);
+        return c.body(fixDashManifest(dashFile));
     }
 });
 
