@@ -228,11 +228,13 @@ if (import.meta.main) {
     const { signal } = controller;
     run(signal, config.server.port, config.server.host);
 
-    Deno.addSignalListener("SIGTERM", () => {
-        console.log("Caught SIGINT, shutting down...");
-        controller.abort();
-        Deno.exit(0);
-    });
+    if (Deno.build.os !== "windows") {
+        Deno.addSignalListener("SIGTERM", () => {
+            console.log("Caught SIGINT, shutting down...");
+            controller.abort();
+            Deno.exit(0);
+        });
+    }
 
     Deno.addSignalListener("SIGINT", () => {
         console.log("Caught SIGINT, shutting down...");
