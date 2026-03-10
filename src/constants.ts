@@ -5,7 +5,7 @@
 // extract the signature decipher algorithm and we need to wait for a fix
 // in Youtube.JS.
 // taken from https://github.com/yt-dlp/yt-dlp/commit/d3165e83ffc0088eef5e594927ea9ac99a6e2ce6
-export const PLAYER_ID = "9f4cc5e4"; 
+export const PLAYER_ID = "a944b11f"; 
 
 // Error message shown when tokenMinter is not yet ready
 export const TOKEN_MINTER_NOT_READY_MESSAGE =
