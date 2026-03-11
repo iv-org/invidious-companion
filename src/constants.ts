@@ -4,7 +4,7 @@
 // rolls out a new Player. This is helpful when Youtube.JS is not able to
 // extract the signature decipher algorithm and we need to wait for a fix
 // in Youtube.JS.
-export const PLAYER_ID = undefined; 
+export const PLAYER_ID = "01bde470"; 
 
 // Error message shown when tokenMinter is not yet ready
 export const TOKEN_MINTER_NOT_READY_MESSAGE =
