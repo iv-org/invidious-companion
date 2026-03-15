@@ -13,8 +13,10 @@ player.post("/player", async (c) => {
     const metrics = c.get("metrics");
     const tokenMinter = c.get("tokenMinter");
 
-    // Check if tokenMinter is ready (only needed when PO token is enabled)
-    if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
+    // Check if tokenMinter is ready (only needed when PO token is enabled and OAuth is not)
+    if (config.jobs.youtube_session.po_token_enabled &&
+        !config.youtube_session.oauth_enabled &&
+        !tokenMinter) {
         return c.json({
             playabilityStatus: {
                 status: "ERROR",
