@@ -35,7 +35,12 @@
     "bufferutil": "./src/lib/extra/emptyExport.ts",
     "utf-8-validate": "./src/lib/extra/emptyExport.ts"
   },
-  "unstable": ["cron", "kv", "http", "temporal"],
+  "unstable": [
+    "cron",
+    "kv",
+    "http",
+    "temporal"
+  ],
   "fmt": {
     "indentWidth": 4
   }
