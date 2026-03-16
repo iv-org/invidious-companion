@@ -44,17 +44,7 @@ export const getFetchClient = (config: Config): {
                 method: init?.method,
                 body: init?.body,
             });
-
-            // Pipe the body through a TransformStream to close the client when done
-            const { readable, writable } = new TransformStream();
-            const bodyStream = fetchRes.body;
-            if (bodyStream) {
-                bodyStream.pipeTo(writable).finally(() => client.close());
-            } else {
-                client.close();
-            }
-
-            return new Response(bodyStream ? readable : null, {
+            return new Response(fetchRes.body, {
                 status: fetchRes.status,
                 headers: fetchRes.headers,
             });
