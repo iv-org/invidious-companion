@@ -32,7 +32,7 @@ jobs:
           daemon: true
           port: 9150
           config: |
-            ExitNodes {fr},{de},{nl},{se},{ch},{es},{it},{pl},{cz},{at}
+            ExcludeExitNodes {us}
             StrictNodes 1
 
       - name: Run tests x4 times (IP may be banned)
