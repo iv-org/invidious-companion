@@ -11,6 +11,12 @@ jobs:
     steps:
       - name: Setup repo
         uses: actions/checkout@v6
+
+      - name: Checkout binaries repo
+        uses: actions/checkout@v6
+        with:
+          repository: iv-org/binaries
+          path: ci-binaries
         
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -26,19 +32,15 @@ jobs:
       - name: Run linter
         run: deno task lint
 
-      - name: Install and run tor
-        uses: tor-actions/setup-tor@main
-        with:
-          daemon: true
-          port: 9150
-
       - name: Run tests x4 times (IP may be banned)
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 5
           max_attempts: 4
           command: |
-            sudo pkill -HUP tor
-            curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo 
+            ci-binaries/opera-proxy &
+            sleep 3s
+            curl -s -x http://127.0.0.1:18080 --retry 5 --retry-delay 2 --retry-connrefused https://check.torproject.org/api/ip; echo 
             rm -rf /var/tmp/youtubei.js
-            PROXY=socks5://127.0.0.1:9150 deno task test
+            PROXY=http://127.0.0.1:18080 deno task test
+            pkill opera-proxy
