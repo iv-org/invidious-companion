@@ -43,4 +43,4 @@ jobs:
             curl -s -x http://127.0.0.1:18080 --retry 5 --retry-delay 2 --retry-connrefused https://check.torproject.org/api/ip; echo 
             rm -rf /var/tmp/youtubei.js
             PROXY=http://127.0.0.1:18080 deno task test
-            pkill opera-proxy-amd64
+            pkill -f opera-proxy-amd64
