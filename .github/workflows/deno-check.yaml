@@ -38,9 +38,9 @@ jobs:
           timeout_minutes: 5
           max_attempts: 4
           command: |
-            ci-binaries/opera-proxy &
+            ci-binaries/opera-proxy-amd64 &
             sleep 3s
             curl -s -x http://127.0.0.1:18080 --retry 5 --retry-delay 2 --retry-connrefused https://check.torproject.org/api/ip; echo 
             rm -rf /var/tmp/youtubei.js
             PROXY=http://127.0.0.1:18080 deno task test
-            pkill opera-proxy
+            pkill opera-proxy-amd64
