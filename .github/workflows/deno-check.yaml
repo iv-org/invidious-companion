@@ -35,11 +35,11 @@ jobs:
             ExcludeExitNodes {us}
             StrictNodes 1
 
-      - name: Run tests x4 times (IP may be banned)
+      - name: Run tests x8 times (IP may be banned)
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 5
-          max_attempts: 4
+          max_attempts: 8
           command: |
             sudo pkill -HUP tor
             curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo 
