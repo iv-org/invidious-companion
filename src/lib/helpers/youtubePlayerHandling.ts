@@ -77,59 +77,36 @@ export const youtubePlayerParsing = async ({
                 !clientNameUsed?.value.includes("IOS") &&
                 !clientNameUsed?.value.includes("ANDROID")
             ) {
-                for (const [index, format] of streamingData.formats.entries()) {
-                    videoData.streamingData.formats[index].url = await format
+                for (let index = 0; index < streamingData.formats.length; index++) {
+                    const format = videoData.streamingData.formats[index];
+
+                    format.url = await streamingData.formats[index]
                         .decipher(
                             innertubeClient.session.player,
                         );
-                    if (
-                        videoData.streamingData.formats[index]
-                            .signatureCipher !==
-                            undefined
-                    ) {
-                        delete videoData.streamingData.formats[index]
-                            .signatureCipher;
+                    if (format.signatureCipher !== undefined) {
+                        delete format.signatureCipher;
                     }
-                    if (
-                        videoData.streamingData.formats[index].url.includes(
-                            "alr=yes",
-                        )
-                    ) {
-                        videoData.streamingData.formats[index].url.replace(
-                            "alr=yes",
-                            "alr=no",
-                        );
+                    if (format.url.includes("alr=yes")) {
+                        format.url.replace("alr=yes", "alr=no");
                     } else {
-                        videoData.streamingData.formats[index].url += "&alr=no";
+                        format.url += "&alr=no";
                     }
                 }
-                for (
-                    const [index, adaptive_format] of streamingData
-                        .adaptive_formats
-                        .entries()
-                ) {
-                    videoData.streamingData.adaptiveFormats[index].url =
-                        await adaptive_format
+                for (let index = 0; index < streamingData.adaptive_formats.length; index++) {
+                    const format = videoData.streamingData.adaptiveFormats[index]
+
+                    format.url = await streamingData.adaptive_formats[index]
                             .decipher(
                                 innertubeClient.session.player,
                             );
-                    if (
-                        videoData.streamingData.adaptiveFormats[index]
-                            .signatureCipher !==
-                            undefined
-                    ) {
-                        delete videoData.streamingData.adaptiveFormats[index]
-                            .signatureCipher;
+                    if (format.signatureCipher !== undefined) {
+                        delete format.signatureCipher;
                     }
-                    if (
-                        videoData.streamingData.adaptiveFormats[index].url
-                            .includes("alr=yes")
-                    ) {
-                        videoData.streamingData.adaptiveFormats[index].url
-                            .replace("alr=yes", "alr=no");
+                    if (format.url.includes("alr=yes")) {
+                        format.url.replace("alr=yes", "alr=no");
                     } else {
-                        videoData.streamingData.adaptiveFormats[index].url +=
-                            "&alr=no";
+                        format.url += "&alr=no";
                     }
                 }
             }
