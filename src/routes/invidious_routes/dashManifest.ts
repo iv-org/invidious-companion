@@ -86,7 +86,7 @@ dashManifest.get("/:videoId", async (c) => {
             videoInfo.page[0].video_details?.is_post_live_dvr,
             (url: URL) => {
                 let dashUrl = url;
-                let queryParams = new URLSearchParams(dashUrl.search);
+                const queryParams = new URLSearchParams(dashUrl.search);
                 // Can't create URL type without host part
                 queryParams.set("host", dashUrl.host);
 

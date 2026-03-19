@@ -89,7 +89,7 @@ latestVersion.get("/", async (c) => {
             itag.is_original
         )?.url as string || selectedItagFormat[0].url as string;
         const itagUrlParsed = new URL(itagUrl);
-        let queryParams = new URLSearchParams(itagUrlParsed.search);
+        const queryParams = new URLSearchParams(itagUrlParsed.search);
         let urlToRedirect = itagUrlParsed.toString();
 
         if (local) {
