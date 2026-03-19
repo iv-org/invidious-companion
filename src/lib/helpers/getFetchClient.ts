@@ -17,6 +17,18 @@ export const getFetchClient = (config: Config): {
     const proxyAddress = config.networking.proxy;
     const ipv6Block = config.networking.ipv6_block;
 
+    const fetchMaxAttempts = config.networking.fetch?.retry?.times;
+    const fetchInitialDebounce = config.networking.fetch?.retry
+        ?.initial_debounce;
+    const fetchDebounceMultiplier = config.networking.fetch?.retry
+        ?.debounce_multiplier;
+    const retryOptions: RetryOptions = {
+        maxAttempts: fetchMaxAttempts,
+        minTimeout: fetchInitialDebounce,
+        multiplier: fetchDebounceMultiplier,
+        jitter: 0,
+    };
+
     // If proxy or IPv6 rotation is configured, create a custom HTTP client
     // IPv6 rotation generates a unique localAddress for each request to help
     // avoid YouTube's "Please login" errors
@@ -38,7 +50,7 @@ export const getFetchClient = (config: Config): {
             }
 
             const client = Deno.createHttpClient(clientOptions);
-            const fetchRes = await fetchShim(config, input, {
+            const fetchRes = await fetchShim(config, retryOptions, input, {
                 client,
                 headers: init?.headers,
                 method: init?.method,
@@ -52,27 +64,17 @@ export const getFetchClient = (config: Config): {
     }
 
     return (input: FetchInputParameter, init?: FetchInitParameterWithClient) =>
-        fetchShim(config, input, init);
+        fetchShim(config, retryOptions, input, init);
 };
 
 function fetchShim(
     config: Config,
+    retryOptions: RetryOptions,
     input: FetchInputParameter,
     init?: FetchInitParameterWithClient,
 ): FetchReturn {
     const fetchTimeout = config.networking.fetch?.timeout_ms;
     const fetchRetry = config.networking.fetch?.retry?.enabled;
-    const fetchMaxAttempts = config.networking.fetch?.retry?.times;
-    const fetchInitialDebounce = config.networking.fetch?.retry
-        ?.initial_debounce;
-    const fetchDebounceMultiplier = config.networking.fetch?.retry
-        ?.debounce_multiplier;
-    const retryOptions: RetryOptions = {
-        maxAttempts: fetchMaxAttempts,
-        minTimeout: fetchInitialDebounce,
-        multiplier: fetchDebounceMultiplier,
-        jitter: 0,
-    };
 
     const callFetch = () =>
         fetch(input, {
