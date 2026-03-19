@@ -73,8 +73,10 @@ latestVersion.get("/", async (c) => {
     const availableFormats = streamingData?.formats.concat(
         streamingData.adaptive_formats,
     );
+
+    const numericItag = Number(itag)
     const selectedItagFormat = availableFormats?.filter((i) =>
-        i.itag == Number(itag)
+        i.itag == numericItag
     );
     if (selectedItagFormat?.length === 0) {
         throw new HTTPException(400, {
