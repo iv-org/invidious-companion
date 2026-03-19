@@ -90,24 +90,24 @@ captionsHandler.get("/:videoId", async (c) => {
     }
 
     // Extract selected caption
-    let filterSelected: CaptionTrackData[];
+    let match: CaptionTrackData | undefined;
 
     if (lang) {
-        filterSelected = captionsTrackArray.filter((c: CaptionTrackData) =>
+        match = captionsTrackArray.find((c: CaptionTrackData) =>
             c.language_code === lang
         );
     } else {
-        filterSelected = captionsTrackArray.filter((c: CaptionTrackData) =>
+        match = captionsTrackArray.find((c: CaptionTrackData) =>
             c.name.text === label
         );
     }
 
-    if (filterSelected.length == 0) throw new HTTPException(404);
+    if (match == undefined) throw new HTTPException(404);
 
     c.header("Content-Type", "text/vtt; charset=UTF-8");
     c.header("Access-Control-Allow-Origin", "*");
     return c.body(
-        await handleTranscripts(innertubeClient, videoId, filterSelected[0]),
+        await handleTranscripts(innertubeClient, videoId, match),
     );
 });
 
