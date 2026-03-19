@@ -24,7 +24,7 @@ export const verifyRequest = (
         );
         const [parsedTimestamp, parsedVideoId] = encryptedData.split("|");
         const parsedTimestampInt = parseInt(parsedTimestamp);
-        const timestampNow = Math.round(+new Date() / 1000);
+        const timestampNow = Math.round(Date.now() / 1000);
         if (parsedVideoId !== videoId) {
             return false;
         }
