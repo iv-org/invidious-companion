@@ -1,3 +1,7 @@
+// Valid characters: A-Z, a-z, 0-9, -, _
+// YouTube video IDs are exactly 11 characters
+const VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/
+
 /**
  * Validates a YouTube video ID format
  * YouTube video IDs are 11 characters long and contain alphanumeric characters, hyphens, and underscores
@@ -7,17 +11,10 @@
  * @returns true if the video ID is valid, false otherwise
  */
 export const validateVideoId = (videoId: string): boolean => {
-    // Handle null, undefined, or non-string values
-    if (!videoId || typeof videoId !== "string") {
+    // Handle non-string values
+    if (typeof videoId !== "string") {
         return false;
     }
 
-    // YouTube video IDs are exactly 11 characters
-    if (videoId.length !== 11) {
-        return false;
-    }
-
-    // Valid characters: A-Z, a-z, 0-9, -, _
-    const validPattern = /^[A-Za-z0-9_-]{11}$/;
-    return validPattern.test(videoId);
+    return VIDEO_ID_REGEX.test(videoId);
 };
