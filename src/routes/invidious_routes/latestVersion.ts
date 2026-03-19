@@ -9,6 +9,8 @@ import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 
+const PRIVATE_PARAM_NAMES = ["pot", "ip"];
+
 const latestVersion = new Hono();
 
 latestVersion.get("/", async (c) => {
@@ -91,17 +93,18 @@ latestVersion.get("/", async (c) => {
         if (local) {
             queryParams.set("host", itagUrlParsed.host);
             if (config.server.encrypt_query_params) {
-                const publicParams = [...queryParams].filter(([key]) =>
-                    ["pot", "ip"].includes(key) === false
-                );
                 const privateParams = [...queryParams].filter(([key]) =>
-                    ["pot", "ip"].includes(key) === true
+                    PRIVATE_PARAM_NAMES.includes(key)
                 );
                 const encryptedParams = encryptQuery(
                     JSON.stringify(privateParams),
                     config,
                 );
-                queryParams = new URLSearchParams(publicParams);
+
+                for (const param of PRIVATE_PARAM_NAMES) {
+                    queryParams.delete(param);
+                }
+
                 queryParams.set("enc", "true");
                 queryParams.set("data", encryptedParams);
             }
