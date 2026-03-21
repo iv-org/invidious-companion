@@ -33,30 +33,73 @@ export const getFetchClient = (config: Config): {
     // IPv6 rotation generates a unique localAddress for each request to help
     // avoid YouTube's "Please login" errors
     if (proxyAddress || ipv6Block) {
+        // For proxy-only (no IPv6 rotation), reuse a single client
+        const reusableClient = proxyAddress && !ipv6Block
+            ? Deno.createHttpClient({ proxy: { url: proxyAddress } })
+            : undefined;
+
         return async (
             input: FetchInputParameter,
             init?: RequestInit,
         ) => {
-            const clientOptions: Deno.CreateHttpClientOptions = {};
+            let client: Deno.HttpClient;
 
-            if (proxyAddress) {
-                clientOptions.proxy = {
-                    url: proxyAddress,
-                };
+            if (reusableClient) {
+                client = reusableClient;
+            } else {
+                const clientOptions: Deno.CreateHttpClientOptions = {};
+                if (proxyAddress) {
+                    clientOptions.proxy = { url: proxyAddress };
+                }
+                if (ipv6Block) {
+                    clientOptions.localAddress = generateRandomIPv6(ipv6Block);
+                }
+                client = Deno.createHttpClient(clientOptions);
             }
 
-            if (ipv6Block) {
-                clientOptions.localAddress = generateRandomIPv6(ipv6Block);
-            }
-
-            const client = Deno.createHttpClient(clientOptions);
             const fetchRes = await fetchShim(config, retryOptions, input, {
                 client,
                 headers: init?.headers,
                 method: init?.method,
                 body: init?.body,
             });
-            return new Response(fetchRes.body, {
+
+            // If using a reusable client, return directly without closing
+            if (reusableClient) {
+                return new Response(fetchRes.body, {
+                    status: fetchRes.status,
+                    headers: fetchRes.headers,
+                });
+            }
+
+            // For per-request clients (IPv6 rotation), close after body is consumed
+            const originalBody = fetchRes.body;
+            if (!originalBody) {
+                client.close();
+                return new Response(null, {
+                    status: fetchRes.status,
+                    headers: fetchRes.headers,
+                });
+            }
+
+            const reader = originalBody.getReader();
+            const wrappedBody = new ReadableStream({
+                async pull(controller) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        controller.close();
+                        client.close();
+                        return;
+                    }
+                    controller.enqueue(value);
+                },
+                cancel() {
+                    reader.cancel();
+                    client.close();
+                },
+            });
+
+            return new Response(wrappedBody, {
                 status: fetchRes.status,
                 headers: fetchRes.headers,
             });
