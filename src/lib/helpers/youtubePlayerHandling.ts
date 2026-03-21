@@ -88,7 +88,7 @@ export const youtubePlayerParsing = async ({
                         delete format.signatureCipher;
                     }
                     if (format.url.includes("alr=yes")) {
-                        format.url.replace("alr=yes", "alr=no");
+                        format.url = format.url.replace("alr=yes", "alr=no");
                     } else {
                         format.url += "&alr=no";
                     }
@@ -104,7 +104,7 @@ export const youtubePlayerParsing = async ({
                         delete format.signatureCipher;
                     }
                     if (format.url.includes("alr=yes")) {
-                        format.url.replace("alr=yes", "alr=no");
+                        format.url = format.url.replace("alr=yes", "alr=no");
                     } else {
                         format.url += "&alr=no";
                     }
