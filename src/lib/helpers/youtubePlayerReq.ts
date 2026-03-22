@@ -32,9 +32,12 @@ function callWatchEndpoint(
                         ?.signature_timestamp,
                 },
             },
-            serviceIntegrityDimensions: {
-                poToken: contentPoToken,
-            },
+            // Only include serviceIntegrityDimensions if we have a PO token
+            ...(contentPoToken && {
+                serviceIntegrityDimensions: {
+                    poToken: contentPoToken,
+                },
+            }),
             client: innertubeClientType,
         },
     );
@@ -44,7 +47,7 @@ export const youtubePlayerReq = async (
     innertubeClient: Innertube,
     videoId: string,
     config: Config,
-    tokenMinter: TokenMinter,
+    tokenMinter: TokenMinter | undefined,
 ): Promise<ApiResponse> => {
     const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
 
@@ -53,7 +56,10 @@ export const youtubePlayerReq = async (
         innertubeClientUsed = "TV";
     }
 
-    const contentPoToken = await tokenMinter(videoId);
+    // Only generate PO token if not using OAuth and tokenMinter is available
+    const contentPoToken = !innertubeClientOauthEnabled && tokenMinter
+        ? await tokenMinter(videoId)
+        : "";
 
     const youtubePlayerResponse = await callWatchEndpoint(
         videoId,
