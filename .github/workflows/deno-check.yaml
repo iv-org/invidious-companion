@@ -41,31 +41,40 @@ jobs:
             ExcludeExitNodes {us}
             StrictNodes 1
 
-      - name: Run tests x4 times (IP may be banned) with opera-proxy
-        uses: nick-fields/retry@v3
-        id: opera_proxy
-        with:
-          timeout_minutes: 5
-          max_attempts: 4
-          command: |
+      - name: Run tests with opera-proxy (fallback to tor)
+        run: |
+          OPERA_SUCCESS=false
+          for attempt in {1..4}; do
+            echo "=== Opera-proxy attempt $attempt/4 ==="
             ci-binaries/opera-proxy-amd64 &
             PROXY_PID=$!
             sleep 3s
-            curl -s -x http://127.0.0.1:18080 --retry 5 --retry-delay 2 --retry-connrefused https://check.torproject.org/api/ip; echo 
+            curl -s -x http://127.0.0.1:18080 --retry 5 --retry-delay 2 --retry-connrefused https://check.torproject.org/api/ip; echo
             rm -rf /var/tmp/youtubei.js
-            PROXY=http://127.0.0.1:18080 deno task test
-            TEST_EXIT=$?
-            kill $PROXY_PID
-            exit $TEST_EXIT
+            if PROXY=http://127.0.0.1:18080 deno task test; then
+              OPERA_SUCCESS=true
+              kill $PROXY_PID 2>/dev/null
+              break
+            fi
+            kill $PROXY_PID 2>/dev/null
+          done
 
-      - name: Run tests x8 times (IP may be banned) with tor if opera failed
-        uses: nick-fields/retry@v3
-        if: failure() && steps.opera_proxy.outcome == 'failure'
-        with:
-          timeout_minutes: 5
-          max_attempts: 8
-          command: |
+          if [ "$OPERA_SUCCESS" = true ]; then
+            echo "=== Tests passed with opera-proxy ==="
+            exit 0
+          fi
+
+          echo "=== Opera-proxy failed, falling back to tor ==="
+          for attempt in {1..12}; do
+            echo "=== Tor attempt $attempt/12 ==="
             sudo pkill -HUP tor
-            curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo 
+            curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo
             rm -rf /var/tmp/youtubei.js
-            PROXY=socks5://127.0.0.1:9150 deno task test
+            if PROXY=socks5://127.0.0.1:9150 deno task test; then
+              echo "=== Tests passed with tor ==="
+              exit 0
+            fi
+          done
+
+          echo "=== All attempts failed ==="
+          exit 1
