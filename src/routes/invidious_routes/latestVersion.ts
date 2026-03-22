@@ -74,7 +74,7 @@ latestVersion.get("/", async (c) => {
         streamingData.adaptive_formats,
     );
 
-    const numericItag = Number(itag)
+    const numericItag = Number(itag);
     const selectedItagFormat = availableFormats?.filter((i) =>
         i.itag == numericItag
     );
