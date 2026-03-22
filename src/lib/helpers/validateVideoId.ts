@@ -1,6 +1,6 @@
 // Valid characters: A-Z, a-z, 0-9, -, _
 // YouTube video IDs are exactly 11 characters
-const VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/
+const VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
 
 /**
  * Validates a YouTube video ID format

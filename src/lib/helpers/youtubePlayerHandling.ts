@@ -77,7 +77,11 @@ export const youtubePlayerParsing = async ({
                 !clientNameUsed?.value.includes("IOS") &&
                 !clientNameUsed?.value.includes("ANDROID")
             ) {
-                for (let index = 0; index < streamingData.formats.length; index++) {
+                for (
+                    let index = 0;
+                    index < streamingData.formats.length;
+                    index++
+                ) {
                     const format = videoData.streamingData.formats[index];
 
                     format.url = await streamingData.formats[index]
@@ -93,13 +97,18 @@ export const youtubePlayerParsing = async ({
                         format.url += "&alr=no";
                     }
                 }
-                for (let index = 0; index < streamingData.adaptive_formats.length; index++) {
-                    const format = videoData.streamingData.adaptiveFormats[index]
+                for (
+                    let index = 0;
+                    index < streamingData.adaptive_formats.length;
+                    index++
+                ) {
+                    const format =
+                        videoData.streamingData.adaptiveFormats[index];
 
                     format.url = await streamingData.adaptive_formats[index]
-                            .decipher(
-                                innertubeClient.session.player,
-                            );
+                        .decipher(
+                            innertubeClient.session.player,
+                        );
                     if (format.signatureCipher !== undefined) {
                         delete format.signatureCipher;
                     }
