@@ -90,19 +90,19 @@ captionsHandler.get("/:videoId", async (c) => {
     }
 
     // Extract selected caption
-    let filterSelected: CaptionTrackData[];
+    let match: CaptionTrackData | undefined;
 
     if (lang) {
-        filterSelected = captionsTrackArray.filter((c: CaptionTrackData) =>
+        match = captionsTrackArray.find((c: CaptionTrackData) =>
             c.language_code === lang
         );
     } else {
-        filterSelected = captionsTrackArray.filter((c: CaptionTrackData) =>
+        match = captionsTrackArray.find((c: CaptionTrackData) =>
             c.name.text === label
         );
     }
 
-    if (filterSelected.length == 0) throw new HTTPException(404);
+    if (match == undefined) throw new HTTPException(404);
 
     let poToken: string | undefined;
     let clientName: string | undefined;
@@ -114,7 +114,7 @@ captionsHandler.get("/:videoId", async (c) => {
     c.header("Content-Type", "text/vtt; charset=UTF-8");
     c.header("Access-Control-Allow-Origin", "*");
     return c.body(
-        await handleTranscripts(innertubeClient, videoId, filterSelected[0], poToken, clientName),
+        await handleTranscripts(innertubeClient, videoId, match, poToken, clientName),
     );
 });
 

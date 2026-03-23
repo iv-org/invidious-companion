@@ -17,51 +17,6 @@ export const getFetchClient = (config: Config): {
     const proxyAddress = config.networking.proxy;
     const ipv6Block = config.networking.ipv6_block;
 
-    // If proxy or IPv6 rotation is configured, create a custom HTTP client
-    // IPv6 rotation generates a unique localAddress for each request to help
-    // avoid YouTube's "Please login" errors
-    if (proxyAddress || ipv6Block) {
-        return async (
-            input: FetchInputParameter,
-            init?: RequestInit,
-        ) => {
-            const clientOptions: Deno.CreateHttpClientOptions = {};
-
-            if (proxyAddress) {
-                clientOptions.proxy = {
-                    url: proxyAddress,
-                };
-            }
-
-            if (ipv6Block) {
-                clientOptions.localAddress = generateRandomIPv6(ipv6Block);
-            }
-
-            const client = Deno.createHttpClient(clientOptions);
-            const fetchRes = await fetchShim(config, input, {
-                client,
-                headers: init?.headers,
-                method: init?.method,
-                body: init?.body,
-            });
-            return new Response(fetchRes.body, {
-                status: fetchRes.status,
-                headers: fetchRes.headers,
-            });
-        };
-    }
-
-    return (input: FetchInputParameter, init?: FetchInitParameterWithClient) =>
-        fetchShim(config, input, init);
-};
-
-function fetchShim(
-    config: Config,
-    input: FetchInputParameter,
-    init?: FetchInitParameterWithClient,
-): FetchReturn {
-    const fetchTimeout = config.networking.fetch?.timeout_ms;
-    const fetchRetry = config.networking.fetch?.retry?.enabled;
     const fetchMaxAttempts = config.networking.fetch?.retry?.times;
     const fetchInitialDebounce = config.networking.fetch?.retry
         ?.initial_debounce;
@@ -73,6 +28,96 @@ function fetchShim(
         multiplier: fetchDebounceMultiplier,
         jitter: 0,
     };
+
+    // If proxy or IPv6 rotation is configured, create a custom HTTP client
+    // IPv6 rotation generates a unique localAddress for each request to help
+    // avoid YouTube's "Please login" errors
+    if (proxyAddress || ipv6Block) {
+        // For proxy-only (no IPv6 rotation), reuse a single client
+        const reusableClient = proxyAddress && !ipv6Block
+            ? Deno.createHttpClient({ proxy: { url: proxyAddress } })
+            : undefined;
+
+        return async (
+            input: FetchInputParameter,
+            init?: RequestInit,
+        ) => {
+            let client: Deno.HttpClient;
+
+            if (reusableClient) {
+                client = reusableClient;
+            } else {
+                const clientOptions: Deno.CreateHttpClientOptions = {};
+                if (proxyAddress) {
+                    clientOptions.proxy = { url: proxyAddress };
+                }
+                if (ipv6Block) {
+                    clientOptions.localAddress = generateRandomIPv6(ipv6Block);
+                }
+                client = Deno.createHttpClient(clientOptions);
+            }
+
+            const fetchRes = await fetchShim(config, retryOptions, input, {
+                client,
+                headers: init?.headers,
+                method: init?.method,
+                body: init?.body,
+            });
+
+            // If using a reusable client, return directly without closing
+            if (reusableClient) {
+                return new Response(fetchRes.body, {
+                    status: fetchRes.status,
+                    headers: fetchRes.headers,
+                });
+            }
+
+            // For per-request clients (IPv6 rotation), close after body is consumed
+            const originalBody = fetchRes.body;
+            if (!originalBody) {
+                client.close();
+                return new Response(null, {
+                    status: fetchRes.status,
+                    headers: fetchRes.headers,
+                });
+            }
+
+            const reader = originalBody.getReader();
+            const wrappedBody = new ReadableStream({
+                async pull(controller) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        controller.close();
+                        client.close();
+                        return;
+                    }
+                    controller.enqueue(value);
+                },
+                cancel() {
+                    reader.cancel();
+                    client.close();
+                },
+            });
+
+            return new Response(wrappedBody, {
+                status: fetchRes.status,
+                headers: fetchRes.headers,
+            });
+        };
+    }
+
+    return (input: FetchInputParameter, init?: FetchInitParameterWithClient) =>
+        fetchShim(config, retryOptions, input, init);
+};
+
+function fetchShim(
+    config: Config,
+    retryOptions: RetryOptions,
+    input: FetchInputParameter,
+    init?: FetchInitParameterWithClient,
+): FetchReturn {
+    const fetchTimeout = config.networking.fetch?.timeout_ms;
+    const fetchRetry = config.networking.fetch?.retry?.enabled;
 
     const callFetch = () =>
         fetch(input, {

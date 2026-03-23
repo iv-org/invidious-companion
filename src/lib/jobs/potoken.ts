@@ -153,7 +153,7 @@ async function checkToken({
         const searchResults = await instantiatedInnertubeClient.search("news", {
             type: "video",
             upload_date: "week",
-            duration: "medium",
+            duration: "three_to_twenty_mins",
         });
 
         // Get all videos that have an id property and shuffle them randomly

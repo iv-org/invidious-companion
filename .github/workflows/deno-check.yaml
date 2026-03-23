@@ -26,19 +26,55 @@ jobs:
       - name: Run linter
         run: deno task lint
 
+      - name: Checkout binaries repo
+        uses: actions/checkout@v6
+        with:
+          repository: iv-org/binaries
+          path: ci-binaries
+
       - name: Install and run tor
         uses: tor-actions/setup-tor@main
         with:
           daemon: true
           port: 9150
+          config: |
+            ExcludeExitNodes {us}
+            StrictNodes 1
 
-      - name: Run tests x4 times (IP may be banned)
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 5
-          max_attempts: 4
-          command: |
-            pkill -HUP tor
-            curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo 
+      - name: Run tests with opera-proxy (fallback to tor)
+        run: |
+          OPERA_SUCCESS=false
+          for attempt in {1..4}; do
+            echo "=== Opera-proxy attempt $attempt/4 ==="
+            ci-binaries/opera-proxy-amd64 &
+            PROXY_PID=$!
+            sleep 3s
+            curl -s -x http://127.0.0.1:18080 --retry 5 --retry-delay 2 --retry-connrefused https://check.torproject.org/api/ip; echo
             rm -rf /var/tmp/youtubei.js
-            PROXY=socks5://127.0.0.1:9150 deno task test
+            if PROXY=http://127.0.0.1:18080 deno task test; then
+              OPERA_SUCCESS=true
+              kill $PROXY_PID 2>/dev/null
+              break
+            fi
+            kill $PROXY_PID 2>/dev/null
+          done
+
+          if [ "$OPERA_SUCCESS" = true ]; then
+            echo "=== Tests passed with opera-proxy ==="
+            exit 0
+          fi
+
+          echo "=== Opera-proxy failed, falling back to tor ==="
+          for attempt in {1..12}; do
+            echo "=== Tor attempt $attempt/12 ==="
+            sudo pkill -HUP tor
+            curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo
+            rm -rf /var/tmp/youtubei.js
+            if PROXY=socks5://127.0.0.1:9150 deno task test; then
+              echo "=== Tests passed with tor ==="
+              exit 0
+            fi
+          done
+
+          echo "=== All attempts failed ==="
+          exit 1

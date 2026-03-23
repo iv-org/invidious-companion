@@ -10,6 +10,8 @@ import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 
+const PRIVATE_PARAM_NAMES = ["pot", "ip"];
+
 const dashManifest = new Hono();
 
 dashManifest.get("/:videoId", async (c) => {
@@ -70,9 +72,7 @@ dashManifest.get("/:videoId", async (c) => {
         // video.js only support MP4 not WEBM
         videoInfo.streaming_data.adaptive_formats = videoInfo
             .streaming_data.adaptive_formats
-            .filter((i) =>
-                i.mime_type.includes("mp4")
-            );
+            .filter((i) => i.mime_type.includes("mp4"));
 
         const player_response = videoInfo.page[0];
         // TODO: fix include storyboards in DASH manifest file
@@ -84,7 +84,7 @@ dashManifest.get("/:videoId", async (c) => {
             videoInfo.page[0].video_details?.is_post_live_dvr,
             (url: URL) => {
                 let dashUrl = url;
-                let queryParams = new URLSearchParams(dashUrl.search);
+                const queryParams = new URLSearchParams(dashUrl.search);
                 // Can't create URL type without host part
                 queryParams.set("host", dashUrl.host);
 
@@ -95,17 +95,18 @@ dashManifest.get("/:videoId", async (c) => {
                     if (
                         config.server.encrypt_query_params
                     ) {
-                        const publicParams = [...queryParams].filter(([key]) =>
-                            ["pot", "ip"].includes(key) === false
-                        );
                         const privateParams = [...queryParams].filter(([key]) =>
-                            ["pot", "ip"].includes(key) === true
+                            PRIVATE_PARAM_NAMES.includes(key)
                         );
                         const encryptedParams = encryptQuery(
                             JSON.stringify(privateParams),
                             config,
                         );
-                        queryParams = new URLSearchParams(publicParams);
+
+                        for (const param of PRIVATE_PARAM_NAMES) {
+                            queryParams.delete(param);
+                        }
+
                         queryParams.set("enc", "true");
                         queryParams.set("data", encryptedParams);
                     }
