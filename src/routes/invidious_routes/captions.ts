@@ -107,8 +107,8 @@ captionsHandler.get("/:videoId", async (c) => {
     let poToken: string | undefined;
     let clientName: string | undefined;
     if (tokenMinter) {
-      poToken = await tokenMinter(videoId);
-      clientName = innertubeClient.session.context.client.clientName;
+        poToken = await tokenMinter(videoId);
+        clientName = innertubeClient.session.context.client.clientName;
     }
 
     c.header("Content-Type", "text/vtt; charset=UTF-8");
