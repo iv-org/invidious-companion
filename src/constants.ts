@@ -1,11 +1,12 @@
-// Set to `undefined` if it's no longer in use!
+// PLAYER_ID is now fully configurable via the configuration system (recommended).
+// Set via environment variable YOUTUBE_SESSION_PLAYER_ID or in config.toml under
+// [youtube_session]
+// player_id = "your-player-id-here"
 //
-// Old Players IDs are usually available for a few more days after Youtube
-// rolls out a new Player. This is helpful when Youtube.JS is not able to
+// Old Player IDs are usually available for a few more days after YouTube
+// rolls out a new Player. This is helpful when youtubei.js is not able to
 // extract the signature decipher algorithm and we need to wait for a fix
-// in Youtube.JS.
-export const PLAYER_ID = undefined;
+// in youtubei.js.
 
-// Error message shown when tokenMinter is not yet ready
 export const TOKEN_MINTER_NOT_READY_MESSAGE =
     "Companion is starting. Please wait until a valid potoken is found. If this process takes too long, please consult: https://docs.invidious.io/youtube-errors-explained/#po-token-initialization-taking-too-much-time-to-complete";
