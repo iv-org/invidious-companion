@@ -62,6 +62,9 @@ export const ConfigSchema = z.object({
         directory: z.string().default(
             Deno.env.get("CACHE_DIRECTORY") || "/var/tmp",
         ),
+        ttl_seconds: z.number().default(
+            Number(Deno.env.get("CACHE_TTL_SECONDS")) || 3600,
+        ),
     }).strict().default({}),
     networking: z.object({
         proxy: z.string().nullable().default(Deno.env.get("PROXY") || null),
