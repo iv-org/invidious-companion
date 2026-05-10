@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { companionRoutes, miscRoutes } from "./routes/index.ts";
 import { Innertube, Platform } from "youtubei.js";
-import { poTokenGenerate, type TokenMinter } from "./lib/jobs/potoken.ts";
+import { poTokenGenerate, type TokenMinter, cleanupWorkers } from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
 import { retry } from "@std/async";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
@@ -227,17 +227,29 @@ if (import.meta.main) {
     const { signal } = controller;
     run(signal, config.server.port, config.server.host);
 
-    if (Deno.build.os !== "windows") {
-        Deno.addSignalListener("SIGTERM", () => {
-            console.log("Caught SIGINT, shutting down...");
-            controller.abort();
+    const shutdown = (signalName: string) => {
+        console.log(`[INFO] Caught ${signalName}, initiating graceful shutdown...`);
+        controller.abort();
+
+        // Cleanup PO token workers
+        cleanupWorkers();
+
+        // Optional: add a timeout for forced exit if shutdown hangs
+        setTimeout(() => {
+            console.log("[WARN] Graceful shutdown timeout (10s) reached, forcing exit...");
             Deno.exit(0);
-        });
+        }, 10000);
+
+        // Give a moment for cleanup, then exit
+        setTimeout(() => {
+            console.log("[INFO] Graceful shutdown completed.");
+            Deno.exit(0);
+        }, 1000);
+    };
+
+    if (Deno.build.os !== "windows") {
+        Deno.addSignalListener("SIGTERM", () => shutdown("SIGTERM"));
     }
 
-    Deno.addSignalListener("SIGINT", () => {
-        console.log("Caught SIGINT, shutting down...");
-        controller.abort();
-        Deno.exit(0);
-    });
+    Deno.addSignalListener("SIGINT", () => shutdown("SIGINT"));
 }
