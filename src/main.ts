@@ -11,7 +11,6 @@ import { existsSync } from "@std/fs/exists";
 import { parseConfig } from "./lib/helpers/config.ts";
 const config = await parseConfig();
 import { Metrics } from "./lib/helpers/metrics.ts";
-import { PLAYER_ID } from "./constants.ts";
 import { jsInterpreter } from "./lib/helpers/jsInterpreter.ts";
 
 const args = parseArgs(Deno.args);
@@ -79,7 +78,7 @@ innertubeClient = await Innertube.create({
     fetch: getFetchClient(config),
     cookie: innertubeClientCookies || undefined,
     user_agent: USER_AGENT,
-    player_id: PLAYER_ID,
+    player_id: config.youtube_session.player_id,
 });
 
 if (!innertubeClientOauthEnabled) {
@@ -128,7 +127,7 @@ if (!innertubeClientOauthEnabled) {
                     retrieve_player: innertubeClientFetchPlayer,
                     user_agent: USER_AGENT,
                     cookie: innertubeClientCookies || undefined,
-                    player_id: PLAYER_ID,
+                    player_id: config.youtube_session.player_id,
                 });
             }
         },
