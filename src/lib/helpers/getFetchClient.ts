@@ -52,9 +52,23 @@ export const getFetchClient = (config: Config): {
                     clientOptions.proxy = { url: proxyAddress };
                 }
                 if (ipv6Block) {
-                    clientOptions.localAddress = generateRandomIPv6(ipv6Block);
+                    try {
+                        clientOptions.localAddress = generateRandomIPv6(ipv6Block);
+                    } catch (err) {
+                        console.warn(`[WARN] Failed to generate IPv6 from block ${ipv6Block}, proceeding without IPv6 rotation:`, err);
+                    }
                 }
-                client = Deno.createHttpClient(clientOptions);
+                try {
+                    client = Deno.createHttpClient(clientOptions);
+                } catch (err) {
+                    if (clientOptions.localAddress) {
+                        console.warn("[WARN] IPv6 client creation failed (likely no IPv6 support or permission on host), falling back to non-IPv6 client. This improves robustness on systems without IPv6.", err);
+                        delete clientOptions.localAddress;
+                        client = Deno.createHttpClient(clientOptions);
+                    } else {
+                        throw err;
+                    }
+                }
             }
 
             const fetchRes = await fetchShim(config, retryOptions, input, {
