@@ -53,6 +53,16 @@ export class Metrics {
         "Number successful requests made to the Innertube API",
     );
 
+    public cacheHit = this.createCounter(
+        "cache_hit_total",
+        "Number of cache hits for video player data",
+    );
+
+    public cacheMiss = this.createCounter(
+        "cache_miss_total",
+        "Number of cache misses for video player data",
+    );
+
     private innertubeFailedRequest = this.createCounter(
         "innertube_failed_request_total",
         "Number failed requests made to the Innertube API for whatever reason",
