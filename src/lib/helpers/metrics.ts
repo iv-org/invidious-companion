@@ -63,6 +63,16 @@ export class Metrics {
         "Number of cache misses for video player data",
     );
 
+    public ipv6Fallback = this.createCounter(
+        "ipv6_fallback_total",
+        "Number of times IPv6 rotation was disabled due to errors (e.g. no IPv6 support on host)",
+    );
+
+    public ipv6AddressGenerated = this.createCounter(
+        "ipv6_address_generated_total",
+        "Number of IPv6 addresses generated for requests",
+    );
+
     private innertubeFailedRequest = this.createCounter(
         "innertube_failed_request_total",
         "Number failed requests made to the Innertube API for whatever reason",
