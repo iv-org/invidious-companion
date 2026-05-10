@@ -18,7 +18,17 @@ const { youtubePlayerReq } = await import(youtubePlayerReqLocation);
 
 import type { Config } from "./config.ts";
 
-const kv = await Deno.openKv();
+let kvInstance: Deno.Kv | null = null;
+
+async function getKv(config: Config): Promise<Deno.Kv> {
+    if (!kvInstance) {
+        const dir = config.cache.directory || "/var/tmp";
+        const kvPath = `${dir}/invidious-companion.kv`;
+        kvInstance = await Deno.openKv(kvPath);
+        console.log(`[INFO] Using persistent KV store at ${kvPath}`);
+    }
+    return kvInstance;
+}
 
 export const youtubePlayerParsing = async ({
     innertubeClient,
@@ -36,13 +46,18 @@ export const youtubePlayerParsing = async ({
     overrideCache?: boolean;
 }): Promise<object> => {
     const cacheEnabled = overrideCache ? false : config.cache.enabled;
+    const kv = await getKv(config);
 
-    const videoCached = (await kv.get(["video_cache", videoId]))
-        .value as Uint8Array;
+    const cachedEntry = await kv.get(["video_cache", videoId]);
+    const videoCached = cachedEntry.value as Uint8Array | null;
 
     if (videoCached != null && cacheEnabled) {
+        metrics?.cacheHit.inc();
         return JSON.parse(new TextDecoder().decode(decompress(videoCached)));
     } else {
+        if (cacheEnabled) {
+            metrics?.cacheMiss.inc();
+        }
         const youtubePlayerResponse = await youtubePlayerReq(
             innertubeClient,
             videoId,
@@ -142,18 +157,23 @@ export const youtubePlayerParsing = async ({
         if (videoData.playabilityStatus?.status == "OK") {
             metrics?.innertubeSuccessfulRequest.inc();
             if (cacheEnabled) {
+                const ttlMs = (config.cache.ttl_seconds || 3600) * 1000;
                 (async () => {
-                    await kv.set(
-                        ["video_cache", videoId],
-                        compress(
-                            new TextEncoder().encode(
-                                JSON.stringify(videoOnlyNecessaryInfo),
+                    try {
+                        await kv.set(
+                            ["video_cache", videoId],
+                            compress(
+                                new TextEncoder().encode(
+                                    JSON.stringify(videoOnlyNecessaryInfo),
                             ),
-                        ),
-                        {
-                            expireIn: 1000 * 60 * 60,
-                        },
-                    );
+                            ),
+                            {
+                                expireIn: ttlMs,
+                            },
+                        );
+                    } catch (err) {
+                        console.error("[ERROR] Failed to write to cache:", err);
+                    }
                 })();
             }
         } else {
