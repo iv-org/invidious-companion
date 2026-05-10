@@ -73,6 +73,21 @@ export class Metrics {
         "Number of IPv6 addresses generated for requests",
     );
 
+    public gracefulShutdowns = this.createCounter(
+        "graceful_shutdowns_total",
+        "Number of graceful shutdowns initiated and completed successfully",
+    );
+
+    public videoPlaybackRequests = this.createCounter(
+        "video_playback_requests_total",
+        "Number of video playback proxy requests handled",
+    );
+
+    public poTokenGenerationSuccess = this.createCounter(
+        "potoken_generation_success_total",
+        "Number of successful PO token generations",
+    );
+
     private innertubeFailedRequest = this.createCounter(
         "innertube_failed_request_total",
         "Number failed requests made to the Innertube API for whatever reason",

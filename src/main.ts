@@ -234,6 +234,8 @@ if (import.meta.main) {
         // Cleanup PO token workers
         cleanupWorkers();
 
+        metrics?.gracefulShutdowns.inc();
+
         // Optional: add a timeout for forced exit if shutdown hangs
         setTimeout(() => {
             console.log("[WARN] Graceful shutdown timeout (10s) reached, forcing exit...");
