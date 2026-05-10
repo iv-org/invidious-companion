@@ -249,3 +249,22 @@ async function checkToken({
         throw err;
     }
 }
+
+export function cleanupWorkers(): void {
+    if (workers.length === 0) {
+        console.log("[INFO] No PO token workers to clean up.");
+        return;
+    }
+    console.log(`[INFO] Cleaning up ${workers.length} PO token worker(s) for graceful shutdown...`);
+    while (workers.length > 0) {
+        const worker = workers.shift();
+        if (worker) {
+            try {
+                worker.terminate();
+                console.log("[INFO] Terminated a PO token worker.");
+            } catch (err) {
+                console.error("[ERROR] Failed to terminate PO token worker:", err);
+            }
+        }
+    }
+}
