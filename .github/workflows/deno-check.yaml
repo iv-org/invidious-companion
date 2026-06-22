@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Setup repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -27,7 +27,7 @@ jobs:
         run: deno task lint
 
       - name: Checkout binaries repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: iv-org/binaries
           path: ci-binaries
