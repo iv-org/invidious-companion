@@ -38,6 +38,7 @@ junit.xml
 Untitled*.ipynb
 
 invidious_companion
+deno
 test_things/
 config/config.toml
 .cache/
