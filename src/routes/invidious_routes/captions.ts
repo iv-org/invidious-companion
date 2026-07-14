@@ -32,6 +32,13 @@ captionsHandler.get("/:videoId", async (c) => {
         });
     }
 
+    // fail early if captions are disabled
+    if (!config.captions?.enabled) {
+        throw new HTTPException(503, {
+            res: new Response("Captions are disabled by administrator."),
+        });
+    }
+
     // Check if tokenMinter is ready (only needed when PO token is enabled)
     if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
         throw new HTTPException(503, {
