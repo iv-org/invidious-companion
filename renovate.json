@@ -1,0 +1,64 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":automergeDigest"
+  ],
+  "timezone": "UTC",
+  "schedule": [
+    "every weekday before 6am"
+  ],
+  "assignees": ["unixfox"],
+  "reviewers": ["unixfox"],
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "description": "Group Deno standard library updates",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["@std/**"],
+      "groupName": "Deno standard library"
+    },
+    {
+      "description": "Group Hono framework updates",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["@hono/**"],
+      "groupName": "Hono framework"
+    },
+    {
+      "description": "Group YouTube.js ecosystem updates",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["youtubei.js**", "googlevideo**"],
+      "groupName": "YouTube.js ecosystem"
+    },
+    {
+      "description": "Group npm dependencies routed through Deno",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["npm:**"],
+      "groupName": "npm dependencies"
+    },
+    {
+      "description": "Auto-merge patch updates for @std/",
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["@std/**"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Auto-merge patch updates for GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Auto-merge patch updates for Docker",
+      "matchManagers": ["dockerfile"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ]
+}
