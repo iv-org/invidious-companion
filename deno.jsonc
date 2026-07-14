@@ -41,7 +41,7 @@
     // googlevideo URL parsing and n-parameter decryption.
     "googlevideo": "jsr:@luanrt/googlevideo@4.0.4",
     // JavaScript parser (for YouTube challenges).
-    "meriyah": "npm:meriyah@7.1.1",
+    "meriyah": "npm:meriyah@7.1.2",
     // Compression (used for chunked responses).
     "fflate": "npm:fflate@0.8.3",
     "crypto/": "https://deno.land/x/crypto@v0.11.0/",
