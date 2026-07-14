@@ -18,7 +18,7 @@
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.17",
     // Web framework.
-    "hono": "jsr:@hono/hono@4.7.4",
+    "hono": "jsr:@hono/hono@4.12.29",
     // TOML configuration parser.
     "@std/toml": "jsr:@std/toml@1.0.2",
     // Prometheus metrics client.
