@@ -7,9 +7,6 @@
     ":automergeDigest"
   ],
   "timezone": "UTC",
-  "schedule": [
-    "every weekday before 6am"
-  ],
   "assignees": ["unixfox"],
   "reviewers": ["unixfox"],
   "minimumReleaseAge": "3 days",
