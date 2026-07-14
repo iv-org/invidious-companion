@@ -10,6 +10,8 @@
   "assignees": ["unixfox"],
   "reviewers": ["unixfox"],
   "minimumReleaseAge": "3 days",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
   "packageRules": [
     {
       "description": "Group Deno standard library updates",
