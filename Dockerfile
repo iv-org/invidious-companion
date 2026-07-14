@@ -113,7 +113,7 @@ FROM debian-deno AS builder
 WORKDIR /app
 
 COPY deno.lock ./
-COPY deno.json ./
+COPY deno.jsonc ./
 
 COPY ./src/ ./src/
 
