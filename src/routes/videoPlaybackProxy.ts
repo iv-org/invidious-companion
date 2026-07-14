@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { encodeRFC5987ValueChars } from "../lib/helpers/encodeRFC5987ValueChars.ts";
 import { decryptQuery } from "../lib/helpers/encryptQuery.ts";
-import { StreamingApi } from "hono/utils/stream";
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
