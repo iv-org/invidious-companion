@@ -14,9 +14,16 @@ import type { Config } from "./config.ts";
 // Dockerfile's `mkdir -p /var/tmp/youtubei.js` hasn't run.
 //
 // Done lazily because config is only available once parseConfig()
-// resolves in main.ts, and memoized so callers share one handle. On
-// failure the memo is cleared so a later call can retry instead of
-// being stuck on a permanently rejected promise.
+// resolves in main.ts, and memoized so callers share one handle.
+//
+// If the on-disk store cannot be written (e.g. a read-only filesystem
+// where neither the cache directory nor its parent is writable), fall
+// back to an ephemeral in-memory KV store (the special ":memory:" path,
+// see https://docs.deno.com/api/deno/~/Deno.openKv). This keeps the app
+// running instead of crash-looping; the cache is simply not persisted
+// across restarts. A warning is logged so the misconfiguration is
+// visible. The in-memory store always succeeds, so once the fallback is
+// taken it is memoized like the on-disk handle.
 let kvPromise: Promise<Deno.Kv> | undefined;
 
 export const getKv = (config: Config): Promise<Deno.Kv> => {
@@ -25,8 +32,11 @@ export const getKv = (config: Config): Promise<Deno.Kv> => {
         kvPromise = Deno.mkdir(cacheDir, { recursive: true })
             .then(() => Deno.openKv(`${cacheDir}/kv_cache.sqlite3`))
             .catch((err) => {
-                kvPromise = undefined;
-                throw err;
+                console.error(
+                    `[WARN] Failed to open the on-disk KV cache at ${cacheDir}/kv_cache.sqlite3, falling back to an in-memory store (cache will not persist across restarts)`,
+                    err,
+                );
+                return Deno.openKv(":memory:");
             });
     }
     return kvPromise;
