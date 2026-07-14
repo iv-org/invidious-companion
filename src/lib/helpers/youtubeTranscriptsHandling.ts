@@ -28,7 +28,8 @@ const ESCAPE_SUBSTITUTIONS = {
 function shiftVttToCenter(vtt: string): string {
     const lines = vtt.split("\n");
     const updatedLines: string[] = [];
-    const timingRegex = /^((?:\d{1,2}:)?\d{2}:\d{2}\.\d{3} --> (?:\d{1,2}:)?\d{2}:\d{2}\.\d{3})(.*)$/;
+    const timingRegex =
+        /^((?:\d{1,2}:)?\d{2}:\d{2}\.\d{3} --> (?:\d{1,2}:)?\d{2}:\d{2}\.\d{3})(.*)$/;
 
     for (const line of lines) {
         const match = line.match(timingRegex);
@@ -51,7 +52,7 @@ export async function handleTranscripts(
 ) {
     if (poToken && clientName) {
         const baseUrl = selectedCaption.base_url;
-        let url = `${baseUrl}&fmt=vtt&potc=1&pot=${poToken}&c=${clientName}`;
+        const url = `${baseUrl}&fmt=vtt&potc=1&pot=${poToken}&c=${clientName}`;
 
         const urlObj = new URL(url);
 
@@ -128,9 +129,9 @@ export async function handleTranscripts(
             const text = (line.snippet?.text || "").replace(
                 /[&<>‍‍\u200E\u200F\u00A0]/g,
                 (match: string) =>
-                ESCAPE_SUBSTITUTIONS[
-                    match as keyof typeof ESCAPE_SUBSTITUTIONS
-                ],
+                    ESCAPE_SUBSTITUTIONS[
+                        match as keyof typeof ESCAPE_SUBSTITUTIONS
+                    ],
             );
 
             lines.push(`${timestamp}\n${text}`);

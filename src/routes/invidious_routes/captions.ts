@@ -121,7 +121,13 @@ captionsHandler.get("/:videoId", async (c) => {
     c.header("Content-Type", "text/vtt; charset=UTF-8");
     c.header("Access-Control-Allow-Origin", "*");
     return c.body(
-        await handleTranscripts(innertubeClient, videoId, match, poToken, clientName),
+        await handleTranscripts(
+            innertubeClient,
+            videoId,
+            match,
+            poToken,
+            clientName,
+        ),
     );
 });
 
