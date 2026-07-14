@@ -2,7 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@hono/hono@4.12.29": "4.12.29",
-    "jsr:@luanrt/googlevideo@2.0.0": "2.0.0",
+    "jsr:@luanrt/googlevideo@4.0.4": "4.0.4",
     "jsr:@std/assert@1.0.12": "1.0.12",
     "jsr:@std/async@1.5.0": "1.5.0",
     "jsr:@std/cli@^1.0.17": "1.0.24",
@@ -10,7 +10,7 @@
     "jsr:@std/data-structures@^1.1.1": "1.1.1",
     "jsr:@std/encoding@1.0.11": "1.0.11",
     "jsr:@std/fs@1.0.24": "1.0.24",
-    "jsr:@std/internal@^1.0.12": "1.0.12",
+    "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/internal@^1.0.6": "1.0.12",
     "jsr:@std/path@1.1.6": "1.1.6",
@@ -25,8 +25,8 @@
     "@hono/hono@4.12.29": {
       "integrity": "1826f31cd0026466cdeb3527c4abdcbe2125636dc617b490792451c1360cafde"
     },
-    "@luanrt/googlevideo@2.0.0": {
-      "integrity": "f4089289544d7f76f570ae5d2eadfcfaafae498713737cd0782f519b628ef276",
+    "@luanrt/googlevideo@4.0.4": {
+      "integrity": "f369d8c0bbfecfda3d37a1d44ee251a53bd9bf554dc932d41a8743a5efed3c3e",
       "dependencies": [
         "npm:@bufbuild/protobuf"
       ]
@@ -5819,7 +5819,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@hono/hono@4.12.29",
-      "jsr:@luanrt/googlevideo@2.0.0",
+      "jsr:@luanrt/googlevideo@4.0.4",
       "jsr:@std/async@1.5.0",
       "jsr:@std/cli@^1.0.17",
       "jsr:@std/encoding@1.0.11",
