@@ -2,15 +2,20 @@
   "version": "5",
   "specifiers": {
     "jsr:@hono/hono@4.7.4": "4.7.4",
+    "jsr:@luanrt/googlevideo@2.0.0": "2.0.0",
     "jsr:@std/assert@1.0.12": "1.0.12",
     "jsr:@std/async@1.0.11": "1.0.11",
     "jsr:@std/cli@^1.0.17": "1.0.24",
     "jsr:@std/collections@^1.0.9": "1.1.3",
     "jsr:@std/encoding@1.0.7": "1.0.7",
     "jsr:@std/fs@1.0.14": "1.0.14",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/internal@^1.0.6": "1.0.12",
+    "jsr:@std/path@1.0.8": "1.0.8",
+    "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/toml@1.0.2": "1.0.2",
-    "npm:fflate@0.8.2": "0.8.2",
+    "npm:@bufbuild/protobuf@2": "2.12.1",
+    "npm:fflate@0.8.3": "0.8.3",
     "npm:jsdom@26.1.0": "26.1.0",
     "npm:meriyah@6.1.4": "6.1.4"
   },
@@ -18,17 +23,26 @@
     "@hono/hono@4.7.4": {
       "integrity": "c03c9cbe0fbfc4e51f3fee6502a7903aa4f9ef7c2c98635607b15eee14258825"
     },
+    "@luanrt/googlevideo@2.0.0": {
+      "integrity": "f4089289544d7f76f570ae5d2eadfcfaafae498713737cd0782f519b628ef276",
+      "dependencies": [
+        "npm:@bufbuild/protobuf"
+      ]
+    },
     "@std/assert@1.0.12": {
       "integrity": "08009f0926dda9cbd8bef3a35d3b6a4b964b0ab5c3e140a4e0351fbf34af5b9a",
       "dependencies": [
-        "jsr:@std/internal"
+        "jsr:@std/internal@^1.0.6"
       ]
     },
     "@std/async@1.0.11": {
       "integrity": "eee0d3405275506638a9c8efaa849cf0d35873120c69b7caa1309c9a9e5b6f85"
     },
     "@std/cli@1.0.24": {
-      "integrity": "b655a5beb26aa94f98add6bc8889f5fb9bc3ee2cc3fc954e151201f4c4200a5e"
+      "integrity": "b655a5beb26aa94f98add6bc8889f5fb9bc3ee2cc3fc954e151201f4c4200a5e",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.12"
+      ]
     },
     "@std/collections@1.1.3": {
       "integrity": "bf8b0818886df6a32b64c7d3b037a425111f28278d69fd0995aeb62777c986b0"
@@ -37,10 +51,16 @@
       "integrity": "f631247c1698fef289f2de9e2a33d571e46133b38d042905e3eac3715030a82d"
     },
     "@std/fs@1.0.14": {
-      "integrity": "1e84bf0b95fe08f41f1f4aea9717bbf29f45408a56ce073b0114474ce1c9fccf"
+      "integrity": "1e84bf0b95fe08f41f1f4aea9717bbf29f45408a56ce073b0114474ce1c9fccf",
+      "dependencies": [
+        "jsr:@std/path@^1.0.8"
+      ]
     },
     "@std/internal@1.0.12": {
       "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    },
+    "@std/path@1.0.8": {
+      "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
     },
     "@std/toml@1.0.2": {
       "integrity": "5892ba489c5b512265a384238a8fe8dddbbb9498b4b210ef1b9f0336a423a39b",
@@ -59,6 +79,9 @@
         "@csstools/css-tokenizer",
         "lru-cache"
       ]
+    },
+    "@bufbuild/protobuf@2.12.1": {
+      "integrity": "sha512-BvAMfS6LrgZiryOAZ4pBYucu4wG/Ei/9o9DZ9akbREnMLbPJiom2i8b9C8IsKErQoiKqVhrerzt3kOT/RrzLHg=="
     },
     "@csstools/color-helpers@5.1.0": {
       "integrity": "sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA=="
@@ -117,8 +140,8 @@
     "entities@6.0.1": {
       "integrity": "sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g=="
     },
-    "fflate@0.8.2": {
-      "integrity": "sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A=="
+    "fflate@0.8.3": {
+      "integrity": "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="
     },
     "html-encoding-sniffer@4.0.0": {
       "integrity": "sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ==",
@@ -245,7 +268,8 @@
       "integrity": "sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==",
       "dependencies": [
         "iconv-lite"
-      ]
+      ],
+      "deprecated": true
     },
     "whatwg-mimetype@4.0.0": {
       "integrity": "sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg=="
@@ -278,6 +302,7 @@
     "https://esm.sh/@csstools/css-tokenizer@^3.0.3?target=denonext": "https://esm.sh/@csstools/css-tokenizer@3.0.4?target=denonext",
     "https://esm.sh/@csstools/css-tokenizer@^3.0.4?target=denonext": "https://esm.sh/@csstools/css-tokenizer@3.0.4?target=denonext",
     "https://esm.sh/@opentelemetry/api@^1.4.0?target=denonext": "https://esm.sh/@opentelemetry/api@1.9.0?target=denonext",
+    "https://esm.sh/@types/estree@1.0.6": "https://esm.sh/@types/estree@1.0.6/index.d.ts",
     "https://esm.sh/agent-base@^7.1.0?target=denonext": "https://esm.sh/agent-base@7.1.4?target=denonext",
     "https://esm.sh/agent-base@^7.1.2?target=denonext": "https://esm.sh/agent-base@7.1.4?target=denonext",
     "https://esm.sh/asynckit@^0.4.0?target=denonext": "https://esm.sh/asynckit@0.4.0?target=denonext",
@@ -2251,6 +2276,10 @@
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/misc.ts": "7f8d468445f5e58ff5fb61f78ba2bf38447e77400b4975b255c69b4c1cc1ad7a",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/nodes.ts": "8eac431c14f3840873901312fb8750a1a4c5f0ce17de3d0eac9402742bce42b9",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/parser.ts": "d20bfc80c8e1f9f8af0abc4226703f8b083019e0b2dc3990ce8107c014626e6d",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/types/CommandEndpoints.ts": "4e09e63c0f19959f642045eb178c389e9561667ed5a877040c99b74f4220ffe7",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/types/ParsedResponse.ts": "3ea22a9e3d23b8d5f3cd937830b7293d1a308fc984b0bf99337cdd283e699efe",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/types/RawResponse.ts": "1b014ddedb55e2229e8b41591065e96bbbd669a26aa3b037b33efbae69266715",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/types/index.ts": "007247905143a2c8fe5c1bb02470f126f9107af5ea2649c1035489587aff97d1",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/youtube/AccountInfo.ts": "55db92aea54b21ff7d21741e5b76ebbb365bd157e47913200426cf25da7dcf80",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/youtube/Channel.ts": "270e669eaa0af5b4358e3067dad929a486418dadd3a33b4e4310e87a3f0e4d4a",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/youtube/Comments.ts": "de5684f3c20bd3890435bd959f7d515ea989356ec6802d04af9b0de68d6a1595",
@@ -2290,6 +2319,14 @@
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/platform/jsruntime/default.ts": "0354bd04f0c24bd659d83ecb929365f53288e45d599e9d47188dea649d9bf236",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/platform/lib.ts": "b1ef65da57cc2acfa278a6468d7a6e045f96f43f8bfebabb2dd683ee23e047dd",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/platform/polyfills/web-crypto.ts": "ae20ed00dea9eafca9ba590f4fa440299cbd57288add788c59cb19f3455ae6d1",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/types/Cache.ts": "06cd238bce7c9657055151587e36ee445e8236d54d27272124ced10ea7be0da4",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/types/DashOptions.ts": "cf694c112ab97d778b3df735ddc76fd16fd5ae0d49943e2cc580f1f986f63da6",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/types/FormatUtils.ts": "a877e6d3e84651d5de882a3e6cba7ac82ac4c64d315be64c072776cf2a9eeb72",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/types/GetVideoInfoOptions.ts": "f6bbc11dbf9ee5677e1a55b3064f50d716e9336aa8d4c4a32c164e64576c1beb",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/types/Misc.ts": "06bfe1ee364f30ca21dab0dea546fd3f284ee97955921f6daeb8c3ee4a558719",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/types/PlatformShim.ts": "24e8c48ad6754ba64bf95327317dbcc5450c6092e87e7bc06e92f757b22ed4c4",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/types/StreamingInfoOptions.ts": "30204b70b4e2c83dc909447acf152c74ba5c500f6b364451d6a66018a77c6821",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/types/index.ts": "16ec980101e06859f4269f8abd1bc3372dd2a9deea200dbc8396d821449738cc",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/utils/BinarySerializer.ts": "a74802547f52ae1cedc8ba38f95cdc36adafd825d47c15fd4812c40573412146",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/utils/Cache.ts": "fd90c88da32e9283adf065475a5cb4e680b5152a6bc06dd8a3dc9349358cab35",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/utils/Constants.ts": "593958003ecb3a7dca8fa998d812fed59882b276f2175ccdde45956245bb1171",
@@ -5760,7 +5797,7 @@
       "jsr:@std/fs@1.0.14",
       "jsr:@std/path@1.0.8",
       "jsr:@std/toml@1.0.2",
-      "npm:fflate@0.8.2",
+      "npm:fflate@0.8.3",
       "npm:jsdom@26.1.0",
       "npm:meriyah@6.1.4"
     ]

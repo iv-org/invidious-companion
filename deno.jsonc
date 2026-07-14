@@ -43,7 +43,7 @@
     // JavaScript parser (for YouTube challenges).
     "meriyah": "npm:meriyah@6.1.4",
     // Compression (used for chunked responses).
-    "fflate": "npm:fflate@0.8.2",
+    "fflate": "npm:fflate@0.8.3",
     "crypto/": "https://deno.land/x/crypto@v0.11.0/",
     "@std/encoding/base64": "jsr:@std/encoding@1.0.7/base64",
     "@std/async": "jsr:@std/async@1.0.11",
