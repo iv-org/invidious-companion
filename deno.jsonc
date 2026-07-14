@@ -30,7 +30,7 @@
     "youtubei.js/PlayerCaptionsTracklist": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/classes/PlayerCaptionsTracklist.ts",
     "youtubei.js/TabbedFeed": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/core/mixins/TabbedFeed.ts",
     // DOM implementation for Node/Deno (used by YouTube.js).
-    "jsdom": "npm:jsdom@26.1.0",
+    "jsdom": "npm:jsdom@29.1.1",
     // Botguard utilities for PO token generation.
     "bgutils": "https://esm.sh/bgutils-js@3.2.0",
     // ESTree AST types.
