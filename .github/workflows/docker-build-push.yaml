@@ -57,7 +57,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
-            type=sha,prefix={{branch}}-
+            type=sha,format=short,prefix={{date 'YYYY.MM.DD'}}-,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
           # Define labels
           labels: |
             quay.expires-after=12w
