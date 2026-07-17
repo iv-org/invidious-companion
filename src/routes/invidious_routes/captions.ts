@@ -32,6 +32,13 @@ captionsHandler.get("/:videoId", async (c) => {
         });
     }
 
+    // fail early if captions are disabled
+    if (!config.captions?.enabled) {
+        throw new HTTPException(503, {
+            res: new Response("Captions are disabled by administrator."),
+        });
+    }
+
     // Check if tokenMinter is ready (only needed when PO token is enabled)
     if (config.jobs.youtube_session.po_token_enabled && !tokenMinter) {
         throw new HTTPException(503, {
@@ -104,10 +111,23 @@ captionsHandler.get("/:videoId", async (c) => {
 
     if (match == undefined) throw new HTTPException(404);
 
+    let poToken: string | undefined;
+    let clientName: string | undefined;
+    if (tokenMinter) {
+        poToken = await tokenMinter(videoId);
+        clientName = innertubeClient.session.context.client.clientName;
+    }
+
     c.header("Content-Type", "text/vtt; charset=UTF-8");
     c.header("Access-Control-Allow-Origin", "*");
     return c.body(
-        await handleTranscripts(innertubeClient, videoId, match),
+        await handleTranscripts(
+            innertubeClient,
+            videoId,
+            match,
+            poToken,
+            clientName,
+        ),
     );
 });
 

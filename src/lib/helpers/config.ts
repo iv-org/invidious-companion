@@ -129,6 +129,11 @@ export const ConfigSchema = z.object({
             Deno.env.get("YOUTUBE_SESSION_COOKIES") || "",
         ),
     }).strict().default({}),
+    captions: z.object({
+        enabled: z.boolean().default(
+            Deno.env.get("CAPTIONS_ENABLED") === "false" ? false : true,
+        ),
+    }).strict().default({}),
 }).strict();
 
 export type Config = z.infer<typeof ConfigSchema>;
