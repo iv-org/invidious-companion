@@ -131,7 +131,7 @@ export const ConfigSchema = z.object({
     }).strict().default({}),
     captions: z.object({
         enabled: z.boolean().default(
-            Deno.env.get("CAPTIONS_ENABLED") === "true" || false,
+            Deno.env.get("CAPTIONS_ENABLED") === "false" ? false : true,
         ),
     }).strict().default({}),
 }).strict();

@@ -76,5 +76,8 @@
 # oauth_enabled = false # env variable: YOUTUBE_SESSION_OAUTH_ENABLED
 # cookies = "" # env variable: YOUTUBE_SESSION_COOKIES
 
+# Ability to disable captions in case you are getting blocked too
+# aggressively by YouTube.
+# See https://github.com/iv-org/invidious-companion/pull/259
 # [captions]
-# enabled = false # env variable: CAPTIONS_ENABLED
+# enabled = true # env variable: CAPTIONS_ENABLED
