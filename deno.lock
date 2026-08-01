@@ -19,7 +19,7 @@
     "npm:@bufbuild/protobuf@2": "2.12.1",
     "npm:fflate@0.8.3": "0.8.3",
     "npm:jsdom@26.1.0": "26.1.0",
-    "npm:meriyah@7.2.0": "7.2.0"
+    "npm:meriyah@7.3.0": "7.3.0"
   },
   "jsr": {
     "@hono/hono@4.12.32": {
@@ -219,8 +219,8 @@
     "lru-cache@10.4.3": {
       "integrity": "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ=="
     },
-    "meriyah@7.2.0": {
-      "integrity": "sha512-O7uWtjZ4fxKt7oFrpUNT+kbUVoG2a/55hP1KvKeianclcvfctENYcnVSomPScnh3Chz5dzKBFNkOdC7qmopH+A=="
+    "meriyah@7.3.0": {
+      "integrity": "sha512-TFAu09uiyoLlx/aEhIZGmlDmycB8Orzml2lpNzwRhLip4a5WJiCxOEoQ8mF6zNhfGqbuI7baS+ZV/0Q9YUBzvw=="
     },
     "ms@2.1.3": {
       "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
@@ -5832,7 +5832,7 @@
       "jsr:@std/toml@1.0.11",
       "npm:fflate@0.8.3",
       "npm:jsdom@26.1.0",
-      "npm:meriyah@7.2.0"
+      "npm:meriyah@7.3.0"
     ]
   }
 }
