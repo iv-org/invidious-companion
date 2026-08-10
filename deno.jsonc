@@ -2,11 +2,11 @@
   // Deno tasks definitions.
   "tasks": {
     // Run the server in development mode with file-watching.
-    "dev": "deno run --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname --allow-read=.,/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock --watch src/main.ts",
+    "dev": "DENO_DIR=/var/tmp/youtubei.js/deno-cache XDG_CACHE_HOME=/var/tmp/youtubei.js/xdg-cache deno run --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname,homedir,osRelease,cpus,networkInterfaces --allow-run --allow-ffi --allow-read=.,/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock --deny-read=/proc/version,/etc/os-release,/proc/self/cgroup,/usr/bin/ldd --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock --watch src/main.ts",
     // Compile a self-contained executable binary.
-    "compile": "deno compile --include ./src/lib/helpers/youtubePlayerReq.ts --include ./src/lib/helpers/getFetchClient.ts --output invidious_companion --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-read --allow-sys=hostname --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock src/main.ts --_version_date=\"$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)\" --_version_commit=\"$(git rev-list HEAD --max-count=1 --abbrev-commit)\"",
+    "compile": "deno compile --self-extracting --include ./dependencies.json --include ./src/lib/helpers/youtubePlayerReq.ts --include ./src/lib/helpers/getFetchClient.ts --include ./src/lib/jobs/worker.ts --output invidious_companion --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname,homedir,osRelease,cpus,networkInterfaces --allow-run --allow-ffi --allow-read=.,/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock --deny-read=/proc/version,/etc/os-release,/proc/self/cgroup,/usr/bin/ldd --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock src/main.ts --_version_date=\"$(git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g)\" --_version_commit=\"$(git rev-list HEAD --max-count=1 --abbrev-commit)\"",
     // Run integration tests.
-    "test": "deno test --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname --allow-read=.,/var/tmp/youtubei.js,/tmp/invidious-companion.sock --allow-write=/var/tmp/youtubei.js",
+    "test": "DENO_DIR=/var/tmp/youtubei.js/deno-cache XDG_CACHE_HOME=/var/tmp/youtubei.js/xdg-cache deno test --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname,homedir,osRelease,cpus,networkInterfaces --allow-run --allow-ffi --allow-read=.,/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock --deny-read=/proc/version,/etc/os-release,/proc/self/cgroup,/usr/bin/ldd --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/companionsock",
     // Check code formatting.
     "format": "deno fmt --check src/**",
     // Type-check the source code without emitting output.
@@ -29,7 +29,11 @@
     "youtubei.js/NavigationEndpoint": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/classes/NavigationEndpoint.ts",
     "youtubei.js/PlayerCaptionsTracklist": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/parser/classes/PlayerCaptionsTracklist.ts",
     "youtubei.js/TabbedFeed": "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v17.2.0-deno/deno/src/core/mixins/TabbedFeed.ts",
-    // DOM implementation for Node/Deno (used by YouTube.js).
+    // Headless anti-detect Firefox used for browser-backed PO tokens.
+    "camoufox-js": "npm:camoufox-js@0.12.0",
+    // Camoufox's supported browser automation peer.
+    "playwright-core": "npm:playwright-core@1.60.0",
+    // DOM fallback used when Camoufox cannot be installed or launched.
     "jsdom": "npm:jsdom@26.1.0",
     // Botguard utilities for PO token generation.
     "bgutils": "https://esm.sh/bgutils-js@3.2.0",

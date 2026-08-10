@@ -1,0 +1,14 @@
+{
+  "camoufox": {
+    "linux": {
+      "x86_64": {
+        "version": "v152.0.4-beta.28",
+        "sha256": "924f3109ccd6d47cd6a0384d67a345fadf975d48b6319f8dbbd5954c588982bd"
+      },
+      "arm64": {
+        "version": "v152.0.4-beta.28",
+        "sha256": "3a105a2fc929e80a79b4b7fce2c93ed62c4fb2c877f3c1ed2a5d66a1c4fe968f"
+      }
+    }
+  }
+}

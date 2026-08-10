@@ -5,6 +5,12 @@ import {
 } from "../helpers/youtubePlayerHandling.ts";
 import type { Config } from "../helpers/config.ts";
 import { Metrics } from "../helpers/metrics.ts";
+import {
+    closeCamoufoxPoTokenRuntime,
+    createCamoufoxPoTokenGeneration,
+} from "./camoufox.ts";
+import { BrowserPoTokenUnavailableError } from "../potoken/errors.ts";
+import { InputMessage, OutputMessageSchema } from "./worker.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -18,122 +24,247 @@ if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
 }
 const { getFetchClient } = await import(getFetchClientLocation);
 
-import { InputMessage, OutputMessageSchema } from "./worker.ts";
 import { PLAYER_ID } from "../../constants.ts";
 
+export type TokenMinter = (videoId: string) => Promise<string>;
+let generationInFlight: Promise<PoTokenResult> | undefined;
+let activeFallbackWorker: TokenGeneratorWorker | undefined;
+type PoTokenResult = { innertubeClient: Innertube; tokenMinter: TokenMinter };
 interface TokenGeneratorWorker extends Omit<Worker, "postMessage"> {
     postMessage(message: InputMessage): void;
 }
 
-const workers: TokenGeneratorWorker[] = [];
+// Adapted from https://github.com/LuanRT/BgUtils/blob/main/examples/node/index.ts
+export function poTokenGenerate(
+    config: Config,
+    metrics: Metrics | undefined,
+): Promise<PoTokenResult> {
+    if (generationInFlight) return generationInFlight;
+    generationInFlight = generatePoToken(config, metrics).finally(() => {
+        generationInFlight = undefined;
+    });
+    return generationInFlight;
+}
 
-function createMinter(worker: TokenGeneratorWorker) {
-    return (videoId: string): Promise<string> => {
-        const { promise, resolve } = Promise.withResolvers<string>();
-        // generate a UUID to identify the request as many minter calls
-        // may be made within a timespan, and this function will be
-        // informed about all of them until it's got its own
+async function generatePoToken(
+    config: Config,
+    metrics: Metrics | undefined,
+): Promise<PoTokenResult> {
+    const fetchImpl = getFetchClient(config);
+    let generation;
+    try {
+        generation = await createCamoufoxPoTokenGeneration(
+            fetchImpl,
+            config.youtube_session.cookies,
+        );
+    } catch (error) {
+        if (error instanceof BrowserPoTokenUnavailableError) {
+            console.warn(
+                "[WARN] Camoufox is unavailable; using the JSDOM PO token fallback",
+                { error },
+            );
+            return await generateWithJSDOM(config, metrics);
+        }
+        throw error;
+    }
+
+    try {
+        const instantiatedInnertubeClient = await Innertube.create({
+            enable_session_cache: false,
+            po_token: generation.sessionPoToken,
+            visitor_data: generation.visitorData,
+            user_agent: generation.userAgent,
+            fetch: fetchImpl,
+            generate_session_locally: true,
+            cookie: config.youtube_session.cookies || undefined,
+            player_id: PLAYER_ID,
+        });
+        await checkToken({
+            instantiatedInnertubeClient,
+            config,
+            integrityTokenBasedMinter: generation.mint,
+            metrics,
+        });
+        await generation.activate();
+        if (activeFallbackWorker) {
+            void shutdownWorker(activeFallbackWorker);
+            activeFallbackWorker = undefined;
+        }
+        console.log("[INFO] Successfully generated PO token with Camoufox");
+        return {
+            innertubeClient: instantiatedInnertubeClient,
+            tokenMinter: generation.mint,
+        };
+    } catch (error) {
+        await generation.discard();
+        console.log("[WARN] Failed to get valid PO token, will retry", {
+            error,
+        });
+        throw error;
+    }
+}
+
+export async function closePoTokenRuntime(): Promise<void> {
+    const fallbackWorker = activeFallbackWorker;
+    activeFallbackWorker = undefined;
+    await Promise.all([
+        fallbackWorker ? shutdownWorker(fallbackWorker) : Promise.resolve(),
+        closeCamoufoxPoTokenRuntime(),
+    ]);
+}
+
+function generateWithJSDOM(
+    config: Config,
+    metrics: Metrics | undefined,
+): Promise<PoTokenResult> {
+    const { promise, resolve, reject } = Promise.withResolvers<PoTokenResult>();
+    const worker: TokenGeneratorWorker = new Worker(
+        new URL("./worker.ts", import.meta.url).href,
+        { type: "module", name: "JSDOM PO Token Fallback" },
+    );
+    let settled = false;
+    const timeout = setTimeout(
+        () => fail(new Error("JSDOM PO token initialization timed out")),
+        5 * 60_000,
+    );
+    const fail = (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        worker.terminate();
+        reject(error);
+    };
+
+    worker.addEventListener("error", (event) => {
+        fail(event.error ?? new Error(event.message));
+    });
+    worker.addEventListener("messageerror", () => {
+        fail(new Error("Could not deserialize JSDOM worker message"));
+    });
+    worker.addEventListener("message", async (event) => {
+        const result = OutputMessageSchema.safeParse(event.data);
+        if (!result.success) {
+            fail(new Error("Invalid JSDOM worker response"));
+            return;
+        }
+        const message = result.data;
+        if (message.type === "ready") {
+            worker.postMessage({ type: "initialise", config });
+            return;
+        }
+        if (message.type === "error") {
+            fail(new Error(message.error));
+            return;
+        }
+        if (message.type !== "initialised") return;
+
+        try {
+            const instantiatedInnertubeClient = await Innertube.create({
+                enable_session_cache: false,
+                po_token: message.sessionPoToken,
+                visitor_data: message.visitorData,
+                fetch: getFetchClient(config),
+                generate_session_locally: true,
+                cookie: config.youtube_session.cookies || undefined,
+                player_id: PLAYER_ID,
+            });
+            const minter = createJSDOMMinter(worker);
+            await checkToken({
+                instantiatedInnertubeClient,
+                config,
+                integrityTokenBasedMinter: minter,
+                metrics,
+            });
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            const previousWorker = activeFallbackWorker;
+            activeFallbackWorker = worker;
+            if (previousWorker && previousWorker !== worker) {
+                void shutdownWorker(previousWorker);
+            }
+            console.log("[INFO] Successfully generated PO token with JSDOM");
+            resolve({
+                innertubeClient: instantiatedInnertubeClient,
+                tokenMinter: minter,
+            });
+        } catch (error) {
+            fail(error);
+        }
+    });
+    return promise;
+}
+
+function createJSDOMMinter(worker: TokenGeneratorWorker): TokenMinter {
+    return (videoId) => {
+        const { promise, resolve, reject } = Promise.withResolvers<string>();
         const requestId = crypto.randomUUID();
-        const listener = (message: MessageEvent) => {
-            const parsedMessage = OutputMessageSchema.parse(message.data);
+        const timeout = setTimeout(() => {
+            cleanup();
+            reject(new Error(`PO token mint timed out for video ${videoId}`));
+        }, 30_000);
+        const cleanup = () => {
+            clearTimeout(timeout);
+            worker.removeEventListener("message", listener);
+            worker.removeEventListener("error", errorListener);
+        };
+        const errorListener = (event: ErrorEvent) => {
+            cleanup();
+            reject(event.error ?? new Error(event.message));
+        };
+        const listener = (event: MessageEvent) => {
+            const result = OutputMessageSchema.safeParse(event.data);
+            if (!result.success) return;
+            const message = result.data;
             if (
-                parsedMessage.type === "content-token" &&
-                parsedMessage.requestId === requestId
+                message.type === "content-token" &&
+                message.requestId === requestId
             ) {
-                worker.removeEventListener("message", listener);
-                resolve(parsedMessage.contentToken);
+                cleanup();
+                resolve(message.contentToken);
+            } else if (
+                message.type === "content-token-error" &&
+                message.requestId === requestId
+            ) {
+                cleanup();
+                reject(new Error(message.error));
             }
         };
         worker.addEventListener("message", listener);
+        worker.addEventListener("error", errorListener);
         worker.postMessage({
             type: "content-token-request",
             videoId,
             requestId,
         });
-
         return promise;
     };
 }
 
-export type TokenMinter = ReturnType<typeof createMinter>;
-
-// Adapted from https://github.com/LuanRT/BgUtils/blob/main/examples/node/index.ts
-export const poTokenGenerate = (
-    config: Config,
-    metrics: Metrics | undefined,
-): Promise<{ innertubeClient: Innertube; tokenMinter: TokenMinter }> => {
-    const { promise, resolve, reject } = Promise.withResolvers<
-        Awaited<ReturnType<typeof poTokenGenerate>>
-    >();
-
-    const worker: TokenGeneratorWorker = new Worker(
-        new URL("./worker.ts", import.meta.url).href,
-        {
-            type: "module",
-            name: "PO Token Generator",
-        },
-    );
-    // take note of the worker so we can kill it once a new one takes its place
-    workers.push(worker);
-    worker.addEventListener("message", async (event) => {
-        const parsedMessage = OutputMessageSchema.parse(event.data);
-
-        // worker is listening for messages
-        if (parsedMessage.type === "ready") {
-            const untypedPostMessage = worker.postMessage.bind(worker);
-            worker.postMessage = (message: InputMessage) =>
-                untypedPostMessage(message);
-            worker.postMessage({ type: "initialise", config });
-        }
-
-        if (parsedMessage.type === "error") {
-            console.log({ errorFromWorker: parsedMessage.error });
+function shutdownWorker(worker: TokenGeneratorWorker): Promise<void> {
+    return new Promise((resolve) => {
+        let settled = false;
+        const finish = () => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            worker.removeEventListener("message", listener);
             worker.terminate();
-            reject(parsedMessage.error);
-        }
-
-        // worker is initialised and has passed back a session token and visitor data
-        if (parsedMessage.type === "initialised") {
-            try {
-                const instantiatedInnertubeClient = await Innertube.create({
-                    enable_session_cache: false,
-                    po_token: parsedMessage.sessionPoToken,
-                    visitor_data: parsedMessage.visitorData,
-                    fetch: getFetchClient(config),
-                    generate_session_locally: true,
-                    cookie: config.youtube_session.cookies || undefined,
-                    player_id: PLAYER_ID,
-                });
-                const minter = createMinter(worker);
-                // check token from minter
-                await checkToken({
-                    instantiatedInnertubeClient,
-                    config,
-                    integrityTokenBasedMinter: minter,
-                    metrics,
-                });
-                console.log("[INFO] Successfully generated PO token");
-                const numberToKill = workers.length - 1;
-                for (let i = 0; i < numberToKill; i++) {
-                    const workerToKill = workers.shift();
-                    workerToKill?.terminate();
-                }
-                return resolve({
-                    innertubeClient: instantiatedInnertubeClient,
-                    tokenMinter: minter,
-                });
-            } catch (err) {
-                console.log("[WARN] Failed to get valid PO token, will retry", {
-                    err,
-                });
-                worker.terminate();
-                reject(err);
-            }
+            resolve();
+        };
+        const timeout = setTimeout(finish, 5_000);
+        const listener = (event: MessageEvent) => {
+            const result = OutputMessageSchema.safeParse(event.data);
+            if (result.success && result.data.type === "shutdown") finish();
+        };
+        worker.addEventListener("message", listener);
+        try {
+            worker.postMessage({ type: "shutdown" });
+        } catch {
+            finish();
         }
     });
-
-    return promise;
-};
+}
 
 async function checkToken({
     instantiatedInnertubeClient,
