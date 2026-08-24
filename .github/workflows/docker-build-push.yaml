@@ -1,77 +1,57 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image to GHCR
 
-# Define when this workflow will run
 on:
   push:
-    branches:
-      - master  # Trigger on pushes to master branch
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'  # Trigger on semantic version tags
-    paths-ignore:
-      - '.gitignore'
-      - 'LICENSE'
-      - 'README.md'
-      - 'docker-compose.yml'
-      - 'grafana_dashboard.json'
-  workflow_dispatch:  # Allow manual triggering of the workflow
+    branches: [ "beta" ]
+    tags: [ "v*.*.*" ]
 
-# Define environment variables used throughout the workflow
+# Define environment variables for the registry and image name
 env:
-  REGISTRY: quay.io
-  IMAGE_NAME: invidious/invidious-companion
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    
+    # Required permissions to write to the package registry
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      # Step 1: Check out the repository code
-      - name: Checkout code
-        uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Step 2: Set up QEMU for multi-architecture builds
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
-      # Step 3: Set up Docker Buildx for enhanced build capabilities
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@v3
 
-      # Step 4: Authenticate with Quay.io registry
-      - name: Log in to Quay.io
-        uses: docker/login-action@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 5: Extract metadata for Docker image tagging and labeling
-      - name: Extract metadata for Docker
+      - name: Extract metadata (tags, labels)
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          # Define tagging strategy
           tags: |
+            type=ref,event=branch
+            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
-            type=sha,format=short,prefix={{date 'YYYY.MM.DD'}}-,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
-          # Define labels
-          labels: |
-            quay.expires-after=12w
+            type=sha,prefix=
 
-      # Step 6: Build and push the Docker image
       - name: Build and push Docker image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v5
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
-          platforms: linux/amd64,linux/arm64  # Build for multiple architectures
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            "CHECK_CHECKSUMS=1"
