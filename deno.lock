@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@hono/hono@4.12.33": "4.12.33",
+    "jsr:@hono/hono@4.13.5": "4.13.5",
     "jsr:@luanrt/googlevideo@4.1.1": "4.1.1",
     "jsr:@std/assert@1.0.12": "1.0.12",
     "jsr:@std/async@1.5.0": "1.5.0",
@@ -22,8 +22,8 @@
     "npm:meriyah@7.3.0": "7.3.0"
   },
   "jsr": {
-    "@hono/hono@4.12.33": {
-      "integrity": "0df9fd54840e64fd3c10455aed240ed1dbc8b2773b6d9b825e3a681378d1ba77"
+    "@hono/hono@4.13.5": {
+      "integrity": "b5b10f340820d14d69add622452e88722d7e99e05e30cdeafcb90133fc752126"
     },
     "@luanrt/googlevideo@4.1.1": {
       "integrity": "e619a7cda1fe68f06d53f27f94ed941e40a2dc1b5efa049e331d2e27d15e2ce0",
@@ -89,7 +89,7 @@
     }
   },
   "npm": {
-    "@asamuzakjp/css-color@3.2.0_@csstools+css-parser-algorithms@3.0.5__@csstools+css-tokenizer@3.0.4_@csstools+css-tokenizer@3.0.4": {
+    "@asamuzakjp/css-color@3.2.0_@csstools+css-parser-algorithms@3.0.5_@csstools+css-tokenizer@3.0.4": {
       "integrity": "sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==",
       "dependencies": [
         "@csstools/css-calc",
@@ -105,14 +105,14 @@
     "@csstools/color-helpers@5.1.0": {
       "integrity": "sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA=="
     },
-    "@csstools/css-calc@2.1.4_@csstools+css-parser-algorithms@3.0.5__@csstools+css-tokenizer@3.0.4_@csstools+css-tokenizer@3.0.4": {
+    "@csstools/css-calc@2.1.4_@csstools+css-parser-algorithms@3.0.5_@csstools+css-tokenizer@3.0.4": {
       "integrity": "sha512-3N8oaj+0juUw/1H3YwmDDJXCgTB1gKU6Hc/bB502u9zR0q2vd786XJH9QfrKIEgFlZmhZiq6epXl4rHqhzsIgQ==",
       "dependencies": [
         "@csstools/css-parser-algorithms",
         "@csstools/css-tokenizer"
       ]
     },
-    "@csstools/css-color-parser@3.1.0_@csstools+css-parser-algorithms@3.0.5__@csstools+css-tokenizer@3.0.4_@csstools+css-tokenizer@3.0.4": {
+    "@csstools/css-color-parser@3.1.0_@csstools+css-parser-algorithms@3.0.5_@csstools+css-tokenizer@3.0.4": {
       "integrity": "sha512-nbtKwh3a6xNVIp/VRuXV64yTKnb1IjTAEEh3irzS+HkKjAOYLTGNb9pmVNntZ8iVBHcWDA2Dof0QtPgFI1BaTA==",
       "dependencies": [
         "@csstools/color-helpers",
@@ -5822,7 +5822,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@hono/hono@4.12.33",
+      "jsr:@hono/hono@4.13.5",
       "jsr:@luanrt/googlevideo@4.1.1",
       "jsr:@std/async@1.5.0",
       "jsr:@std/cli@^1.0.32",
