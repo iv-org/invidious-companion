@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@hono/hono@4.13.5": "4.13.5",
+    "jsr:@hono/hono@4.13.7": "4.13.7",
     "jsr:@luanrt/googlevideo@4.1.1": "4.1.1",
     "jsr:@std/assert@1.0.12": "1.0.12",
     "jsr:@std/async@1.5.0": "1.5.0",
@@ -22,8 +22,8 @@
     "npm:meriyah@7.3.2": "7.3.2"
   },
   "jsr": {
-    "@hono/hono@4.13.5": {
-      "integrity": "b5b10f340820d14d69add622452e88722d7e99e05e30cdeafcb90133fc752126"
+    "@hono/hono@4.13.7": {
+      "integrity": "90f83307462b2dd47c9a8028cf5e4827abedc74a53fd291a49130f1579fdcd79"
     },
     "@luanrt/googlevideo@4.1.1": {
       "integrity": "e619a7cda1fe68f06d53f27f94ed941e40a2dc1b5efa049e331d2e27d15e2ce0",
@@ -6504,7 +6504,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@hono/hono@4.13.5",
+      "jsr:@hono/hono@4.13.7",
       "jsr:@luanrt/googlevideo@4.1.1",
       "jsr:@std/async@1.5.0",
       "jsr:@std/cli@^1.0.32",
