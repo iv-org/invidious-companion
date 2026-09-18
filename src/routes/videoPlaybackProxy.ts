@@ -77,13 +77,6 @@ videoPlaybackProxy.get("/", async (c) => {
     const rangeHeader = c.req.header("range");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
     const [firstByte, lastByte] = requestBytes?.split("-") || [];
-    if (requestBytes) {
-        queryParams.append(
-            "range",
-            requestBytes,
-        );
-    }
-
     const headersToSend: HeadersInit = {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -140,6 +133,9 @@ videoPlaybackProxy.get("/", async (c) => {
     }
 
     const googleVideoUrl = new URL(location);
+    if (requestBytes) {
+        googleVideoUrl.searchParams.set("range", requestBytes);
+    }
     const postResponse = await fetchClient(googleVideoUrl, {
         method: "POST",
         body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
@@ -166,29 +162,23 @@ videoPlaybackProxy.get("/", async (c) => {
 
     let responseStatus = headResponse.status;
     if (requestBytes && responseStatus == 200) {
-        // check for range headers in the forms:
-        // "bytes=0-" get full length from start
-        // "bytes=500-" get full length from 500 bytes in
-        // "bytes=500-1000" get 500 bytes starting from 500
+        const headTotal = Number(headResponse.headers.get("content-length")) ||
+            Number(queryParams.get("clen"));
         if (lastByte) {
             responseStatus = 206;
+            headersForResponse["content-length"] = String(
+                Number(lastByte) - Number(firstByte) + 1,
+            );
             headersForResponse["content-range"] = `bytes ${requestBytes}/${
-                queryParams.get("clen") || "*"
+                headTotal || "*"
             }`;
-        } else {
-            // i.e. "bytes=0-", "bytes=600-"
-            // full size of content is able to be calculated, so a full Content-Range header can be constructed
-            const bytesReceived = headersForResponse["content-length"];
-            // last byte should always be one less than the length
-            const totalContentLength = Number(firstByte) +
-                Number(bytesReceived);
-            const lastByte = totalContentLength - 1;
-            if (firstByte !== "0") {
-                // only part of the total content returned, 206
-                responseStatus = 206;
-            }
+        } else if (headTotal) {
+            responseStatus = 206;
             headersForResponse["content-range"] =
-                `bytes ${firstByte}-${lastByte}/${totalContentLength}`;
+                `bytes ${firstByte}-${headTotal - 1}/${headTotal}`;
+            headersForResponse["content-length"] = String(
+                headTotal - Number(firstByte || 0),
+            );
         }
     }
 
