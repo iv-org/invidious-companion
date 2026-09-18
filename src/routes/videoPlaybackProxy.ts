@@ -76,7 +76,7 @@ videoPlaybackProxy.get("/", async (c) => {
 
     const rangeHeader = c.req.header("range");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
-    const [firstByte, lastByte] = requestBytes?.split("-") || [];
+    const rangeMatch = requestBytes?.match(/^(\d+)-(\d+)?$/) ?? null;
     const headersToSend: HeadersInit = {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -132,9 +132,17 @@ videoPlaybackProxy.get("/", async (c) => {
         });
     }
 
+    const headTotal = Number(headResponse.headers.get("content-length")) ||
+        Number(queryParams.get("clen"));
     const googleVideoUrl = new URL(location);
-    if (requestBytes) {
-        googleVideoUrl.searchParams.set("range", requestBytes);
+    if (rangeMatch) {
+        if (headTotal && Number(rangeMatch[1]) >= headTotal) {
+            return new Response(null, {
+                status: 416,
+                headers: { "content-range": `bytes */${headTotal}` },
+            });
+        }
+        googleVideoUrl.searchParams.set("range", rangeMatch[0]);
     }
     const postResponse = await fetchClient(googleVideoUrl, {
         method: "POST",
@@ -161,25 +169,25 @@ videoPlaybackProxy.get("/", async (c) => {
     }
 
     let responseStatus = headResponse.status;
-    if (requestBytes && responseStatus == 200) {
-        const headTotal = Number(headResponse.headers.get("content-length")) ||
-            Number(queryParams.get("clen"));
-        if (lastByte) {
+    if (rangeMatch && responseStatus == 200) {
+        if (headTotal) {
+            const startByte = Number(rangeMatch[1]);
+            if (startByte >= headTotal) {
+                return new Response(null, {
+                    status: 416,
+                    headers: { "content-range": `bytes */${headTotal}` },
+                });
+            }
             responseStatus = 206;
-            headersForResponse["content-length"] = String(
-                Number(lastByte) - Number(firstByte) + 1,
+            const endByte = Math.min(
+                Number(rangeMatch[2] ?? (headTotal - 1)),
+                headTotal - 1,
             );
-            headersForResponse["content-range"] = `bytes ${requestBytes}/${
-                headTotal || "*"
-            }`;
-        } else if (headTotal) {
-            responseStatus = 206;
-            headersForResponse["content-range"] = `bytes ${firstByte}-${
-                headTotal - 1
-            }/${headTotal}`;
             headersForResponse["content-length"] = String(
-                headTotal - Number(firstByte || 0),
+                endByte - startByte + 1,
             );
+            headersForResponse["content-range"] =
+                `bytes ${startByte}-${endByte}/${headTotal}`;
         }
     }
 
