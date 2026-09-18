@@ -133,12 +133,22 @@ videoPlaybackProxy.get("/", async (c) => {
         });
     }
 
-    const headTotal = Number(headResponse.headers.get("content-length")) ||
-        Number(queryParams.get("clen"));
+    const contentLength = headResponse.headers.get("content-length");
+    const clen = queryParams.get("clen");
+    const parsedContentLength = contentLength === null
+        ? NaN
+        : Number(contentLength);
+    const parsedClen = clen === null ? NaN : Number(clen);
+    const headTotal = Number.isSafeInteger(parsedContentLength) &&
+            parsedContentLength >= 0
+        ? parsedContentLength
+        : Number.isSafeInteger(parsedClen) && parsedClen >= 0
+        ? parsedClen
+        : undefined;
     const googleVideoUrl = new URL(location);
     let startByte = 0;
     let requestedEnd = 0;
-    if (rangeMatch && headTotal) {
+    if (rangeMatch && headTotal !== undefined) {
         const isSuffix = rangeMatch[3] !== undefined;
         startByte = isSuffix
             ? Math.max(headTotal - Number(rangeMatch[3]), 0)
@@ -182,7 +192,7 @@ videoPlaybackProxy.get("/", async (c) => {
     }
 
     let responseStatus = headResponse.status;
-    if (rangeMatch && headTotal && responseStatus == 200) {
+    if (rangeMatch && headTotal !== undefined && responseStatus == 200) {
         responseStatus = 206;
         const endByte = Math.min(requestedEnd, headTotal - 1);
         headersForResponse["content-length"] = String(
