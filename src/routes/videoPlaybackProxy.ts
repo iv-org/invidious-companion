@@ -136,7 +136,11 @@ videoPlaybackProxy.get("/", async (c) => {
         Number(queryParams.get("clen"));
     const googleVideoUrl = new URL(location);
     if (rangeMatch) {
-        if (headTotal && Number(rangeMatch[1]) >= headTotal) {
+        const startByte = Number(rangeMatch[1]);
+        const requestedEnd = rangeMatch[2] !== undefined
+            ? Number(rangeMatch[2])
+            : headTotal - 1;
+        if (headTotal && (startByte >= headTotal || requestedEnd < startByte)) {
             return new Response(null, {
                 status: 416,
                 headers: { "content-range": `bytes */${headTotal}` },
@@ -172,15 +176,11 @@ videoPlaybackProxy.get("/", async (c) => {
     if (rangeMatch && responseStatus == 200) {
         if (headTotal) {
             const startByte = Number(rangeMatch[1]);
-            if (startByte >= headTotal) {
-                return new Response(null, {
-                    status: 416,
-                    headers: { "content-range": `bytes */${headTotal}` },
-                });
-            }
             responseStatus = 206;
             const endByte = Math.min(
-                Number(rangeMatch[2] ?? (headTotal - 1)),
+                rangeMatch[2] !== undefined
+                    ? Number(rangeMatch[2])
+                    : headTotal - 1,
                 headTotal - 1,
             );
             headersForResponse["content-length"] = String(
