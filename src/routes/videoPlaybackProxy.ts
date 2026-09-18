@@ -174,8 +174,9 @@ videoPlaybackProxy.get("/", async (c) => {
             }`;
         } else if (headTotal) {
             responseStatus = 206;
-            headersForResponse["content-range"] =
-                `bytes ${firstByte}-${headTotal - 1}/${headTotal}`;
+            headersForResponse["content-range"] = `bytes ${firstByte}-${
+                headTotal - 1
+            }/${headTotal}`;
             headersForResponse["content-length"] = String(
                 headTotal - Number(firstByte || 0),
             );
