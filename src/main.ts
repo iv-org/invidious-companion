@@ -1,7 +1,11 @@
 import { Hono } from "hono";
 import { companionRoutes, miscRoutes } from "./routes/index.ts";
 import { Innertube, Platform } from "youtubei.js";
-import { poTokenGenerate, type TokenMinter } from "./lib/jobs/potoken.ts";
+import {
+    closePoTokenRuntime,
+    poTokenGenerate,
+    type TokenMinter,
+} from "./lib/jobs/potoken.ts";
 import { USER_AGENT } from "bgutils";
 import { retry } from "@std/async";
 import type { HonoVariables } from "./lib/types/HonoVariables.ts";
@@ -223,22 +227,27 @@ export function run(signal: AbortSignal, port: number, hostname: string) {
         );
     }
 }
+export async function shutdown() {
+    await closePoTokenRuntime();
+}
+
 if (import.meta.main) {
     const controller = new AbortController();
     const { signal } = controller;
     run(signal, config.server.port, config.server.host);
 
-    if (Deno.build.os !== "windows") {
-        Deno.addSignalListener("SIGTERM", () => {
-            console.log("Caught SIGINT, shutting down...");
-            controller.abort();
-            Deno.exit(0);
-        });
-    }
-
-    Deno.addSignalListener("SIGINT", () => {
-        console.log("Caught SIGINT, shutting down...");
+    let shuttingDown = false;
+    const stop = async (signalName: string) => {
+        if (shuttingDown) return;
+        shuttingDown = true;
+        console.log(`Caught ${signalName}, shutting down...`);
         controller.abort();
+        await shutdown();
         Deno.exit(0);
-    });
+    };
+
+    if (Deno.build.os !== "windows") {
+        Deno.addSignalListener("SIGTERM", () => void stop("SIGTERM"));
+    }
+    Deno.addSignalListener("SIGINT", () => void stop("SIGINT"));
 }

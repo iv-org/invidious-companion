@@ -8,6 +8,7 @@ services:
     ports:
       - 127.0.0.1:8282:8282
     restart: unless-stopped
+    shm_size: 256mb
     cap_drop:
       - ALL
     read_only: true

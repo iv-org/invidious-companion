@@ -13,7 +13,53 @@
   "minimumReleaseAge": "3 days",
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
+  "customDatasources": {
+    "camoufox-amd64": {
+      "defaultRegistryUrlTemplate": "https://api.github.com/repos/daijro/camoufox/releases",
+      "transformTemplates": [
+        "{\"releases\": $map($[draft=false], function($release) { ($asset := $release.assets[$contains(name, '-lin.x86_64.zip')][0]; $asset.digest ? {\"version\": $release.tag_name, \"digest\": $substringAfter($asset.digest, 'sha256:'), \"releaseTimestamp\": $release.published_at}) })}"
+      ]
+    },
+    "camoufox-arm64": {
+      "defaultRegistryUrlTemplate": "https://api.github.com/repos/daijro/camoufox/releases",
+      "transformTemplates": [
+        "{\"releases\": $map($[draft=false], function($release) { ($asset := $release.assets[$contains(name, '-lin.arm64.zip')][0]; $asset.digest ? {\"version\": $release.tag_name, \"digest\": $substringAfter($asset.digest, 'sha256:'), \"releaseTimestamp\": $release.published_at}) })}"
+      ]
+    }
+  },
+  "customManagers": [
+    {
+      "customType": "jsonata",
+      "fileFormat": "json",
+      "managerFilePatterns": ["/^dependencies\\.json$/"],
+      "matchStrings": [
+        "{\"currentValue\": camoufox.linux.x86_64.version, \"currentDigest\": camoufox.linux.x86_64.sha256}"
+      ],
+      "depNameTemplate": "Camoufox Linux x86_64",
+      "datasourceTemplate": "custom.camoufox-amd64",
+      "versioningTemplate": "loose"
+    },
+    {
+      "customType": "jsonata",
+      "fileFormat": "json",
+      "managerFilePatterns": ["/^dependencies\\.json$/"],
+      "matchStrings": [
+        "{\"currentValue\": camoufox.linux.arm64.version, \"currentDigest\": camoufox.linux.arm64.sha256}"
+      ],
+      "depNameTemplate": "Camoufox Linux ARM64",
+      "datasourceTemplate": "custom.camoufox-arm64",
+      "versioningTemplate": "loose"
+    }
+  ],
   "packageRules": [
+    {
+      "description": "Group Camoufox browser updates",
+      "matchDatasources": [
+        "custom.camoufox-amd64",
+        "custom.camoufox-arm64"
+      ],
+      "groupName": "Camoufox browser"
+    },
     {
       "description": "Group Deno standard library updates",
       "matchManagers": ["deno"],

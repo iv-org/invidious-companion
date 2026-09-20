@@ -10,7 +10,15 @@ Companion for Invidious which handle all the video stream retrieval from YouTube
 
 ### Requirements
 
-- [deno](https://docs.deno.com/runtime/)  
+- [deno](https://docs.deno.com/runtime/)
+- [Camoufox](https://camoufox.com/) for browser-backed PO token generation.
+  The Docker image installs a pinned headless browser into the existing
+  `/var/tmp/youtubei.js` volume automatically. Local development downloads it
+  into the same directory on first startup.
+
+  Companion falls back to its previous JSDOM generator when Camoufox cannot be
+  installed or launched. Camoufox runs with `headless: true`; Xvfb is not used.
+  The production image uses a shell-less Google Distroless runtime.
 
 ### Run Locally (development)
 

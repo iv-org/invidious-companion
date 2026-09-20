@@ -7,6 +7,7 @@ import type { WebPoSignalOutput } from "bgutils";
 import { JSDOM } from "jsdom";
 import { Innertube } from "youtubei.js";
 import { PLAYER_ID } from "../../constants.ts";
+import { INTEGRITY_TOKEN_REQUEST_KEY } from "../potoken/constants.ts";
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
     if (Deno.env.has("DENO_COMPILED")) {
@@ -37,9 +38,11 @@ const InputContentTokenSchema = z.object({
 }).strict();
 export type InputInitialise = z.infer<typeof InputInitialiseSchema>;
 export type InputContentToken = z.infer<typeof InputContentTokenSchema>;
+const InputShutdownSchema = z.object({ type: z.literal("shutdown") }).strict();
 const InputMessageSchema = z.union([
     InputInitialiseSchema,
     InputContentTokenSchema,
+    InputShutdownSchema,
 ]);
 export type InputMessage = z.infer<typeof InputMessageSchema>;
 
@@ -60,15 +63,24 @@ const OutputContentTokenSchema = z.object({
     requestId: InputContentTokenSchema.shape.requestId,
 }).strict();
 
+const OutputContentTokenErrorSchema = z.object({
+    type: z.literal("content-token-error"),
+    error: z.string(),
+    requestId: InputContentTokenSchema.shape.requestId,
+}).strict();
+
 const OutputErrorSchema = z.object({
     type: z.literal("error"),
-    error: z.any(),
+    error: z.string(),
 }).strict();
+const OutputShutdownSchema = z.object({ type: z.literal("shutdown") }).strict();
 export const OutputMessageSchema = z.union([
     OutputReadySchema,
     OutputInitialiseSchema,
     OutputContentTokenSchema,
+    OutputContentTokenErrorSchema,
     OutputErrorSchema,
+    OutputShutdownSchema,
 ]);
 type OutputMessage = z.infer<typeof OutputMessageSchema>;
 
@@ -76,14 +88,16 @@ const IntegrityTokenResponse = z.tuple([z.string()]).rest(z.any());
 
 const isWorker = typeof WorkerGlobalScope !== "undefined" &&
     self instanceof WorkerGlobalScope;
+
 if (isWorker) {
     // helper function to force type-checking
-    const untypedPostmessage = self.postMessage.bind(self);
+    const untypedPostMessage = self.postMessage.bind(self);
     const postMessage = (message: OutputMessage) => {
-        untypedPostmessage(message);
+        untypedPostMessage(message);
     };
 
-    let minter: BG.WebPoMinter;
+    let minter: BG.WebPoMinter | undefined;
+    let cleanup: (() => void) | undefined;
 
     onmessage = async (event) => {
         const message = InputMessageSchema.parse(event.data);
@@ -96,37 +110,50 @@ if (isWorker) {
                     sessionPoToken,
                     visitorData,
                     generatedMinter,
+                    cleanup: generatedCleanup,
                 } = await setup({
                     fetchImpl,
                     innertubeClientCookies:
                         message.config.youtube_session.cookies,
                 });
                 minter = generatedMinter;
+                cleanup = generatedCleanup;
                 postMessage({
                     type: "initialised",
                     sessionPoToken,
                     visitorData,
                 });
-            } catch (err) {
-                postMessage({ type: "error", error: err });
+            } catch (error) {
+                postMessage({ type: "error", error: errorMessage(error) });
             }
+            return;
         }
+
         // this is called every time a video needs a content token
         if (message.type === "content-token-request") {
-            if (!minter) {
-                throw new Error(
-                    "Minter not yet ready, must initialise first",
-                );
+            try {
+                if (!minter) {
+                    throw new Error("PO token minter is not initialized");
+                }
+                postMessage({
+                    type: "content-token",
+                    contentToken: await minter.mintAsWebsafeString(
+                        message.videoId,
+                    ),
+                    requestId: message.requestId,
+                });
+            } catch (error) {
+                postMessage({
+                    type: "content-token-error",
+                    error: errorMessage(error),
+                    requestId: message.requestId,
+                });
             }
-            const contentToken = await minter.mintAsWebsafeString(
-                message.videoId,
-            );
-            postMessage({
-                type: "content-token",
-                contentToken,
-                requestId: message.requestId,
-            });
+            return;
         }
+
+        cleanup?.();
+        postMessage({ type: "shutdown" });
     };
 
     postMessage({ type: "ready" });
@@ -207,8 +234,6 @@ async function setup(
 
     const webPoSignalOutput: WebPoSignalOutput = [];
     const botguardResponse = await botguard.snapshot({ webPoSignalOutput });
-    const requestKey = "O43z0dpjhgX20SCx4KAo";
-
     const integrityTokenResponse = await fetchImpl(
         buildURL("GenerateIT", true),
         {
@@ -219,13 +244,20 @@ async function setup(
                 "x-user-agent": "grpc-web-javascript/0.1",
                 "user-agent": USER_AGENT,
             },
-            body: JSON.stringify([requestKey, botguardResponse]),
+            body: JSON.stringify([
+                INTEGRITY_TOKEN_REQUEST_KEY,
+                botguardResponse,
+            ]),
         },
     );
+    if (!integrityTokenResponse.ok) {
+        throw new Error(
+            `Could not get integrity token: ${integrityTokenResponse.status}`,
+        );
+    }
     const integrityTokenBody = IntegrityTokenResponse.parse(
         await integrityTokenResponse.json(),
     );
-
     const integrityTokenBasedMinter = await BG.WebPoMinter.create({
         integrityToken: integrityTokenBody[0],
     }, webPoSignalOutput);
@@ -238,5 +270,10 @@ async function setup(
         sessionPoToken,
         visitorData,
         generatedMinter: integrityTokenBasedMinter,
+        cleanup: () => dom.window.close(),
     };
+}
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
 }

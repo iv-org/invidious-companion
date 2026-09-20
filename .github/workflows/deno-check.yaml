@@ -7,22 +7,43 @@ on:
 jobs:
   testing:
     runs-on: ubuntu-latest
+    env:
+      CAMOUFOX_INSTALL_DIR: /var/tmp/youtubei.js/camoufox
+      DENO_DIR: /var/tmp/youtubei.js/deno-cache
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
     steps:
       - name: Setup repo
         uses: actions/checkout@v7
-        
+
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+
+      - name: Install Camoufox
+        run: |
+          playwright_specifier="$(sed '/^[[:space:]]*\/\//d' deno.jsonc | jq -er '.imports["playwright-core"]')"
+          deno run -A "${playwright_specifier}" install-deps firefox
+          camoufox_tag="$(jq -er '.camoufox.linux.x86_64.version' dependencies.json)"
+          camoufox_version="${camoufox_tag#v}"
+          camoufox_checksum="$(jq -er '.camoufox.linux.x86_64.sha256' dependencies.json)"
+          mkdir -p /var/tmp/youtubei.js/camoufox
+          curl -fsSL --output /tmp/camoufox.zip \
+            "https://github.com/daijro/camoufox/releases/download/${camoufox_tag}/camoufox-${camoufox_version}-lin.x86_64.zip"
+          echo "${camoufox_checksum}  /tmp/camoufox.zip" | sha256sum -c -
+          unzip -q /tmp/camoufox.zip -d /var/tmp/youtubei.js/camoufox
+          printf '{"version":"%s","release":"%s"}\n' \
+            "${camoufox_version%%-*}" "${camoufox_version#*-}" \
+            > /var/tmp/youtubei.js/camoufox/version.json
+          rm /tmp/camoufox.zip
 
       - name: Verify formatting
         run: deno task format
 
       - name: Verify typing
         run: deno task check
-      
+
       - name: Run linter
         run: deno task lint
 
@@ -50,7 +71,7 @@ jobs:
             PROXY_PID=$!
             sleep 3s
             curl -s -x http://127.0.0.1:18080 --retry 5 --retry-delay 2 --retry-connrefused https://check.torproject.org/api/ip; echo
-            rm -rf /var/tmp/youtubei.js
+            rm -f /var/tmp/youtubei.js/kv_cache.sqlite3*
             if PROXY=http://127.0.0.1:18080 deno task test; then
               OPERA_SUCCESS=true
               kill $PROXY_PID 2>/dev/null
@@ -69,7 +90,7 @@ jobs:
             echo "=== Tor attempt $attempt/12 ==="
             sudo pkill -HUP tor
             curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo
-            rm -rf /var/tmp/youtubei.js
+            rm -f /var/tmp/youtubei.js/kv_cache.sqlite3*
             if PROXY=socks5://127.0.0.1:9150 deno task test; then
               echo "=== Tests passed with tor ==="
               exit 0
