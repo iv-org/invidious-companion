@@ -140,6 +140,12 @@ videoPlaybackProxy.get("/", async (c) => {
     }
 
     const googleVideoUrl = new URL(location);
+    const start = Number(firstByte || 0);
+    const end = start + Number(headResponse.headers.get("content-length"));
+    const chunked = !lastByte && end > start;
+    if (chunked) {
+        googleVideoUrl.searchParams.set("range", chunkRange(start, end));
+    }
     const postResponse = await fetchClient(googleVideoUrl, {
         method: "POST",
         body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
@@ -192,11 +198,72 @@ videoPlaybackProxy.get("/", async (c) => {
         }
     }
 
-    return new Response(postResponse.body, {
+    const body = chunked && postResponse.body
+        ? chunkedBody(
+            postResponse.body,
+            (range) => {
+                googleVideoUrl.searchParams.set("range", range);
+                return fetchClient(googleVideoUrl, {
+                    method: "POST",
+                    body: new Uint8Array([0x78, 0]),
+                    headers: headersToSend,
+                });
+            },
+            start,
+            end,
+        )
+        : postResponse.body;
+
+    return new Response(body, {
         status: responseStatus,
         statusText: headResponse.statusText,
         headers: headersForResponse,
     });
 });
+
+const CHUNK_SIZE = 10 * 1024 * 1024;
+
+function chunkRange(start: number, end: number): string {
+    return `${start}-${Math.min(start + CHUNK_SIZE, end) - 1}`;
+}
+
+function chunkedBody(
+    firstChunk: ReadableStream<Uint8Array>,
+    requestChunk: (range: string) => Promise<Response>,
+    start: number,
+    end: number,
+): ReadableStream<Uint8Array> {
+    let position = start;
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined = firstChunk
+        .getReader();
+
+    return new ReadableStream<Uint8Array>({
+        async pull(controller) {
+            while (reader) {
+                const { done, value } = await reader.read();
+                if (!done) {
+                    position += value.byteLength;
+                    controller.enqueue(value);
+                    return;
+                }
+
+                reader = undefined;
+                if (position < end) {
+                    const response = await requestChunk(
+                        chunkRange(position, end),
+                    );
+                    if (response.status !== 200 || !response.body) {
+                        throw new Error("Non-200 response from google servers");
+                    }
+                    reader = response.body.getReader();
+                }
+            }
+            controller.close();
+        },
+        cancel(reason) {
+            return reader?.cancel(reason);
+        },
+    });
+}
 
 export default videoPlaybackProxy;
