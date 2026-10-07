@@ -234,6 +234,8 @@ function chunkedBody(
     end: number,
 ): ReadableStream<Uint8Array> {
     let position = start;
+    let chunkStart = start;
+    let cancelled = false;
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined = firstChunk
         .getReader();
 
@@ -247,20 +249,31 @@ function chunkedBody(
                     return;
                 }
 
+                if (position === chunkStart) {
+                    throw new Error("Empty response from google servers");
+                }
+
                 reader = undefined;
                 if (position < end) {
                     const response = await requestChunk(
                         chunkRange(position, end),
                     );
+                    if (cancelled) {
+                        await response.body?.cancel();
+                        return;
+                    }
                     if (response.status !== 200 || !response.body) {
+                        await response.body?.cancel();
                         throw new Error("Non-200 response from google servers");
                     }
+                    chunkStart = position;
                     reader = response.body.getReader();
                 }
             }
             controller.close();
         },
         cancel(reason) {
+            cancelled = true;
             return reader?.cancel(reason);
         },
     });
