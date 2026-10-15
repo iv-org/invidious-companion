@@ -1,7 +1,7 @@
-import { Platform, Types } from "youtubei.js";
+import { Platform } from "youtubei.js";
+import type { Types } from "youtubei.js";
 
 // https://ytjs.dev/guide/getting-started.html#providing-a-custom-javascript-interpreter
-// deno-lint-ignore require-await
 export const jsInterpreter = Platform.shim.eval = async (
     data: Types.BuildScriptResult,
     env: Record<string, Types.VMPrimative>,

@@ -11,20 +11,21 @@ jobs:
     steps:
       - name: Setup repo
         uses: actions/checkout@v7
-        
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
         with:
-          deno-version: v2.x
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Verify formatting
-        run: deno task format
+        run: npm run format
 
       - name: Verify typing
-        run: deno task check
-      
-      - name: Run linter
-        run: deno task lint
+        run: npm run check
 
       - name: Checkout binaries repo
         uses: actions/checkout@v7
@@ -51,7 +52,7 @@ jobs:
             sleep 3s
             curl -s -x http://127.0.0.1:18080 --retry 5 --retry-delay 2 --retry-connrefused https://check.torproject.org/api/ip; echo
             rm -rf /var/tmp/youtubei.js
-            if PROXY=http://127.0.0.1:18080 deno task test; then
+            if PROXY=http://127.0.0.1:18080 npm test; then
               OPERA_SUCCESS=true
               kill $PROXY_PID 2>/dev/null
               break
@@ -70,7 +71,7 @@ jobs:
             sudo pkill -HUP tor
             curl -s --socks5 127.0.0.1:9150 https://check.torproject.org/api/ip; echo
             rm -rf /var/tmp/youtubei.js
-            if PROXY=socks5://127.0.0.1:9150 deno task test; then
+            if PROXY=socks5://127.0.0.1:9150 npm test; then
               echo "=== Tests passed with tor ==="
               exit 0
             fi

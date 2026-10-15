@@ -1,16 +1,16 @@
 import { Hono } from "hono";
-import { logger } from "hono/logger";
 import { bearerAuth } from "hono/bearer-auth";
+import { logger } from "hono/logger";
 
-import youtubeApiPlayer from "./youtube_api_routes/player.ts";
-import invidiousRouteLatestVersion from "./invidious_routes/latestVersion.ts";
-import invidiousRouteDashManifest from "./invidious_routes/dashManifest.ts";
-import invidiousCaptionsApi from "./invidious_routes/captions.ts";
-import getDownloadHandler from "./invidious_routes/download.ts";
-import videoPlaybackProxy from "./videoPlaybackProxy.ts";
 import type { Config } from "../lib/helpers/config.ts";
-import metrics from "./metrics.ts";
 import health from "./health.ts";
+import invidiousCaptionsApi from "./invidious_routes/captions.ts";
+import invidiousRouteDashManifest from "./invidious_routes/dashManifest.ts";
+import getDownloadHandler from "./invidious_routes/download.ts";
+import invidiousRouteLatestVersion from "./invidious_routes/latestVersion.ts";
+import metrics from "./metrics.ts";
+import videoPlaybackProxy from "./videoPlaybackProxy.ts";
+import youtubeApiPlayer from "./youtube_api_routes/player.ts";
 
 export const companionRoutes = (
     app: Hono,

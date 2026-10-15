@@ -15,36 +15,16 @@
   "prConcurrentLimit": 0,
   "packageRules": [
     {
-      "description": "Group Deno standard library updates",
-      "matchManagers": ["deno"],
-      "matchPackageNames": ["@std/**"],
-      "groupName": "Deno standard library"
-    },
-    {
       "description": "Group Hono framework updates",
-      "matchManagers": ["deno"],
-      "matchPackageNames": ["@hono/**"],
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["hono", "@hono/**"],
       "groupName": "Hono framework"
     },
     {
       "description": "Group YouTube.js ecosystem updates",
-      "matchManagers": ["deno"],
-      "matchPackageNames": ["youtubei.js**", "googlevideo**"],
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["youtubei.js", "googlevideo", "bgutils-js"],
       "groupName": "YouTube.js ecosystem"
-    },
-    {
-      "description": "Group npm dependencies routed through Deno",
-      "matchManagers": ["deno"],
-      "matchPackageNames": ["npm:**"],
-      "groupName": "npm dependencies"
-    },
-    {
-      "description": "Auto-merge patch updates for @std/",
-      "matchManagers": ["deno"],
-      "matchPackageNames": ["@std/**"],
-      "matchUpdateTypes": ["patch"],
-      "automerge": true,
-      "automergeType": "pr"
     },
     {
       "description": "Auto-merge patch updates for GitHub Actions",

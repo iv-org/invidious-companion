@@ -1,5 +1,5 @@
-import { IRawResponse } from "youtubei.js";
 import { Counter, Registry } from "prom-client";
+import type { IRawResponse } from "youtubei.js";
 
 export class Metrics {
     private METRICS_PREFIX = "invidious_companion_";
@@ -20,7 +20,7 @@ export class Metrics {
 
     private innertubeErrorStatusLoginRequired = this.createCounter(
         "innertube_error_status_loginRequired_total",
-        'Number of times that the status "LOGIN_REQUIRED" has been returned by Innertube API',
+        "Number of times that the status \"LOGIN_REQUIRED\" has been returned by Innertube API",
     );
 
     private innertubeErrorStatusUnknown = this.createCounter(
@@ -30,12 +30,12 @@ export class Metrics {
 
     private innertubeErrorReasonSignIn = this.createCounter(
         "innertube_error_reason_SignIn_total",
-        'Number of times that the message "Sign in to confirm you’re not a bot." has been returned by Innertube API',
+        "Number of times that the message \"Sign in to confirm you’re not a bot.\" has been returned by Innertube API",
     );
 
     private innertubeErrorSubreasonProtectCommunity = this.createCounter(
         "innertube_error_subreason_ProtectCommunity_total",
-        'Number of times that the message "This helps protect our community." has been returned by Innertube API',
+        "Number of times that the message \"This helps protect our community.\" has been returned by Innertube API",
     );
 
     private innertubeErrorReasonUnknown = this.createCounter(
@@ -62,10 +62,10 @@ export class Metrics {
         const status = videoData.playabilityStatus?.status;
 
         return {
-            unplayable: status ===
-                "UNPLAYABLE",
-            contentCheckRequired: status ===
-                "CONTENT_CHECK_REQUIRED",
+            unplayable: status
+                === "UNPLAYABLE",
+            contentCheckRequired: status
+                === "CONTENT_CHECK_REQUIRED",
             loginRequired: status === "LOGIN_REQUIRED",
         };
     }

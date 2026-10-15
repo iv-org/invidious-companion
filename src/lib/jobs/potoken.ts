@@ -1,25 +1,15 @@
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { Worker } from "node:worker_threads";
 import { Innertube } from "youtubei.js";
-import {
-    youtubePlayerParsing,
-    youtubeVideoInfo,
-} from "../helpers/youtubePlayerHandling.ts";
 import type { Config } from "../helpers/config.ts";
+import { getFetchClient } from "../helpers/getFetchClient.ts";
 import { Metrics } from "../helpers/metrics.ts";
-let getFetchClientLocation = "getFetchClient";
-if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
-    if (Deno.env.has("DENO_COMPILED")) {
-        getFetchClientLocation = Deno.mainModule.replace("src/main.ts", "") +
-            Deno.env.get("GET_FETCH_CLIENT_LOCATION");
-    } else {
-        getFetchClientLocation = Deno.env.get(
-            "GET_FETCH_CLIENT_LOCATION",
-        ) as string;
-    }
-}
-const { getFetchClient } = await import(getFetchClientLocation);
+import { youtubePlayerParsing, youtubeVideoInfo } from "../helpers/youtubePlayerHandling.ts";
 
-import { InputMessage, OutputMessageSchema } from "./worker.ts";
 import { PLAYER_ID } from "../../constants.ts";
+import { OutputMessageSchema } from "./worker.ts";
+import type { InputMessage } from "./worker.ts";
 
 interface TokenGeneratorWorker extends Omit<Worker, "postMessage"> {
     postMessage(message: InputMessage): void;
@@ -34,17 +24,17 @@ function createMinter(worker: TokenGeneratorWorker) {
         // may be made within a timespan, and this function will be
         // informed about all of them until it's got its own
         const requestId = crypto.randomUUID();
-        const listener = (message: MessageEvent) => {
-            const parsedMessage = OutputMessageSchema.parse(message.data);
+        const listener = (data: unknown) => {
+            const parsedMessage = OutputMessageSchema.parse(data);
             if (
-                parsedMessage.type === "content-token" &&
-                parsedMessage.requestId === requestId
+                parsedMessage.type === "content-token"
+                && parsedMessage.requestId === requestId
             ) {
-                worker.removeEventListener("message", listener);
+                worker.off("message", listener);
                 resolve(parsedMessage.contentToken);
             }
         };
-        worker.addEventListener("message", listener);
+        worker.on("message", listener);
         worker.postMessage({
             type: "content-token-request",
             videoId,
@@ -66,23 +56,35 @@ export const poTokenGenerate = (
         Awaited<ReturnType<typeof poTokenGenerate>>
     >();
 
+    // The worker runs as TypeScript when developing from source and as a
+    // bundle compiled by the build step used for packaged binaries. The
+    // filenames are assembled at runtime because packaging tools (pkg)
+    // statically resolve new URL() literals and would try to bundle a
+    // worker file that only exists in one of the two layouts. The path
+    // must also be a plain string so pkg's worker wrapper (which injects
+    // the snapshot filesystem into worker threads) can intercept it.
+    const workerTsUrl = new URL(`./worker.${"ts"}`, import.meta.url);
+    const workerPath = existsSync(fileURLToPath(workerTsUrl))
+        ? fileURLToPath(workerTsUrl)
+        : fileURLToPath(new URL(`./worker.${"cjs"}`, import.meta.url));
     const worker: TokenGeneratorWorker = new Worker(
-        new URL("./worker.ts", import.meta.url).href,
+        workerPath,
         {
-            type: "module",
             name: "PO Token Generator",
         },
     );
     // take note of the worker so we can kill it once a new one takes its place
     workers.push(worker);
-    worker.addEventListener("message", async (event) => {
-        const parsedMessage = OutputMessageSchema.parse(event.data);
+    worker.on("error", (err) => {
+        console.log({ errorFromWorker: err });
+        worker.terminate();
+        reject(err);
+    });
+    worker.on("message", async (data) => {
+        const parsedMessage = OutputMessageSchema.parse(data);
 
         // worker is listening for messages
         if (parsedMessage.type === "ready") {
-            const untypedPostMessage = worker.postMessage.bind(worker);
-            worker.postMessage = (message: InputMessage) =>
-                untypedPostMessage(message);
             worker.postMessage({ type: "initialise", config });
         }
 
@@ -158,9 +160,7 @@ async function checkToken({
 
         // Get all videos that have an id property and shuffle them randomly
         const videos = searchResults.videos
-            .filter((video) =>
-                video.type === "Video" && "id" in video && video.id
-            )
+            .filter((video) => video.type === "Video" && "id" in video && video.id)
             .map((value) => ({ value, sort: Math.random() }))
             .sort((a, b) => a.sort - b.sort)
             .map(({ value }) => value);
@@ -210,7 +210,7 @@ async function checkToken({
                     continue;
                 }
 
-                const result = await fetchImpl(validFormat?.url, {
+                const result = await fetchImpl(validFormat.url!, {
                     method: "HEAD",
                 });
 

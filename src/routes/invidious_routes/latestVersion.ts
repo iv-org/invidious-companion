@@ -1,13 +1,10 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import {
-    youtubePlayerParsing,
-    youtubeVideoInfo,
-} from "../../lib/helpers/youtubePlayerHandling.ts";
-import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
-import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
+import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import { youtubePlayerParsing, youtubeVideoInfo } from "../../lib/helpers/youtubePlayerHandling.ts";
 
 const PRIVATE_PARAM_NAMES = ["pot", "ip"];
 
@@ -66,8 +63,8 @@ latestVersion.get("/", async (c) => {
     );
 
     if (videoInfo.playability_status?.status !== "OK") {
-        throw ("The video can't be played: " + id + " due to reason: " +
-            videoInfo.playability_status?.reason);
+        throw ("The video can't be played: " + id + " due to reason: "
+            + videoInfo.playability_status?.reason);
     }
     const streamingData = videoInfo.streaming_data;
     const availableFormats = streamingData?.formats.concat(
@@ -75,9 +72,7 @@ latestVersion.get("/", async (c) => {
     );
 
     const numericItag = Number(itag);
-    const selectedItagFormat = availableFormats?.filter((i) =>
-        i.itag == numericItag
-    );
+    const selectedItagFormat = availableFormats?.filter((i) => i.itag == numericItag);
     if (selectedItagFormat?.length === 0) {
         throw new HTTPException(400, {
             res: new Response("No itag found."),
@@ -85,9 +80,8 @@ latestVersion.get("/", async (c) => {
     } else if (selectedItagFormat) {
         // Always offer original audio if possible
         // This may be changed due to https://github.com/iv-org/invidious/issues/5501
-        const itagUrl = selectedItagFormat.find((itag) =>
-            itag.is_original
-        )?.url as string || selectedItagFormat[0].url as string;
+        const itagUrl = selectedItagFormat.find((itag) => itag.is_original)?.url as string
+            || selectedItagFormat[0].url as string;
         const itagUrlParsed = new URL(itagUrl);
         const queryParams = new URLSearchParams(itagUrlParsed.search);
         let urlToRedirect = itagUrlParsed.toString();
@@ -95,9 +89,7 @@ latestVersion.get("/", async (c) => {
         if (local) {
             queryParams.set("host", itagUrlParsed.host);
             if (config.server.encrypt_query_params) {
-                const privateParams = [...queryParams].filter(([key]) =>
-                    PRIVATE_PARAM_NAMES.includes(key)
-                );
+                const privateParams = [...queryParams].filter(([key]) => PRIVATE_PARAM_NAMES.includes(key));
                 const encryptedParams = encryptQuery(
                     JSON.stringify(privateParams),
                     config,
@@ -110,9 +102,9 @@ latestVersion.get("/", async (c) => {
                 queryParams.set("enc", "true");
                 queryParams.set("data", encryptedParams);
             }
-            urlToRedirect = config.server.base_path + itagUrlParsed.pathname +
-                "?" +
-                queryParams.toString();
+            urlToRedirect = config.server.base_path + itagUrlParsed.pathname
+                + "?"
+                + queryParams.toString();
         }
 
         if (title) urlToRedirect += `&title=${encodeURIComponent(title)}`;

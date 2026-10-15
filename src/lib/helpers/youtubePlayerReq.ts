@@ -1,8 +1,10 @@
-import { ApiResponse, Innertube } from "youtubei.js";
-import NavigationEndpoint from "youtubei.js/NavigationEndpoint";
+import { Innertube, YTNodes } from "youtubei.js";
+import type { ApiResponse } from "youtubei.js";
 import type { TokenMinter } from "../jobs/potoken.ts";
 
 import type { Config } from "./config.ts";
+
+const NavigationEndpoint = YTNodes.NavigationEndpoint;
 
 function callWatchEndpoint(
     videoId: string,
@@ -65,10 +67,10 @@ export const youtubePlayerReq = async (
     // Check if the first adaptive format URL is undefined, if it is then fallback to multiple YT clients
 
     if (
-        !innertubeClientOauthEnabled &&
-        youtubePlayerResponse.data.streamingData &&
-        youtubePlayerResponse.data.streamingData.adaptiveFormats[0].url ===
-            undefined
+        !innertubeClientOauthEnabled
+        && youtubePlayerResponse.data.streamingData
+        && youtubePlayerResponse.data.streamingData.adaptiveFormats[0].url
+            === undefined
     ) {
         console.log(
             "[WARNING] No URLs found for adaptive formats. Falling back to other YT clients.",
@@ -92,16 +94,14 @@ export const youtubePlayerReq = async (
             if (
                 youtubePlayerResponseFallback.data.streamingData && (
                     youtubePlayerResponseFallback.data.streamingData
-                        .adaptiveFormats[0].url ||
-                    youtubePlayerResponseFallback.data.streamingData
+                        .adaptiveFormats[0].url
+                    || youtubePlayerResponseFallback.data.streamingData
                         .adaptiveFormats[0].signatureCipher
                 )
             ) {
-                const fallbackFormats =
-                    youtubePlayerResponseFallback.data.streamingData.formats;
+                const fallbackFormats = youtubePlayerResponseFallback.data.streamingData.formats;
                 if (fallbackFormats?.length) {
-                    youtubePlayerResponse.data.streamingData.formats =
-                        fallbackFormats;
+                    youtubePlayerResponse.data.streamingData.formats = fallbackFormats;
                 }
                 youtubePlayerResponse.data.streamingData.adaptiveFormats =
                     youtubePlayerResponseFallback.data.streamingData

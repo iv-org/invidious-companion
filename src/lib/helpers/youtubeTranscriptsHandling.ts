@@ -1,7 +1,11 @@
-import { Innertube } from "youtubei.js";
-import type { CaptionTrackData } from "youtubei.js/PlayerCaptionsTracklist";
+import { Temporal } from "@js-temporal/polyfill";
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { Innertube, YTNodes } from "youtubei.js";
+
+export type CaptionTrackData = NonNullable<
+    InstanceType<typeof YTNodes.PlayerCaptionsTracklist>["caption_tracks"]
+>[number];
 
 function createTemporalDuration(milliseconds: number) {
     return new Temporal.Duration(
@@ -28,8 +32,7 @@ const ESCAPE_SUBSTITUTIONS = {
 function shiftVttToCenter(vtt: string): string {
     const lines = vtt.split("\n");
     const updatedLines: string[] = [];
-    const timingRegex =
-        /^((?:\d{1,2}:)?\d{2}:\d{2}\.\d{3} --> (?:\d{1,2}:)?\d{2}:\d{2}\.\d{3})(.*)$/;
+    const timingRegex = /^((?:\d{1,2}:)?\d{2}:\d{2}\.\d{3} --> (?:\d{1,2}:)?\d{2}:\d{2}\.\d{3})(.*)$/;
 
     for (const line of lines) {
         const match = line.match(timingRegex);
@@ -97,32 +100,19 @@ export async function handleTranscripts(
                 fractionalDigits: 3,
             };
 
-            // Temporal.Duration.prototype.toLocaleString() is supposed to delegate to Intl.DurationFormat
-            // which Deno does not support. However, instead of following specs and having toLocaleString return
-            // the same toString() it seems to have its own implementation of Intl.DurationFormat,
-            // with its options parameter type incorrectly restricted to the same as the one for Intl.DateTimeFormatOptions
-            // even though they do not share the same arguments.
-            //
-            // The above matches the options parameter of Intl.DurationFormat, and the resulting output is as expected.
-            // Until this is fixed typechecking must be disabled for the two use cases below
-            //
-            // See
-            // https://docs.deno.com/api/web/~/Intl.DateTimeFormatOptions
-            // https://docs.deno.com/api/web/~/Temporal.Duration.prototype.toLocaleString
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/DurationFormat
+            // Temporal.Duration.prototype.toLocaleString() delegates to
+            // Intl.DurationFormat, which is natively available in Node.js.
+            // The output is a digital-style timestamp, e.g. "1:02:03.456".
 
             const start_ms = createTemporalDuration(Number(line.start_ms))
                 .round({
                     largestUnit: "year",
                     relativeTo: Temporal.PlainDateTime.from("2022-01-01"),
-                    //@ts-ignore see above
                 }).toLocaleString("en-US", timestampFormatOptions);
 
             const end_ms = createTemporalDuration(Number(line.end_ms)).round({
                 largestUnit: "year",
                 relativeTo: Temporal.PlainDateTime.from("2022-01-01"),
-                //@ts-ignore see above
             }).toLocaleString("en-US", timestampFormatOptions);
             const timestamp = `${start_ms} --> ${end_ms}`;
 

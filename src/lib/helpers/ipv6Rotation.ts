@@ -99,9 +99,7 @@ function bytesToIPv6(bytes: number[]): string {
     // Find the longest sequence of consecutive zeros
     const zeroSequences = ipv6.match(/(^|:)(0:)+/g);
     if (zeroSequences) {
-        const longestZeroSeq = zeroSequences.reduce((a, b) =>
-            a.length > b.length ? a : b
-        );
+        const longestZeroSeq = zeroSequences.reduce((a, b) => a.length > b.length ? a : b);
         ipv6 = ipv6.replace(longestZeroSeq, longestZeroSeq[0] + ":");
     }
 

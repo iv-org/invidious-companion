@@ -1,8 +1,8 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
-import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import { z } from "zod";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
+import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 
 const DownloadWidgetSchema = z.union([
     z.object({ label: z.string(), ext: z.string() }).strict(),
@@ -59,8 +59,8 @@ export default function getDownloadHandler(app: Hono) {
         }
 
         if (
-            !(title && videoId &&
-                DownloadWidgetSchema.safeParse(downloadWidgetData).success)
+            !(title && videoId
+                && DownloadWidgetSchema.safeParse(downloadWidgetData).success)
         ) {
             throw new HTTPException(400, {
                 res: new Response("Invalid form data required for download"),

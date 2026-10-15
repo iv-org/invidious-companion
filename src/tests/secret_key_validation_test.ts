@@ -1,16 +1,17 @@
+import { test } from "node:test";
 /**
  * Test for secret key validation in the actual Invidious companion configuration
  * This test verifies that SERVER_SECRET_KEY validation properly rejects special characters
  * when the actual config is parsed
  */
-import { assert, assertEquals } from "./deps.ts";
 import { parseConfig } from "../lib/helpers/config.ts";
+import { assert, assertEquals } from "./deps.ts";
 
-Deno.test("Secret key validation in Invidious companion config", async (t) => {
+test("Secret key validation in Invidious companion config", async (t) => {
     // Clean up any existing environment variables that might interfere
-    Deno.env.delete("SERVER_SECRET_KEY");
+    delete process.env.SERVER_SECRET_KEY;
 
-    await t.step("accepts valid alphanumeric keys", async () => {
+    await t.test("accepts valid alphanumeric keys", async () => {
         const validKeys = [
             "aaaaaaaaaaaaaaaa", // all lowercase
             "AAAAAAAAAAAAAAAA", // all uppercase
@@ -21,7 +22,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
 
         for (const key of validKeys) {
             // Set the environment variable for each test
-            Deno.env.set("SERVER_SECRET_KEY", key);
+            process.env.SERVER_SECRET_KEY = key;
 
             try {
                 const config = await parseConfig();
@@ -41,7 +42,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
         }
     });
 
-    await t.step("rejects keys with special characters", async () => {
+    await t.test("rejects keys with special characters", async () => {
         const invalidKeys = [
             "my#key!123456789", // Contains # and !
             "test@key12345678", // Contains @ (fixed length)
@@ -57,7 +58,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
 
         for (const key of invalidKeys) {
             // Set the environment variable for each test
-            Deno.env.set("SERVER_SECRET_KEY", key);
+            process.env.SERVER_SECRET_KEY = key;
 
             try {
                 await parseConfig();
@@ -68,11 +69,9 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
             } catch (error) {
                 // Verify it's a config parsing error with the right message
                 assert(
-                    error instanceof Error &&
-                        error.message.includes("Failed to parse configuration"),
-                    `Should get config parsing error, got: ${
-                        error instanceof Error ? error.message : String(error)
-                    }`,
+                    error instanceof Error
+                        && error.message.includes("Failed to parse configuration"),
+                    `Should get config parsing error, got: ${error instanceof Error ? error.message : String(error)}`,
                 );
 
                 // Check that the error contains expected validation message content
@@ -82,15 +81,15 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
                 assert(
                     errorStr.includes(
                         "SERVER_SECRET_KEY contains invalid characters",
-                    ) ||
-                        errorStr.includes("alphanumeric characters"),
+                    )
+                        || errorStr.includes("alphanumeric characters"),
                     `Error should mention invalid characters or alphanumeric, got: ${errorStr}`,
                 );
             }
         }
     });
 
-    await t.step("rejects keys with wrong length", async () => {
+    await t.test("rejects keys with wrong length", async () => {
         const wrongLengthKeys = [
             "short", // Too short
             "thiskeyistoolongtobevalid", // Too long
@@ -102,7 +101,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
 
         for (const key of wrongLengthKeys) {
             // Set the environment variable for each test
-            Deno.env.set("SERVER_SECRET_KEY", key);
+            process.env.SERVER_SECRET_KEY = key;
 
             try {
                 await parseConfig();
@@ -113,11 +112,9 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
             } catch (error) {
                 // Verify it's a config parsing error
                 assert(
-                    error instanceof Error &&
-                        error.message.includes("Failed to parse configuration"),
-                    `Should get config parsing error, got: ${
-                        error instanceof Error ? error.message : String(error)
-                    }`,
+                    error instanceof Error
+                        && error.message.includes("Failed to parse configuration"),
+                    `Should get config parsing error, got: ${error instanceof Error ? error.message : String(error)}`,
                 );
 
                 // Check that the error mentions length requirement
@@ -125,8 +122,8 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
                     ? error.toString()
                     : String(error);
                 assert(
-                    errorStr.includes("exactly 16 character") ||
-                        errorStr.includes(
+                    errorStr.includes("exactly 16 character")
+                        || errorStr.includes(
                             "String must contain exactly 16 character",
                         ),
                     `Error should mention 16 characters, got: ${errorStr}`,
@@ -135,9 +132,9 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
         }
     });
 
-    await t.step("validates error message content", async () => {
+    await t.test("validates error message content", async () => {
         // Test that special character validation provides the right error
-        Deno.env.set("SERVER_SECRET_KEY", "my#key!123456789");
+        process.env.SERVER_SECRET_KEY = "my#key!123456789";
 
         try {
             await parseConfig();
@@ -151,14 +148,14 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
             assert(
                 errorStr.includes(
                     "SERVER_SECRET_KEY contains invalid characters",
-                ) ||
-                    errorStr.includes("alphanumeric characters"),
+                )
+                    || errorStr.includes("alphanumeric characters"),
                 "Should mention SERVER_SECRET_KEY and character validation",
             );
         }
 
         // Test that length validation still works and provides clear message
-        Deno.env.set("SERVER_SECRET_KEY", "short");
+        process.env.SERVER_SECRET_KEY = "short";
 
         try {
             await parseConfig();
@@ -168,8 +165,8 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
                 ? error.toString()
                 : String(error);
             assert(
-                errorStr.includes("exactly 16 character") ||
-                    errorStr.includes(
+                errorStr.includes("exactly 16 character")
+                    || errorStr.includes(
                         "String must contain exactly 16 character",
                     ),
                 `Should mention 16 characters: ${errorStr}`,
@@ -177,12 +174,12 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
         }
     });
 
-    await t.step(
+    await t.test(
         "validates precedence - length vs character validation",
         async () => {
             // When both length and character validation fail, length should be checked first
             // This is the default Zod behavior
-            Deno.env.set("SERVER_SECRET_KEY", "bad#");
+            process.env.SERVER_SECRET_KEY = "bad#";
 
             try {
                 await parseConfig();
@@ -196,8 +193,8 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
                     : String(error);
                 // Should get length error since it's checked first
                 assert(
-                    errorStr.includes("exactly 16 character") ||
-                        errorStr.includes(
+                    errorStr.includes("exactly 16 character")
+                        || errorStr.includes(
                             "String must contain exactly 16 character",
                         ),
                     `Should get length error first: ${errorStr}`,
@@ -207,9 +204,9 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
     );
 
     // Clean up environment variable after tests
-    await t.step("validates missing SERVER_SECRET_KEY fails", async () => {
+    await t.test("validates missing SERVER_SECRET_KEY fails", async () => {
         // Test with no SERVER_SECRET_KEY set (uses default empty string)
-        Deno.env.delete("SERVER_SECRET_KEY");
+        delete process.env.SERVER_SECRET_KEY;
 
         try {
             await parseConfig();
@@ -222,8 +219,8 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
                 ? error.toString()
                 : String(error);
             assert(
-                errorStr.includes("exactly 16 character") ||
-                    errorStr.includes(
+                errorStr.includes("exactly 16 character")
+                    || errorStr.includes(
                         "String must contain exactly 16 character",
                     ),
                 `Should get length error for empty key: ${errorStr}`,
@@ -231,7 +228,7 @@ Deno.test("Secret key validation in Invidious companion config", async (t) => {
         }
     });
 
-    await t.step("cleanup", () => {
-        Deno.env.delete("SERVER_SECRET_KEY");
+    await t.test("cleanup", () => {
+        delete process.env.SERVER_SECRET_KEY;
     });
 });
