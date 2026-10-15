@@ -1,7 +1,8 @@
-import { assertEquals, assertThrows } from "./deps.ts";
+import { test } from "node:test";
 import { generateRandomIPv6 } from "../lib/helpers/ipv6Rotation.ts";
+import { assertEquals, assertThrows } from "./deps.ts";
 
-Deno.test("generateRandomIPv6 - generates valid IPv6 addresses", () => {
+test("generateRandomIPv6 - generates valid IPv6 addresses", () => {
     const ipv6Block = "2001:db8::/32";
 
     // Generate multiple addresses to ensure randomness
@@ -23,7 +24,7 @@ Deno.test("generateRandomIPv6 - generates valid IPv6 addresses", () => {
     assertEquals(addresses.size > 50, true);
 });
 
-Deno.test("generateRandomIPv6 - handles different block sizes", () => {
+test("generateRandomIPv6 - handles different block sizes", () => {
     // Test with /32 block
     const addr32 = generateRandomIPv6("2001:db8::/32");
     const parts32 = addr32.split(":");
@@ -44,7 +45,7 @@ Deno.test("generateRandomIPv6 - handles different block sizes", () => {
     assertEquals(parts64[1], "db8");
 });
 
-Deno.test("generateRandomIPv6 - throws error for invalid block size", () => {
+test("generateRandomIPv6 - throws error for invalid block size", () => {
     assertThrows(
         () => generateRandomIPv6("2001:db8::/129"),
         Error,
@@ -58,7 +59,7 @@ Deno.test("generateRandomIPv6 - throws error for invalid block size", () => {
     );
 });
 
-Deno.test("generateRandomIPv6 - handles compressed IPv6 notation", () => {
+test("generateRandomIPv6 - handles compressed IPv6 notation", () => {
     const ipv6Block = "2001:db8::/32";
     const addr = generateRandomIPv6(ipv6Block);
 

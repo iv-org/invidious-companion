@@ -1,14 +1,11 @@
 import { Hono } from "hono";
-import { FormatUtils } from "youtubei.js";
-import {
-    youtubePlayerParsing,
-    youtubeVideoInfo,
-} from "../../lib/helpers/youtubePlayerHandling.ts";
-import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
 import { HTTPException } from "hono/http-exception";
+import { FormatUtils } from "youtubei.js";
+import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
 import { encryptQuery } from "../../lib/helpers/encryptQuery.ts";
 import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
-import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
+import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import { youtubePlayerParsing, youtubeVideoInfo } from "../../lib/helpers/youtubePlayerHandling.ts";
 
 const PRIVATE_PARAM_NAMES = ["pot", "ip"];
 
@@ -62,8 +59,8 @@ dashManifest.get("/:videoId", async (c) => {
     );
 
     if (videoInfo.playability_status?.status !== "OK") {
-        throw ("The video can't be played: " + videoId + " due to reason: " +
-            videoInfo.playability_status?.reason);
+        throw ("The video can't be played: " + videoId + " due to reason: "
+            + videoInfo.playability_status?.reason);
     }
 
     c.header("content-type", "application/dash+xml");
@@ -76,7 +73,7 @@ dashManifest.get("/:videoId", async (c) => {
 
         const player_response = videoInfo.page[0];
         // TODO: fix include storyboards in DASH manifest file
-        //const storyboards = player_response.storyboards;
+        // const storyboards = player_response.storyboards;
         const captions = player_response.captions?.caption_tracks;
 
         const dashFile = await FormatUtils.toDash(
@@ -95,9 +92,7 @@ dashManifest.get("/:videoId", async (c) => {
                     if (
                         config.server.encrypt_query_params
                     ) {
-                        const privateParams = [...queryParams].filter(([key]) =>
-                            PRIVATE_PARAM_NAMES.includes(key)
-                        );
+                        const privateParams = [...queryParams].filter(([key]) => PRIVATE_PARAM_NAMES.includes(key));
                         const encryptedParams = encryptQuery(
                             JSON.stringify(privateParams),
                             config,
@@ -110,9 +105,8 @@ dashManifest.get("/:videoId", async (c) => {
                         queryParams.set("enc", "true");
                         queryParams.set("data", encryptedParams);
                     }
-                    dashUrl =
-                        (config.server.base_path + dashUrl.pathname + "?" +
-                            queryParams.toString()) as unknown as URL;
+                    dashUrl = (config.server.base_path + dashUrl.pathname + "?"
+                        + queryParams.toString()) as unknown as URL;
                     return dashUrl;
                 } else {
                     return dashUrl;

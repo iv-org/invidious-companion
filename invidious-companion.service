@@ -10,7 +10,7 @@ Type=simple
 User=invidious
 Group=invidious
 
-# Security hardening - balanced approach for Deno applications
+# Security hardening - balanced approach for Node.js applications
 NoNewPrivileges=true
 PrivateDevices=true
 PrivateTmp=true
@@ -32,6 +32,13 @@ BindPaths=/var/tmp/youtubei.js
 
 WorkingDirectory=/home/invidious/invidious-companion
 ExecStart=/home/invidious/invidious-companion/invidious_companion
+
+# Node.js permission model (invidious_companion is a self-contained binary
+# with a bundled Node.js runtime; the model is enabled via NODE_OPTIONS).
+# Mirrors the allowlist the previous Deno build baked in via
+# --allow-read/--allow-write. --allow-worker is required by the PO token job.
+# Node's permission model does not gate networking (no --allow-net equivalent).
+Environment="NODE_OPTIONS=--permission --allow-fs-read=* --allow-fs-write=/var/tmp/youtubei.js --allow-fs-write=/home/invidious/tmp --allow-fs-write=/tmp/invidious-companion.sock --allow-fs-write=/tmp/companionsock --allow-worker --allow-addons"
 
 Environment=SERVER_SECRET_KEY=CHANGE_ME
 Environment=CACHE_DIRECTORY=/var/tmp/youtubei.js

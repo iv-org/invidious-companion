@@ -1,28 +1,15 @@
-/// <reference lib="webworker" />
-
-import { z } from "zod";
-import { Config, ConfigSchema } from "../helpers/config.ts";
-import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils";
-import type { WebPoSignalOutput } from "bgutils";
-import { JSDOM } from "jsdom";
+import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from "bgutils-js";
+import type { WebPoSignalOutput } from "bgutils-js";
+import { JSDOM, VirtualConsole } from "jsdom";
+import { isMainThread, parentPort } from "node:worker_threads";
 import { Innertube } from "youtubei.js";
+import { z } from "zod";
 import { PLAYER_ID } from "../../constants.ts";
-let getFetchClientLocation = "getFetchClient";
-if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
-    if (Deno.env.has("DENO_COMPILED")) {
-        getFetchClientLocation = Deno.mainModule.replace("src/main.ts", "") +
-            Deno.env.get("GET_FETCH_CLIENT_LOCATION");
-    } else {
-        getFetchClientLocation = Deno.env.get(
-            "GET_FETCH_CLIENT_LOCATION",
-        ) as string;
-    }
-}
+import { ConfigSchema } from "../helpers/config.ts";
+import type { Config } from "../helpers/config.ts";
+import { getFetchClient } from "../helpers/getFetchClient.ts";
 
 type FetchFunction = typeof fetch;
-const { getFetchClient }: {
-    getFetchClient: (config: Config) => Promise<FetchFunction>;
-} = await import(getFetchClientLocation);
 
 // ---- Messages to send to the webworker ----
 const InputInitialiseSchema = z.object({
@@ -74,19 +61,19 @@ type OutputMessage = z.infer<typeof OutputMessageSchema>;
 
 const IntegrityTokenResponse = z.tuple([z.string()]).rest(z.any());
 
-const isWorker = typeof WorkerGlobalScope !== "undefined" &&
-    self instanceof WorkerGlobalScope;
+const isWorker = !isMainThread && parentPort !== null;
 if (isWorker) {
     // helper function to force type-checking
-    const untypedPostmessage = self.postMessage.bind(self);
+    const port = parentPort!;
+    const untypedPostMessage = port.postMessage.bind(port);
     const postMessage = (message: OutputMessage) => {
-        untypedPostmessage(message);
+        untypedPostMessage(message);
     };
 
     let minter: BG.WebPoMinter;
 
-    onmessage = async (event) => {
-        const message = InputMessageSchema.parse(event.data);
+    port.on("message", async (data) => {
+        const message = InputMessageSchema.parse(data);
         if (message.type === "initialise") {
             const fetchImpl: typeof fetch = await getFetchClient(
                 message.config,
@@ -98,8 +85,7 @@ if (isWorker) {
                     generatedMinter,
                 } = await setup({
                     fetchImpl,
-                    innertubeClientCookies:
-                        message.config.youtube_session.cookies,
+                    innertubeClientCookies: message.config.youtube_session.cookies,
                 });
                 minter = generatedMinter;
                 postMessage({
@@ -127,7 +113,7 @@ if (isWorker) {
                 requestId: message.requestId,
             });
         }
-    };
+    });
 
     postMessage({ type: "ready" });
 }
@@ -153,13 +139,26 @@ async function setup(
         throw new Error("Could not get visitor data");
     }
 
+    // jsdom reports "Not implemented: HTMLCanvasElement.prototype.getContext"
+    // because no canvas implementation is installed. The Canvas check is not
+    // an enforced element of the Botguard challenge, so that message is
+    // filtered out instead of being printed, while every other jsdom error
+    // is still forwarded to the console.
+    const virtualConsole = new VirtualConsole();
+    virtualConsole.on("jsdomError", (err: Error) => {
+        if (err.message.includes("HTMLCanvasElement")) return;
+        console.error(err);
+    });
+
     const dom = new JSDOM(
-        '<!DOCTYPE html><html lang="en"><head><title></title></head><body></body></html>',
+        "<!DOCTYPE html><html lang=\"en\"><head><title></title></head><body></body></html>",
         {
             url: "https://www.youtube.com/",
             referrer: "https://www.youtube.com/",
             userAgent: USER_AGENT,
-        },
+            virtualConsole,
+            // @types/jsdom is missing the userAgent option that jsdom supports
+        } as ConstructorParameters<typeof JSDOM>[1],
     );
 
     Object.assign(globalThis, {
@@ -193,12 +192,6 @@ async function setup(
         new Function(interpreterJavascript)();
     } else throw new Error("Could not load VM");
 
-    // Botguard currently surfaces a "Not implemented" error here, due to the environment
-    // not having a valid Canvas API in JSDOM. At the time of writing, this doesn't cause
-    // any issues as the Canvas check doesn't appear to be an enforced element of the checks
-    console.log(
-        '[INFO] the "Not implemented: HTMLCanvasElement.prototype.getContext" error is normal. Please do not open a bug report about it.',
-    );
     const botguard = await BG.BotGuardClient.create({
         program: challengeResponse.bg_challenge.program,
         globalName: challengeResponse.bg_challenge.global_name,

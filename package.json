@@ -1,0 +1,62 @@
+{
+  "name": "invidious-companion",
+  "version": "0.0.0",
+  "description": "Companion for Invidious which handle all the video stream retrieval from YouTube servers.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "bin": "build/bin.js",
+  "scripts": {
+    "dev": "node --watch src/bin.ts",
+    "start": "node --permission --allow-fs-read=. --allow-fs-read=/var/tmp/youtubei.js --allow-fs-write=/var/tmp/youtubei.js --allow-fs-read=/tmp/invidious-companion.sock --allow-fs-write=/tmp/invidious-companion.sock --allow-fs-read=/tmp/companionsock --allow-fs-write=/tmp/companionsock --allow-worker --allow-addons src/bin.ts",
+    "test": "node --test --test-force-exit \"src/tests/*_test.ts\"",
+    "check": "tsc --noEmit",
+    "format": "dprint check",
+    "format:fix": "dprint fmt",
+    "compile": "tsc -p tsconfig.build.json && esbuild src/lib/jobs/worker.ts --bundle --platform=node --format=cjs --packages=external --outfile=build/lib/jobs/worker.cjs && pkg ."
+  },
+  "pkg": {
+    "sea": true,
+    "compress": "Brotli",
+    "targets": [
+      "node24-linux-x64",
+      "node24-linux-arm64",
+      "node24-macos-arm64",
+      "node24-win-x64"
+    ],
+    "ignore": [
+      "**/*.d.ts",
+      "**/*.d.cts",
+      "**/*.d.mts",
+      "**/*.map",
+      "**/*.md"
+    ],
+    "assets": [
+      "build/lib/jobs/worker.cjs"
+    ],
+    "outputPath": "dist/"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "@js-temporal/polyfill": "^0.5.1",
+    "bgutils-js": "^3.2.0",
+    "hono": "^4.13.7",
+    "jsdom": "^30.1.3",
+    "node-cron": "^4.6.0",
+    "prom-client": "^15.1.3",
+    "smol-toml": "^1.9.1",
+    "undici": "^8.12.1",
+    "youtubei.js": "^18.1.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^24.0.0",
+    "@yao-pkg/pkg": "^6.0.0",
+    "dprint": "^0.63.0",
+    "esbuild": "^0.28.2",
+    "typescript": "~5.9.3"
+  }
+}

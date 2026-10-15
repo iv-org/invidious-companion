@@ -1,8 +1,9 @@
-import { assertEquals } from "./deps.ts";
+import { test } from "node:test";
 import { validateVideoId } from "../lib/helpers/validateVideoId.ts";
+import { assertEquals } from "./deps.ts";
 
-Deno.test("Video ID validation", async (t) => {
-    await t.step("accepts valid YouTube video IDs", () => {
+test("Video ID validation", async (t) => {
+    await t.test("accepts valid YouTube video IDs", () => {
         const validIds = [
             "jNQXAC9IVRw", // Standard video ID from tests
             "dQw4w9WgXcQ", // Rick Roll video
@@ -23,7 +24,7 @@ Deno.test("Video ID validation", async (t) => {
         }
     });
 
-    await t.step("rejects invalid video IDs", () => {
+    await t.test("rejects invalid video IDs", () => {
         const invalidIds = [
             "", // Empty string
             "short", // Too short
@@ -54,7 +55,7 @@ Deno.test("Video ID validation", async (t) => {
             "jNQX:AC9IVRw", // Contains :
             "jNQX;AC9IVRw", // Contains ;
             "jNQX'AC9IVRw", // Contains '
-            'jNQX"AC9IVRw', // Contains "
+            "jNQX\"AC9IVRw", // Contains "
             "jNQX<AC9IVRw", // Contains <
             "jNQX>AC9IVRw", // Contains >
             "jNQX,AC9IVRw", // Contains ,
@@ -74,7 +75,7 @@ Deno.test("Video ID validation", async (t) => {
         }
     });
 
-    await t.step("handles edge cases", () => {
+    await t.test("handles edge cases", () => {
         // Test null/undefined handling with proper type casting
         assertEquals(
             validateVideoId(null as unknown as string),

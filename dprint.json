@@ -1,0 +1,9 @@
+{
+  "typescript": {
+    "indentWidth": 4
+  },
+  "includes": ["src/**/*.{ts,tsx}"],
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.96.1.wasm"
+  ]
+}

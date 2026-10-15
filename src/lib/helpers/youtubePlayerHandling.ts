@@ -1,20 +1,10 @@
-import { ApiResponse, Innertube, YT } from "youtubei.js";
-import { generateRandomString } from "youtubei.js/Utils";
-import { compress, decompress } from "brotli";
-import type { TokenMinter } from "../jobs/potoken.ts";
+import { brotliCompressSync, brotliDecompressSync } from "node:zlib";
+import { Innertube, Utils, YT } from "youtubei.js";
+import type { ApiResponse } from "youtubei.js";
 import { Metrics } from "../helpers/metrics.ts";
-let youtubePlayerReqLocation = "youtubePlayerReq";
-if (Deno.env.get("YT_PLAYER_REQ_LOCATION")) {
-    if (Deno.env.has("DENO_COMPILED")) {
-        youtubePlayerReqLocation = Deno.mainModule.replace("src/main.ts", "") +
-            Deno.env.get("YT_PLAYER_REQ_LOCATION");
-    } else {
-        youtubePlayerReqLocation = Deno.env.get(
-            "YT_PLAYER_REQ_LOCATION",
-        ) as string;
-    }
-}
-const { youtubePlayerReq } = await import(youtubePlayerReqLocation);
+import type { TokenMinter } from "../jobs/potoken.ts";
+import { youtubePlayerReq } from "./youtubePlayerReq.ts";
+const generateRandomString = Utils.generateRandomString;
 
 import type { Config } from "./config.ts";
 import { getKv } from "./kv.ts";
@@ -41,7 +31,9 @@ export const youtubePlayerParsing = async ({
         .value as Uint8Array;
 
     if (videoCached != null && cacheEnabled) {
-        return JSON.parse(new TextDecoder().decode(decompress(videoCached)));
+        return JSON.parse(
+            new TextDecoder().decode(brotliDecompressSync(videoCached)),
+        );
     } else {
         const youtubePlayerResponse = await youtubePlayerReq(
             innertubeClient,
@@ -51,7 +43,7 @@ export const youtubePlayerParsing = async ({
         );
         const videoData = youtubePlayerResponse.data;
 
-        if (videoData.playabilityStatus.status === "ERROR") {
+        if (videoData.playabilityStatus?.status === "ERROR") {
             return videoData;
         }
 
@@ -66,16 +58,14 @@ export const youtubePlayerParsing = async ({
         // Modify the original YouTube response to include deciphered URLs
         if (streamingData && videoData && videoData.streamingData) {
             const ecatcherServiceTracking = videoData.responseContext
-                ?.serviceTrackingParams.find((o: { service: string }) =>
-                    o.service === "ECATCHER"
-                );
+                ?.serviceTrackingParams?.find((o: { service?: string }) => o.service === "ECATCHER");
             const clientNameUsed = ecatcherServiceTracking?.params?.find((
-                o: { key: string },
+                o: { key?: string },
             ) => o.key === "client.name");
             // no need to decipher on IOS nor ANDROID
             if (
-                !clientNameUsed?.value.includes("IOS") &&
-                !clientNameUsed?.value.includes("ANDROID")
+                !clientNameUsed?.value?.includes("IOS")
+                && !clientNameUsed?.value?.includes("ANDROID")
             ) {
                 for (
                     let index = 0;
@@ -102,8 +92,7 @@ export const youtubePlayerParsing = async ({
                     index < streamingData.adaptive_formats.length;
                     index++
                 ) {
-                    const format =
-                        videoData.streamingData.adaptiveFormats[index];
+                    const format = videoData.streamingData.adaptiveFormats[index];
 
                     format.url = await streamingData.adaptive_formats[index]
                         .decipher(
@@ -145,7 +134,7 @@ export const youtubePlayerParsing = async ({
                 (async () => {
                     await kv.set(
                         ["video_cache", videoId],
-                        compress(
+                        brotliCompressSync(
                             new TextEncoder().encode(
                                 JSON.stringify(videoOnlyNecessaryInfo),
                             ),

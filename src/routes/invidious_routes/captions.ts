@@ -1,15 +1,11 @@
 import { Hono } from "hono";
-import type { HonoVariables } from "../../lib/types/HonoVariables.ts";
-import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
-import {
-    youtubePlayerParsing,
-    youtubeVideoInfo,
-} from "../../lib/helpers/youtubePlayerHandling.ts";
-import type { CaptionTrackData } from "youtubei.js/PlayerCaptionsTracklist";
-import { handleTranscripts } from "../../lib/helpers/youtubeTranscriptsHandling.ts";
 import { HTTPException } from "hono/http-exception";
-import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
+import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
+import { verifyRequest } from "../../lib/helpers/verifyRequest.ts";
+import { youtubePlayerParsing, youtubeVideoInfo } from "../../lib/helpers/youtubePlayerHandling.ts";
+import { type CaptionTrackData, handleTranscripts } from "../../lib/helpers/youtubeTranscriptsHandling.ts";
+import type { HonoVariables } from "../../lib/types/HonoVariables.ts";
 
 interface AvailableCaption {
     label: string;
@@ -100,13 +96,9 @@ captionsHandler.get("/:videoId", async (c) => {
     let match: CaptionTrackData | undefined;
 
     if (lang) {
-        match = captionsTrackArray.find((c: CaptionTrackData) =>
-            c.language_code === lang
-        );
+        match = captionsTrackArray.find((c: CaptionTrackData) => c.language_code === lang);
     } else {
-        match = captionsTrackArray.find((c: CaptionTrackData) =>
-            c.name.text === label
-        );
+        match = captionsTrackArray.find((c: CaptionTrackData) => c.name.text === label);
     }
 
     if (match == undefined) throw new HTTPException(404);

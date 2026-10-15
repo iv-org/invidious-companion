@@ -1,8 +1,8 @@
 import { Hono } from "hono";
-import { youtubePlayerParsing } from "../../lib/helpers/youtubePlayerHandling.ts";
 import { HTTPException } from "hono/http-exception";
-import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
 import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../../constants.ts";
+import { validateVideoId } from "../../lib/helpers/validateVideoId.ts";
+import { youtubePlayerParsing } from "../../lib/helpers/youtubePlayerHandling.ts";
 
 const player = new Hono();
 

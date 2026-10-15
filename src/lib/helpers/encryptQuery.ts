@@ -1,6 +1,4 @@
-import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
-import { Aes } from "crypto/aes.ts";
-import { Ecb, Padding } from "crypto/block-modes.ts";
+import { createCipheriv, createDecipheriv } from "node:crypto";
 import type { Config } from "./config.ts";
 
 export const encryptQuery = (
@@ -8,21 +6,16 @@ export const encryptQuery = (
     config: Config,
 ): string => {
     try {
-        const cipher = new Ecb(
-            Aes,
-            new TextEncoder().encode(
-                config.server.secret_key,
-            ),
-            Padding.PKCS7,
+        const cipher = createCipheriv(
+            "aes-128-ecb",
+            Buffer.from(config.server.secret_key),
+            null,
         );
 
-        const encodedData = new TextEncoder().encode(
-            queryParams,
-        );
-
-        const encryptedData = cipher.encrypt(encodedData);
-
-        return encodeBase64(encryptedData);
+        return Buffer.concat([
+            cipher.update(queryParams, "utf8"),
+            cipher.final(),
+        ]).toString("base64");
     } catch (err) {
         console.error("[ERROR] Failed to encrypt query parameters:", err);
         return "";
@@ -34,21 +27,16 @@ export const decryptQuery = (
     config: Config,
 ): string => {
     try {
-        const decipher = new Ecb(
-            Aes,
-            new TextEncoder().encode(config.server.secret_key),
-            Padding.PKCS7,
+        const decipher = createDecipheriv(
+            "aes-128-ecb",
+            Buffer.from(config.server.secret_key),
+            null,
         );
 
-        const decryptedData = new TextDecoder().decode(
-            decipher.decrypt(
-                decodeBase64(
-                    queryParams,
-                ),
-            ),
-        );
-
-        return decryptedData;
+        return Buffer.concat([
+            decipher.update(Buffer.from(queryParams, "base64")),
+            decipher.final(),
+        ]).toString("utf8");
     } catch (err) {
         console.error("[ERROR] Failed to decrypt query parameters:", err);
         return "";
