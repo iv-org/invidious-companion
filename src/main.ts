@@ -92,7 +92,18 @@ if (!innertubeClientOauthEnabled) {
                 config,
                 metrics,
             ),
-            { minTimeout: 1_000, maxTimeout: 60_000, multiplier: 5, jitter: 0 },
+            {
+                minTimeout: Number(
+                    Deno.env.get("PO_TOKEN_RETRY_MIN_TIMEOUT_MS") ?? 30_000,
+                ),
+                maxTimeout: Number(
+                    Deno.env.get("PO_TOKEN_RETRY_MAX_TIMEOUT_MS") ?? 900_000,
+                ),
+                multiplier: Number(
+                    Deno.env.get("PO_TOKEN_RETRY_MULTIPLIER") ?? 2,
+                ),
+                jitter: 0.5,
+            },
         ).then((result) => {
             innertubeClient = result.innertubeClient;
             tokenMinter = result.tokenMinter;
