@@ -76,14 +76,8 @@ videoPlaybackProxy.get("/", async (c) => {
 
     const rangeHeader = c.req.header("range");
     const requestBytes = rangeHeader ? rangeHeader.split("=")[1] : null;
-    const [firstByte, lastByte] = requestBytes?.split("-") || [];
-    if (requestBytes) {
-        queryParams.append(
-            "range",
-            requestBytes,
-        );
-    }
-
+    const rangeMatch = requestBytes?.match(/^(?:(\d+)-(\d+)?|-(\d+))$/) ??
+        null;
     const headersToSend: HeadersInit = {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -139,7 +133,40 @@ videoPlaybackProxy.get("/", async (c) => {
         });
     }
 
+    const contentLength = headResponse.headers.get("content-length");
+    const clen = queryParams.get("clen");
+    const parsedContentLength = contentLength === null
+        ? NaN
+        : Number(contentLength);
+    const parsedClen = clen === null ? NaN : Number(clen);
+    const headTotal = Number.isSafeInteger(parsedContentLength) &&
+            parsedContentLength >= 0
+        ? parsedContentLength
+        : Number.isSafeInteger(parsedClen) && parsedClen >= 0
+        ? parsedClen
+        : undefined;
     const googleVideoUrl = new URL(location);
+    let startByte = 0;
+    let requestedEnd = 0;
+    if (rangeMatch && headTotal !== undefined) {
+        const isSuffix = rangeMatch[3] !== undefined;
+        startByte = isSuffix
+            ? Math.max(headTotal - Number(rangeMatch[3]), 0)
+            : Number(rangeMatch[1]);
+        requestedEnd = rangeMatch[2] !== undefined
+            ? Number(rangeMatch[2])
+            : headTotal - 1;
+        if (startByte >= headTotal || requestedEnd < startByte) {
+            return new Response(null, {
+                status: 416,
+                headers: { "content-range": `bytes */${headTotal}` },
+            });
+        }
+        googleVideoUrl.searchParams.set(
+            "range",
+            isSuffix ? `${startByte}-${requestedEnd}` : rangeMatch[0],
+        );
+    }
     const postResponse = await fetchClient(googleVideoUrl, {
         method: "POST",
         body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
@@ -165,31 +192,14 @@ videoPlaybackProxy.get("/", async (c) => {
     }
 
     let responseStatus = headResponse.status;
-    if (requestBytes && responseStatus == 200) {
-        // check for range headers in the forms:
-        // "bytes=0-" get full length from start
-        // "bytes=500-" get full length from 500 bytes in
-        // "bytes=500-1000" get 500 bytes starting from 500
-        if (lastByte) {
-            responseStatus = 206;
-            headersForResponse["content-range"] = `bytes ${requestBytes}/${
-                queryParams.get("clen") || "*"
-            }`;
-        } else {
-            // i.e. "bytes=0-", "bytes=600-"
-            // full size of content is able to be calculated, so a full Content-Range header can be constructed
-            const bytesReceived = headersForResponse["content-length"];
-            // last byte should always be one less than the length
-            const totalContentLength = Number(firstByte) +
-                Number(bytesReceived);
-            const lastByte = totalContentLength - 1;
-            if (firstByte !== "0") {
-                // only part of the total content returned, 206
-                responseStatus = 206;
-            }
-            headersForResponse["content-range"] =
-                `bytes ${firstByte}-${lastByte}/${totalContentLength}`;
-        }
+    if (rangeMatch && headTotal !== undefined && responseStatus == 200) {
+        responseStatus = 206;
+        const endByte = Math.min(requestedEnd, headTotal - 1);
+        headersForResponse["content-length"] = String(
+            endByte - startByte + 1,
+        );
+        headersForResponse["content-range"] =
+            `bytes ${startByte}-${endByte}/${headTotal}`;
     }
 
     return new Response(postResponse.body, {
