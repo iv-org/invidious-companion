@@ -39,7 +39,7 @@
     "youtubePlayerReq": "./src/lib/helpers/youtubePlayerReq.ts",
     "getFetchClient": "./src/lib/helpers/getFetchClient.ts",
     // googlevideo URL parsing and n-parameter decryption.
-    "googlevideo": "jsr:@luanrt/googlevideo@4.1.1",
+    "googlevideo": "jsr:@luanrt/googlevideo@5.0.1",
     // JavaScript parser (for YouTube challenges).
     "meriyah": "npm:meriyah@7.4.1",
     // Compression (used for chunked responses).
