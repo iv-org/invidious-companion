@@ -4,10 +4,10 @@
     "jsr:@hono/hono@4.13.7": "4.13.7",
     "jsr:@luanrt/googlevideo@4.1.1": "4.1.1",
     "jsr:@std/assert@1.0.12": "1.0.12",
-    "jsr:@std/async@1.5.0": "1.5.0",
+    "jsr:@std/async@1.5.1": "1.5.1",
     "jsr:@std/cli@^1.0.32": "1.0.32",
     "jsr:@std/collections@^1.1.3": "1.3.0",
-    "jsr:@std/data-structures@^1.1.1": "1.1.1",
+    "jsr:@std/data-structures@^1.1.3": "1.1.3",
     "jsr:@std/encoding@1.0.11": "1.0.11",
     "jsr:@std/fmt@^1.0.10": "1.0.10",
     "jsr:@std/fs@1.0.24": "1.0.24",
@@ -37,8 +37,8 @@
         "jsr:@std/internal@^1.0.6"
       ]
     },
-    "@std/async@1.5.0": {
-      "integrity": "4c1f22d287a17ad7d8643b1952bc5a4d21e5d8b68dc8c20d8268eecc69096e82",
+    "@std/async@1.5.1": {
+      "integrity": "c82455dc70cab29a0adf3ac8075db934785bffdd3902af5afcf25d21a74cfd86",
       "dependencies": [
         "jsr:@std/data-structures"
       ]
@@ -53,8 +53,8 @@
     "@std/collections@1.3.0": {
       "integrity": "eb36b43d784477ea0b476483ac034a14bdd182aff921c812ecf662a1fcef9498"
     },
-    "@std/data-structures@1.1.1": {
-      "integrity": "7e1fcf19771fb9c6dbcd7f65039d6d42ef8dc023cfbc0c4cdc74b24e09229380"
+    "@std/data-structures@1.1.3": {
+      "integrity": "a5ec67199e79ee5b29123474d93fa9a47701ec08a4ef3bd1b623a36476306c5b"
     },
     "@std/encoding@1.0.11": {
       "integrity": "e7cef2f0b3153bccc17431e7c864a1de03a4b6d9647389c43e08aaa775d37385"
@@ -4359,6 +4359,10 @@
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/misc.ts": "acfc8561a8bd2fe060f1ef2bd9aa8f5c61683bc9fddbee3485d7ea025c14641c",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/nodes.ts": "6934701b97c4cf7c8dc6e1fa84941974b890d1cf6e98dcb797f4f3ff39a7d133",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/parser.ts": "b3eed2c718cd4a9fd58cfcfdcabf334b3593430c93d3f223c62b9c4562b6152d",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/types/CommandEndpoints.ts": "8dc557e423a2bc9d11e90c3fd31440f627174616e07c62110fa825a051062889",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/types/ParsedResponse.ts": "d800fd86e60c6dafd51e599eb065ff2863055323ebfe62e5b0ae562fd70ca5e1",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/types/RawResponse.ts": "841dfa6d9651cf9c1739d4d7c01f67f95ed8b877feed08c9cf3ddfa29195f861",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/types/index.ts": "007247905143a2c8fe5c1bb02470f126f9107af5ea2649c1035489587aff97d1",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/youtube/AccountInfo.ts": "55db92aea54b21ff7d21741e5b76ebbb365bd157e47913200426cf25da7dcf80",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/youtube/Channel.ts": "2ec06c0cff628bc99a4e519c21634161ce67ba41398aa47aea92f55f2fe9bf3d",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/parser/youtube/Comments.ts": "34935cbe6e354d42e2772c0dd729a72eb313f20181cd1cc7238f354a8cb8826b",
@@ -4398,6 +4402,14 @@
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/platform/jsruntime/default.ts": "0354bd04f0c24bd659d83ecb929365f53288e45d599e9d47188dea649d9bf236",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/platform/lib.ts": "b1ef65da57cc2acfa278a6468d7a6e045f96f43f8bfebabb2dd683ee23e047dd",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/platform/polyfills/web-crypto.ts": "ae20ed00dea9eafca9ba590f4fa440299cbd57288add788c59cb19f3455ae6d1",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/types/Cache.ts": "06cd238bce7c9657055151587e36ee445e8236d54d27272124ced10ea7be0da4",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/types/DashOptions.ts": "cf694c112ab97d778b3df735ddc76fd16fd5ae0d49943e2cc580f1f986f63da6",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/types/FormatUtils.ts": "a877e6d3e84651d5de882a3e6cba7ac82ac4c64d315be64c072776cf2a9eeb72",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/types/GetVideoInfoOptions.ts": "f6bbc11dbf9ee5677e1a55b3064f50d716e9336aa8d4c4a32c164e64576c1beb",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/types/Misc.ts": "c738329183ce745318bbb1b2f3c19e760d6361eb33f1443f3b758c7afa728dbd",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/types/PlatformShim.ts": "24e8c48ad6754ba64bf95327317dbcc5450c6092e87e7bc06e92f757b22ed4c4",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/types/StreamingInfoOptions.ts": "30204b70b4e2c83dc909447acf152c74ba5c500f6b364451d6a66018a77c6821",
+    "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/types/index.ts": "16ec980101e06859f4269f8abd1bc3372dd2a9deea200dbc8396d821449738cc",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/utils/BinarySerializer.ts": "a74802547f52ae1cedc8ba38f95cdc36adafd825d47c15fd4812c40573412146",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/utils/Cache.ts": "fd90c88da32e9283adf065475a5cb4e680b5152a6bc06dd8a3dc9349358cab35",
     "https://cdn.jsdelivr.net/gh/LuanRT/YouTube.js@v18.3.0-deno/deno/src/utils/Constants.ts": "37887c7149395dc2f8c1d1014976fc3cfdafa8e66f0acf130ac98818b52d663f",
@@ -7876,7 +7888,7 @@
     "dependencies": [
       "jsr:@hono/hono@4.13.7",
       "jsr:@luanrt/googlevideo@4.1.1",
-      "jsr:@std/async@1.5.0",
+      "jsr:@std/async@1.5.1",
       "jsr:@std/cli@^1.0.32",
       "jsr:@std/encoding@1.0.11",
       "jsr:@std/fs@1.0.24",
