@@ -16,7 +16,7 @@ const dashManifest = new Hono();
 
 dashManifest.get("/:videoId", async (c) => {
     const { videoId } = c.req.param();
-    const { check, local } = c.req.query();
+    const { check, local, codec_dash } = c.req.query();
     c.header("access-control-allow-origin", "*");
 
     const innertubeClient = c.get("innertubeClient");
@@ -70,9 +70,46 @@ dashManifest.get("/:videoId", async (c) => {
 
     if (videoInfo.streaming_data) {
         // video.js only support MP4 not WEBM
-        videoInfo.streaming_data.adaptive_formats = videoInfo
-            .streaming_data.adaptive_formats
-            .filter((i) => i.mime_type.includes("mp4"));
+        const filterFormats = (
+            formats: typeof videoInfo.streaming_data.adaptive_formats,
+            codec?: string,
+        ) => {
+            switch (codec) {
+                case "h264":
+                    return formats.filter(
+                        (i) =>
+                            i.mime_type.includes("avc1") ||
+                            i.mime_type.includes("mp4a"),
+                    );
+                case "av1":
+                    return formats.filter(
+                        (i) =>
+                            i.mime_type.includes("av01") ||
+                            i.mime_type.includes("mp4a"),
+                    );
+                default:
+                    // Preserve old behavior when codec_dash is not provided
+                    return formats.filter((i) => i.mime_type.includes("mp4"));
+            }
+        };
+
+        let selectedFormats = filterFormats(
+            videoInfo.streaming_data.adaptive_formats,
+            codec_dash,
+        );
+
+        // Fallback to AVC1 if AV1 was requested but no AV1 video track exists.
+        if (
+            codec_dash === "av1" &&
+            !selectedFormats.some((i) => i.mime_type.includes("av01"))
+        ) {
+            selectedFormats = filterFormats(
+                videoInfo.streaming_data.adaptive_formats,
+                "h264",
+            );
+        }
+
+        videoInfo.streaming_data.adaptive_formats = selectedFormats;
 
         const player_response = videoInfo.page[0];
         // TODO: fix include storyboards in DASH manifest file
