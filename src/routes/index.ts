@@ -3,6 +3,7 @@ import { logger } from "hono/logger";
 import { bearerAuth } from "hono/bearer-auth";
 
 import youtubeApiPlayer from "./youtube_api_routes/player.ts";
+import youtubeApiPotoken from "./youtube_api_routes/potoken.ts";
 import invidiousRouteLatestVersion from "./invidious_routes/latestVersion.ts";
 import invidiousRouteDashManifest from "./invidious_routes/dashManifest.ts";
 import invidiousCaptionsApi from "./invidious_routes/captions.ts";
@@ -35,6 +36,7 @@ export const companionRoutes = (
     );
 
     app.route("/youtubei/v1", youtubeApiPlayer);
+    app.route("/youtubei/v1", youtubeApiPotoken);
     app.route("/latest_version", invidiousRouteLatestVersion);
     // Needs app for app.request in order to call /latest_version endpoint
     app.post("/download", getDownloadHandler(app));
