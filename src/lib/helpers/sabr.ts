@@ -24,6 +24,7 @@ import { buildSabrFormat, EnabledTrackTypes } from "googlevideo/utils";
 import type { FormatStream, SabrFormat } from "googlevideo/shared-types";
 import type { MediaHeader } from "googlevideo/protos";
 import { USER_AGENT } from "bgutils";
+import { encodeBase64 } from "@std/encoding/base64";
 import type { TokenMinter } from "../jobs/potoken.ts";
 import type { Config } from "./config.ts";
 let getFetchClientLocation = "getFetchClient";
@@ -84,8 +85,13 @@ interface Track {
     headEnd: number;
     run: Run | null;
     chain: { n: number } | null;
+    // where each open response reads; fetches run ahead of the farthest
+    wants: Map<number, number>;
     want: number;
     wantWaiters: (() => void)[];
+    // open responses (a format being read is never dropped)
+    readers: number;
+    minter: TokenMinter | undefined;
     waiters: (() => void)[];
     fails: number;
     failed: boolean;
@@ -95,7 +101,9 @@ interface Track {
 
 const sessions = new Map<string, Session>();
 const tracks = new Map<string, Track>();
-let minter: TokenMinter | undefined;
+let totalBytes = 0;
+let readerIds = 0;
+let signKey: Promise<CryptoKey> | undefined;
 let config: Config | undefined;
 
 const formatKey = (itag: number | string, xtags?: string) =>
@@ -104,11 +112,45 @@ const formatKey = (itag: number | string, xtags?: string) =>
 /** whether a player response only plays over SABR */
 export function onlySabr(data: RawFormat): boolean {
     const sd = data.streamingData;
-    const first = sd?.adaptiveFormats?.[0];
-    return !!(sd?.serverAbrStreamingUrl && first && !first.url &&
-        !first.signatureCipher &&
+    // no plain source in any adaptive format (the muxed 360p one may still
+    // have one, which alone is not enough)
+    const all: RawFormat[] = sd?.adaptiveFormats || [];
+    return !!(sd?.serverAbrStreamingUrl && all.length &&
+        all.every((f) => !f.url && !f.signatureCipher && !f.cipher) &&
         data.playerConfig?.mediaCommonConfig?.mediaUstreamerRequestConfig
             ?.videoPlaybackUstreamerConfig);
+}
+
+// SABR format URLs are signed with the secret key, so /videoplayback only
+// starts SABR work for URLs companion handed out itself
+async function sign(c: Config, text: string): Promise<string> {
+    signKey ??= crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(c.server.secret_key),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"],
+    );
+    const mac = await crypto.subtle.sign(
+        "HMAC",
+        await signKey,
+        new TextEncoder().encode(text),
+    );
+    return encodeBase64(new Uint8Array(mac)).replace(/\+/g, "-")
+        .replace(/\//g, "_").replace(/=+$/, "");
+}
+
+const signedText = (q: URLSearchParams) =>
+    [q.get("id"), q.get("itag"), q.get("xtags") || "", q.get("expire")]
+        .join("|");
+
+/** whether a /videoplayback query is a SABR URL companion gave out, unexpired */
+export async function sabrUrlValid(
+    q: URLSearchParams,
+    c: Config,
+): Promise<boolean> {
+    if (Number(q.get("expire")) * 1000 < Date.now()) return false;
+    return q.get("sig") === await sign(c, signedText(q));
 }
 
 /**
@@ -119,10 +161,8 @@ export async function useSabr(
     data: RawFormat,
     videoId: string,
     innertubeClient: Innertube,
-    tokenMinter: TokenMinter,
     companionConfig: Config,
 ): Promise<void> {
-    minter = tokenMinter;
     config = companionConfig;
     const sd = data.streamingData;
     const sabrUrl = await innertubeClient.session.player!.decipher(
@@ -140,6 +180,10 @@ export async function useSabr(
         expire,
         formats: new Map(),
     };
+    // only formats of known length can be served as byte ranges
+    sd.adaptiveFormats = sd.adaptiveFormats.filter((f: RawFormat) =>
+        Number(f.contentLength) > 0
+    );
     for (const f of sd.adaptiveFormats) {
         session.formats.set(formatKey(f.itag, f.xtags), f);
         const q = new URLSearchParams({
@@ -150,11 +194,12 @@ export async function useSabr(
             itag: String(f.itag),
         });
         if (f.xtags) q.set("xtags", f.xtags);
-        if (f.contentLength) q.set("clen", f.contentLength);
+        q.set("clen", f.contentLength);
         if (f.mimeType) q.set("mime", f.mimeType.split(";")[0]);
         if (f.approxDurationMs) {
             q.set("dur", (Number(f.approxDurationMs) / 1000).toFixed(3));
         }
+        q.set("sig", await sign(companionConfig, signedText(q)));
         f.url = `https://${url.host}/videoplayback?${q}`;
     }
     // the muxed formats have no SABR equivalent
@@ -170,7 +215,7 @@ export const hasSabrSession = (videoId: string) => {
 // a format by itag and xtags; without xtags, the original audio track
 function pickFormat(s: Session, itag: string, xtags: string) {
     const exact = s.formats.get(formatKey(itag, xtags));
-    if (exact) return exact;
+    if (exact || xtags) return exact;
     const same = [...s.formats.values()].filter((f) => String(f.itag) === itag);
     return same.find((f) => f.audioTrack?.audioIsDefault) || same[0];
 }
@@ -183,8 +228,10 @@ function wake(t: Track) {
     for (const f of w) f();
 }
 
-function setWant(t: Track, n: number) {
-    t.want = n;
+function setWant(t: Track, reader: number, n: number | null) {
+    if (n === null) t.wants.delete(reader);
+    else t.wants.set(reader, n);
+    t.want = t.dead ? Infinity : Math.max(0, ...t.wants.values());
     const w = t.wantWaiters;
     t.wantWaiters = [];
     for (const f of w) f();
@@ -220,9 +267,31 @@ function addPiece(t: Track, at: number, data: Uint8Array) {
     if (t.pieces.has(at)) return;
     t.pieces.set(at, data);
     t.bytes += data.length;
+    totalBytes += data.length;
     let i = t.starts.length;
     while (i > 0 && t.starts[i - 1] > at) i--;
     t.starts.splice(i, 0, at);
+    if (totalBytes > limit()) trim();
+}
+
+const limit = () =>
+    (config?.networking.videoplayback.sabr_cache_mb ?? 512) * 1_000_000;
+
+// segments well behind where every response reads, least recently used first
+function trim() {
+    const all = [...tracks.values()].sort((a, b) => a.used - b.used);
+    for (const t of all) {
+        if (totalBytes <= limit()) return;
+        const behind = Math.min(
+            ...(t.wants.size ? t.wants.values() : [t.want]),
+        );
+        for (const at of [...t.starts]) {
+            if (totalBytes <= limit()) return;
+            if (at === 0) continue; // the init segment stays
+            if (at + t.pieces.get(at)!.length >= behind - NEAR_BYTES) break;
+            dropPiece(t, at);
+        }
+    }
 }
 
 function dropPiece(t: Track, at: number) {
@@ -230,6 +299,7 @@ function dropPiece(t: Track, at: number) {
     if (!p) return;
     t.pieces.delete(at);
     t.bytes -= p.length;
+    totalBytes -= p.length;
     t.starts.splice(t.starts.indexOf(at), 1);
 }
 
@@ -255,7 +325,13 @@ function track(videoId: string, f: RawFormat): Track {
         t.used = Date.now();
         return t;
     }
-    t = {
+    t = newTrack(id, videoId, f);
+    tracks.set(id, t);
+    return t;
+}
+
+function newTrack(id: string, videoId: string, f: RawFormat): Track {
+    return {
         id,
         videoId,
         format: f,
@@ -267,7 +343,10 @@ function track(videoId: string, f: RawFormat): Track {
         headEnd: 0,
         run: null,
         chain: null,
+        wants: new Map(),
         want: 0,
+        readers: 0,
+        minter: undefined,
         wantWaiters: [],
         waiters: [],
         fails: 0,
@@ -275,8 +354,6 @@ function track(videoId: string, f: RawFormat): Track {
         dead: false,
         used: Date.now(),
     };
-    tracks.set(id, t);
-    return t;
 }
 
 // a SABR stream that starts at the segment holding byte n (`backMs` earlier
@@ -288,7 +365,8 @@ async function fetchFrom(
     chain: { n: number },
 ): Promise<Run> {
     const s = sessions.get(t.videoId);
-    if (!s || !minter) throw new Error("no SABR session");
+    const tokenMinter = t.minter;
+    if (!s || !tokenMinter) throw new Error("no SABR session");
     const isVideo = String(t.format.mimeType).startsWith("video/");
     const formats = [...s.formats.values()].map((f) =>
         buildSabrFormat(f as FormatStream)
@@ -300,7 +378,6 @@ async function fetchFrom(
             .sort((a: SabrFormat, b: SabrFormat) => a.bitrate - b.bitrate)[0]
         : me;
     const startTimeMs = Math.max(0, timeOf(t, n) - backMs);
-    const tokenMinter = minter;
     const fetchClient: typeof fetch = config ? getFetchClient(config) : fetch;
     const stream = new SabrStream({
         videoId: t.videoId,
@@ -403,7 +480,7 @@ async function fetchFrom(
                 throw e;
             }
             const { done, value } = next;
-            if (done) break;
+            if (done || t.run !== run || t.dead) break;
             chunks.push(value as Uint8Array);
             // pair each segment with its header (the init segment's comes
             // with the next media segment's state update)
@@ -456,7 +533,8 @@ function ensure(t: Track, n: number) {
     if (c && !r && c.n <= n && n - c.n < NEAR_BYTES) return;
     const chain = { n };
     t.chain = chain;
-    t.run = null; // a fetch going on stops at its next segment
+    r?.stream.abort().catch(() => {});
+    t.run = null;
     const attempt = (backMs: number, left: number): Promise<void> =>
         fetchFrom(t, n, backMs, chain).then((run) => {
             if (t.chain !== chain) return;
@@ -472,6 +550,7 @@ function ensure(t: Track, n: number) {
                 console.log(`[ERROR] SABR: tokens turned down for ${t.id}`);
             }
         }).catch((e) => {
+            if (t.chain !== chain) return;
             console.log(`[WARNING] SABR fetch failed for ${t.id}:`, String(e));
             if (++t.fails >= MAX_FAILS) t.failed = true;
         }).finally(() => {
@@ -504,38 +583,88 @@ async function until(t: Track, n: number) {
 // read go first, then whole formats nobody is waiting on
 function sweep() {
     const now = Date.now();
-    const limit = (config?.networking.videoplayback.sabr_cache_mb ?? 512) *
-        1_000_000;
-    const all = [...tracks.values()].sort((a, b) => a.used - b.used);
-    let total = all.reduce((a, t) => a + t.bytes, 0);
     const drop = (t: Track) => {
-        total -= t.bytes;
+        for (const at of [...t.starts]) dropPiece(t, at);
         tracks.delete(t.id);
         t.dead = true;
+        t.run?.stream.abort().catch(() => {});
         t.run = null;
         wake(t);
-        setWant(t, Infinity);
+        setWant(t, -1, null);
+        for (const f of t.wantWaiters.splice(0)) f();
     };
-    for (const t of all) {
-        if (t.waiters.length === 0 && now - t.used > IDLE_MS) drop(t);
+    for (const t of [...tracks.values()]) {
+        if (t.readers === 0 && now - t.used > IDLE_MS) drop(t);
     }
-    for (const t of all) {
-        if (total <= limit || t.dead) continue;
-        for (const at of [...t.starts]) {
-            if (at === 0) continue; // the init segment stays
-            if (at + t.pieces.get(at)!.length >= t.want - NEAR_BYTES) break;
-            total -= t.pieces.get(at)!.length;
-            dropPiece(t, at);
-        }
-    }
-    for (const t of all) {
-        if (total > limit && !t.dead && t.waiters.length === 0) drop(t);
-    }
+    trim();
+    const idle = [...tracks.values()].filter((t) => t.readers === 0)
+        .sort((x, y) => x.used - y.used);
+    for (const t of idle) if (totalBytes > limit()) drop(t);
     for (const [id, s] of sessions) {
         if (s.expire * 1000 < now) sessions.delete(id);
     }
 }
 setInterval(sweep, 30_000);
+
+// a single byte range "a-b", "a-" or "-n" of a file of `length` bytes
+function parseRange(range: string | null, length: number) {
+    if (!range) return { start: 0, end: length - 1 };
+    const m = range.trim().match(/^(\d*)-(\d*)$/);
+    if (!m || (!m[1] && !m[2])) return null;
+    let start: number, end: number;
+    if (!m[1]) {
+        start = Math.max(0, length - Number(m[2]));
+        end = length - 1;
+    } else {
+        start = Number(m[1]);
+        end = m[2] ? Math.min(Number(m[2]), length - 1) : length - 1;
+    }
+    return start <= end && start < length ? { start, end } : null;
+}
+
+// a response reading track t from byte `start` to `end`
+function readBody(t: Track, start: number, end: number) {
+    const id = ++readerIds;
+    let pos = start, open = true;
+    t.readers++;
+    const close = () => {
+        if (!open) return;
+        open = false;
+        t.readers--;
+        setWant(t, id, null);
+    };
+    setWant(t, id, start);
+    return {
+        ready: () =>
+            until(t, start).catch((e) => {
+                close();
+                throw e;
+            }),
+        body: new ReadableStream<Uint8Array>({
+            async pull(c) {
+                try {
+                    if (pos > end) {
+                        close();
+                        return c.close();
+                    }
+                    t.used = Date.now();
+                    setWant(t, id, pos);
+                    await until(t, pos);
+                    const i = pieceAt(t, pos);
+                    const at = t.starts[i];
+                    const piece = t.pieces.get(at)!;
+                    const to = Math.min(piece.length, end + 1 - at);
+                    c.enqueue(piece.subarray(pos - at, to));
+                    pos = at + to;
+                } catch (e) {
+                    close();
+                    c.error(e);
+                }
+            },
+            cancel: close,
+        }),
+    };
+}
 
 /** answers a /videoplayback request with `sabr=1` */
 export async function sabrResponse(
@@ -544,62 +673,69 @@ export async function sabrResponse(
     xtags: string,
     range: string | null,
     tokenMinter: TokenMinter,
+    extraHeaders: Record<string, string> = {},
 ): Promise<Response> {
     const s = sessions.get(videoId);
     if (!s) return new Response("No SABR session", { status: 404 });
     const f = pickFormat(s, itag, xtags);
     if (!f) return new Response("No such format", { status: 404 });
-    // the newest minter: older ones stop working once replaced
-    minter = tokenMinter;
     const t = track(videoId, f);
-    const length = t.length;
-    const m = (range || "").match(/(\d*)-(\d*)/);
-    const start = m?.[1] ? Number(m[1]) : 0;
-    let end = m?.[2] ? Number(m[2]) : (length ? length - 1 : Infinity);
-    if (length && end >= length) end = length - 1;
-    if (length && start >= length) {
+    // the minter companion uses now (older ones stop once replaced)
+    t.minter = tokenMinter;
+    const r = parseRange(range, t.length);
+    if (!r) {
         return new Response(null, {
             status: 416,
-            headers: { "content-range": `bytes */${length}` },
+            headers: { "content-range": `bytes */${t.length}` },
         });
     }
-    setWant(t, start);
+    const { ready, body } = readBody(t, r.start, r.end);
     try {
-        await until(t, start);
+        await ready();
     } catch (e) {
+        await body.cancel();
         return new Response(String(e), { status: 502 });
     }
-    let pos = start;
-    const body = new ReadableStream<Uint8Array>({
-        async pull(c) {
-            try {
-                if (pos > end) return c.close();
-                t.used = Date.now();
-                setWant(t, pos);
-                await until(t, pos);
-                const i = pieceAt(t, pos);
-                const at = t.starts[i];
-                const piece = t.pieces.get(at)!;
-                const from = pos - at;
-                const to = Math.min(piece.length, end + 1 - at);
-                c.enqueue(piece.subarray(from, to));
-                pos = at + to;
-            } catch (e) {
-                c.error(e);
-            }
-        },
-    });
     const headers: Record<string, string> = {
         "access-control-allow-origin": "*",
         "accept-ranges": "bytes",
         "content-type": String(f.mimeType || "application/octet-stream")
             .split(";")[0],
+        "content-length": String(r.end + 1 - r.start),
+        ...extraHeaders,
     };
-    if (end !== Infinity) {
-        headers["content-length"] = String(end + 1 - start);
-    }
-    if (range && length) {
-        headers["content-range"] = `bytes ${start}-${end}/${length}`;
+    if (range) {
+        headers["content-range"] = `bytes ${r.start}-${r.end}/${t.length}`;
     }
     return new Response(body, { status: range ? 206 : 200, headers });
+}
+
+/**
+ * Whether `tokenMinter` gets media over SABR for this video: a fresh fetch
+ * of its first segment, apart from the shared cache (for token validation).
+ */
+export async function sabrProbe(
+    videoId: string,
+    tokenMinter: TokenMinter,
+): Promise<boolean> {
+    const s = sessions.get(videoId);
+    const f = s &&
+        [...s.formats.values()].find((x) =>
+            String(x.mimeType).startsWith("audio/")
+        );
+    if (!f) return false;
+    const t = newTrack(`probe|${videoId}|${crypto.randomUUID()}`, videoId, f);
+    t.minter = tokenMinter;
+    const { ready, body } = readBody(t, 0, 0);
+    try {
+        await ready();
+        return t.bytes > 0;
+    } catch {
+        return false;
+    } finally {
+        await body.cancel();
+        t.dead = true;
+        t.run?.stream.abort().catch(() => {});
+        for (const at of [...t.starts]) dropPiece(t, at);
+    }
 }

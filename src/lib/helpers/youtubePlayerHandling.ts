@@ -38,8 +38,12 @@ export const youtubePlayerParsing = async ({
     const cacheEnabled = overrideCache ? false : config.cache.enabled;
     const kv = await getKv(config);
 
-    const videoCached = (await kv.get(["video_cache", videoId]))
-        .value as Uint8Array;
+    // SABR and plain answers are cached apart, so turning SABR off or on
+    // does not hand out URLs of the other kind
+    const cacheKey = config.networking.videoplayback.sabr
+        ? ["video_cache_sabr", videoId]
+        : ["video_cache", videoId];
+    const videoCached = (await kv.get(cacheKey)).value as Uint8Array;
 
     if (videoCached != null && cacheEnabled) {
         return JSON.parse(new TextDecoder().decode(decompress(videoCached)));
@@ -67,13 +71,7 @@ export const youtubePlayerParsing = async ({
         const sabr = config.networking.videoplayback.sabr &&
             onlySabr(videoData);
         if (sabr) {
-            await useSabr(
-                videoData,
-                videoId,
-                innertubeClient,
-                tokenMinter,
-                config,
-            );
+            await useSabr(videoData, videoId, innertubeClient, config);
         }
 
         // Modify the original YouTube response to include deciphered URLs
@@ -157,7 +155,7 @@ export const youtubePlayerParsing = async ({
             if (cacheEnabled) {
                 (async () => {
                     await kv.set(
-                        ["video_cache", videoId],
+                        cacheKey,
                         compress(
                             new TextEncoder().encode(
                                 JSON.stringify(videoOnlyNecessaryInfo),

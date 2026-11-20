@@ -62,6 +62,7 @@ export const getFetchClient = (config: Config): {
                 headers: init?.headers,
                 method: init?.method,
                 body: init?.body,
+                ...(init?.signal ? { signal: init.signal } : {}),
             });
 
             // If using a reusable client, return directly without closing

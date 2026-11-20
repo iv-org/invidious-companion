@@ -88,7 +88,7 @@ dashManifest.get("/:videoId", async (c) => {
                 // Can't create URL type without host part
                 queryParams.set("host", dashUrl.host);
 
-                if (local) {
+                if (local || queryParams.get("sabr") === "1") {
                     if (config.networking.videoplayback.ump) {
                         queryParams.set("ump", "yes");
                     }

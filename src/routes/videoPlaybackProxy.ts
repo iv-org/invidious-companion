@@ -3,7 +3,11 @@ import { HTTPException } from "hono/http-exception";
 import { encodeRFC5987ValueChars } from "../lib/helpers/encodeRFC5987ValueChars.ts";
 import { decryptQuery } from "../lib/helpers/encryptQuery.ts";
 import { StreamingApi } from "hono/utils/stream";
-import { hasSabrSession, sabrResponse } from "../lib/helpers/sabr.ts";
+import {
+    hasSabrSession,
+    sabrResponse,
+    sabrUrlValid,
+} from "../lib/helpers/sabr.ts";
 import { youtubePlayerParsing } from "../lib/helpers/youtubePlayerHandling.ts";
 import { validateVideoId } from "../lib/helpers/validateVideoId.ts";
 import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../constants.ts";
@@ -48,6 +52,12 @@ videoPlaybackProxy.get("/", async (c) => {
                 res: new Response("Invalid SABR query string."),
             });
         }
+        // only URLs companion gave out, before any work is started for them
+        if (!(await sabrUrlValid(queryParams, config))) {
+            throw new HTTPException(403, {
+                res: new Response("Invalid or expired SABR URL."),
+            });
+        }
         const tokenMinter = c.get("tokenMinter");
         if (!tokenMinter) {
             throw new HTTPException(503, {
@@ -64,6 +74,11 @@ videoPlaybackProxy.get("/", async (c) => {
                 metrics: c.get("metrics"),
                 overrideCache: true,
             });
+            if (!hasSabrSession(videoId)) {
+                throw new HTTPException(404, {
+                    res: new Response("The video no longer plays over SABR."),
+                });
+            }
         }
         const rangeHeader = c.req.header("range");
         return await sabrResponse(
@@ -72,6 +87,13 @@ videoPlaybackProxy.get("/", async (c) => {
             xtags || "",
             rangeHeader?.split("=")[1] ?? c.req.query("range") ?? null,
             tokenMinter,
+            title
+                ? {
+                    "content-disposition": `attachment; filename="${
+                        encodeURIComponent(title)
+                    }"; filename*=UTF-8''${encodeRFC5987ValueChars(title)}`,
+                }
+                : {},
         );
     }
 

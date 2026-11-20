@@ -92,7 +92,7 @@ latestVersion.get("/", async (c) => {
         const queryParams = new URLSearchParams(itagUrlParsed.search);
         let urlToRedirect = itagUrlParsed.toString();
 
-        if (local) {
+        if (local || queryParams.get("sabr") === "1") {
             queryParams.set("host", itagUrlParsed.host);
             if (config.server.encrypt_query_params) {
                 const privateParams = [...queryParams].filter(([key]) =>
