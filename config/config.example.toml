@@ -42,6 +42,11 @@
 # ump = false # env variable: NETWORKING_VIDEOPLAYBACK_UMP
 # # size of chunks to request from google servers for rate limiting reductions
 # video_fetch_chunk_size_mb = 5 # env variable: NETWORKING_VIDEOPLAYBACK_VIDEO_FETCH_CHUNK_SIZE_MB
+# # When no YouTube client gives stream URLs, play the video over SABR
+# # (the web player's streaming protocol), served as ordinary byte ranges
+# sabr = false # env variable: NETWORKING_VIDEOPLAYBACK_SABR
+# # memory kept for SABR video data, in MB
+# sabr_cache_mb = 512 # env variable: NETWORKING_VIDEOPLAYBACK_SABR_CACHE_MB
  
 ###
 # Network call timeouts when talking to YouTube. 

@@ -3,6 +3,10 @@ import { HTTPException } from "hono/http-exception";
 import { encodeRFC5987ValueChars } from "../lib/helpers/encodeRFC5987ValueChars.ts";
 import { decryptQuery } from "../lib/helpers/encryptQuery.ts";
 import { StreamingApi } from "hono/utils/stream";
+import { hasSabrSession, sabrResponse } from "../lib/helpers/sabr.ts";
+import { youtubePlayerParsing } from "../lib/helpers/youtubePlayerHandling.ts";
+import { validateVideoId } from "../lib/helpers/validateVideoId.ts";
+import { TOKEN_MINTER_NOT_READY_MESSAGE } from "../constants.ts";
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
@@ -36,6 +40,40 @@ videoPlaybackProxy.get("/", async (c) => {
     const urlReq = new URL(c.req.url);
     const config = c.get("config");
     const queryParams = new URLSearchParams(urlReq.search);
+
+    if (c.req.query("sabr") === "1" && config.networking.videoplayback.sabr) {
+        const { id: videoId, itag, xtags } = c.req.query();
+        if (!videoId || !validateVideoId(videoId) || !/^\d+$/.test(itag)) {
+            throw new HTTPException(400, {
+                res: new Response("Invalid SABR query string."),
+            });
+        }
+        const tokenMinter = c.get("tokenMinter");
+        if (!tokenMinter) {
+            throw new HTTPException(503, {
+                res: new Response(TOKEN_MINTER_NOT_READY_MESSAGE),
+            });
+        }
+        if (!hasSabrSession(videoId)) {
+            // e.g. companion restarted while the player response was cached
+            await youtubePlayerParsing({
+                innertubeClient: c.get("innertubeClient"),
+                videoId,
+                config,
+                tokenMinter,
+                metrics: c.get("metrics"),
+                overrideCache: true,
+            });
+        }
+        const rangeHeader = c.req.header("range");
+        return await sabrResponse(
+            videoId,
+            itag,
+            xtags || "",
+            rangeHeader?.split("=")[1] ?? c.req.query("range") ?? null,
+            tokenMinter,
+        );
+    }
 
     if (c.req.query("enc") === "true") {
         const { data: encryptedQuery } = c.req.query();

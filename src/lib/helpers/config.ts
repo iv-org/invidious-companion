@@ -106,6 +106,15 @@ export const ConfigSchema = z.object({
                     ),
                 ) || 5,
             ),
+            sabr: z.boolean().default(
+                Deno.env.get("NETWORKING_VIDEOPLAYBACK_SABR") === "true" ||
+                    false,
+            ),
+            sabr_cache_mb: z.number().default(
+                Number(
+                    Deno.env.get("NETWORKING_VIDEOPLAYBACK_SABR_CACHE_MB"),
+                ) || 512,
+            ),
         }).strict().default({}),
     }).strict().default({}),
     jobs: z.object({

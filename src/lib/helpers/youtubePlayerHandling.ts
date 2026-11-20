@@ -18,6 +18,7 @@ const { youtubePlayerReq } = await import(youtubePlayerReqLocation);
 
 import type { Config } from "./config.ts";
 import { getKv } from "./kv.ts";
+import { onlySabr, useSabr } from "./sabr.ts";
 
 export const youtubePlayerParsing = async ({
     innertubeClient,
@@ -63,8 +64,20 @@ export const youtubePlayerParsing = async ({
 
         const streamingData = video.streaming_data;
 
+        const sabr = config.networking.videoplayback.sabr &&
+            onlySabr(videoData);
+        if (sabr) {
+            await useSabr(
+                videoData,
+                videoId,
+                innertubeClient,
+                tokenMinter,
+                config,
+            );
+        }
+
         // Modify the original YouTube response to include deciphered URLs
-        if (streamingData && videoData && videoData.streamingData) {
+        if (!sabr && streamingData && videoData && videoData.streamingData) {
             const ecatcherServiceTracking = videoData.responseContext
                 ?.serviceTrackingParams.find((o: { service: string }) =>
                     o.service === "ECATCHER"

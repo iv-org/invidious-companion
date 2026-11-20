@@ -20,6 +20,7 @@ const { getFetchClient } = await import(getFetchClientLocation);
 
 import { InputMessage, OutputMessageSchema } from "./worker.ts";
 import { PLAYER_ID } from "../../constants.ts";
+import { sabrResponse } from "../helpers/sabr.ts";
 
 interface TokenGeneratorWorker extends Omit<Worker, "postMessage"> {
     postMessage(message: InputMessage): void;
@@ -210,11 +211,22 @@ async function checkToken({
                     continue;
                 }
 
-                const result = await fetchImpl(validFormat?.url, {
-                    method: "HEAD",
-                });
+                const formatUrl = new URL(validFormat.url as string);
+                const result = formatUrl.searchParams.get("sabr") === "1"
+                    // a video that plays only over SABR: its first bytes
+                    ? await sabrResponse(
+                        video.id,
+                        formatUrl.searchParams.get("itag") || "",
+                        formatUrl.searchParams.get("xtags") || "",
+                        "0-999",
+                        integrityTokenBasedMinter,
+                    )
+                    : await fetchImpl(validFormat?.url, {
+                        method: "HEAD",
+                    });
+                await result.body?.cancel();
 
-                if (result.status !== 200) {
+                if (result.status !== 200 && result.status !== 206) {
                     console.log(
                         `[WARN] Got status ${result.status} for video ${video.id}, trying next video`,
                     );
