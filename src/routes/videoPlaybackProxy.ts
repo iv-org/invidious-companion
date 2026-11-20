@@ -94,6 +94,7 @@ videoPlaybackProxy.get("/", async (c) => {
                     }"; filename*=UTF-8''${encodeRFC5987ValueChars(title)}`,
                 }
                 : {},
+            c.req.method === "HEAD",
         );
     }
 

@@ -13,6 +13,7 @@ const config = await parseConfig();
 import { Metrics } from "./lib/helpers/metrics.ts";
 import { PLAYER_ID } from "./constants.ts";
 import { jsInterpreter } from "./lib/helpers/jsInterpreter.ts";
+import { setSabrMinter } from "./lib/helpers/sabr.ts";
 
 const args = parseArgs(Deno.args);
 
@@ -96,6 +97,7 @@ if (!innertubeClientOauthEnabled) {
         ).then((result) => {
             innertubeClient = result.innertubeClient;
             tokenMinter = result.tokenMinter;
+            setSabrMinter(tokenMinter);
             tokenMinterReadyResolve?.();
         }).catch((err) => {
             console.error("[ERROR] Failed to initialize PO token:", err);
@@ -117,6 +119,7 @@ if (!innertubeClientOauthEnabled) {
                         config,
                         metrics,
                     ));
+                    setSabrMinter(tokenMinter);
                 } catch (err) {
                     metrics?.potokenGenerationFailure.inc();
                     throw err;

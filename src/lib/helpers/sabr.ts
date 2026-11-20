@@ -102,6 +102,12 @@ interface Track {
 const sessions = new Map<string, Session>();
 const tracks = new Map<string, Track>();
 let totalBytes = 0;
+let liveMinter: TokenMinter | undefined;
+
+/** the validated minter companion uses now (called when it is replaced) */
+export function setSabrMinter(m: TokenMinter | undefined) {
+    liveMinter = m;
+}
 let readerIds = 0;
 let signKey: Promise<CryptoKey> | undefined;
 let config: Config | undefined;
@@ -282,13 +288,15 @@ function trim() {
     const all = [...tracks.values()].sort((a, b) => a.used - b.used);
     for (const t of all) {
         if (totalBytes <= limit()) return;
-        const behind = Math.min(
-            ...(t.wants.size ? t.wants.values() : [t.want]),
-        );
+        // a segment a response is reading or about to read stays; anything
+        // else is fetched again if it is wanted later
+        const windows = [...t.wants.values()];
+        const needed = (a: number, b: number) =>
+            windows.some((w) => b > w - NEAR_BYTES && a < w + AHEAD_BYTES);
         for (const at of [...t.starts]) {
             if (totalBytes <= limit()) return;
             if (at === 0) continue; // the init segment stays
-            if (at + t.pieces.get(at)!.length >= behind - NEAR_BYTES) break;
+            if (needed(at, at + t.pieces.get(at)!.length)) continue;
             dropPiece(t, at);
         }
     }
@@ -325,6 +333,7 @@ function track(videoId: string, f: RawFormat): Track {
         t.used = Date.now();
         return t;
     }
+    if (t) { for (const at of [...t.starts]) dropPiece(t, at); }
     t = newTrack(id, videoId, f);
     tracks.set(id, t);
     return t;
@@ -365,7 +374,7 @@ async function fetchFrom(
     chain: { n: number },
 ): Promise<Run> {
     const s = sessions.get(t.videoId);
-    const tokenMinter = t.minter;
+    const tokenMinter = t.minter ?? liveMinter;
     if (!s || !tokenMinter) throw new Error("no SABR session");
     const isVideo = String(t.format.mimeType).startsWith("video/");
     const formats = [...s.formats.values()].map((f) =>
@@ -674,27 +683,20 @@ export async function sabrResponse(
     range: string | null,
     tokenMinter: TokenMinter,
     extraHeaders: Record<string, string> = {},
+    headOnly = false,
 ): Promise<Response> {
     const s = sessions.get(videoId);
     if (!s) return new Response("No SABR session", { status: 404 });
     const f = pickFormat(s, itag, xtags);
     if (!f) return new Response("No such format", { status: 404 });
     const t = track(videoId, f);
-    // the minter companion uses now (older ones stop once replaced)
-    t.minter = tokenMinter;
+    liveMinter ??= tokenMinter;
     const r = parseRange(range, t.length);
     if (!r) {
         return new Response(null, {
             status: 416,
             headers: { "content-range": `bytes */${t.length}` },
         });
-    }
-    const { ready, body } = readBody(t, r.start, r.end);
-    try {
-        await ready();
-    } catch (e) {
-        await body.cancel();
-        return new Response(String(e), { status: 502 });
     }
     const headers: Record<string, string> = {
         "access-control-allow-origin": "*",
@@ -707,7 +709,16 @@ export async function sabrResponse(
     if (range) {
         headers["content-range"] = `bytes ${r.start}-${r.end}/${t.length}`;
     }
-    return new Response(body, { status: range ? 206 : 200, headers });
+    const status = range ? 206 : 200;
+    if (headOnly) return new Response(null, { status, headers });
+    const { ready, body } = readBody(t, r.start, r.end);
+    try {
+        await ready();
+    } catch (e) {
+        await body.cancel();
+        return new Response(String(e), { status: 502 });
+    }
+    return new Response(body, { status, headers });
 }
 
 /**
