@@ -87,6 +87,35 @@ Deno.test("player fallback recovery", async (t) => {
     );
 
     await t.step(
+        "keeps captions from the accepted fallback",
+        async () => {
+            const captions = {
+                playerCaptionsTracklistRenderer: {
+                    captionTracks: [{
+                        languageCode: "en",
+                        baseUrl: "https://example.com/captions",
+                    }],
+                },
+            };
+            const fallback = playableResponse("TV_SIMPLY");
+            (fallback as unknown as { captions: unknown }).captions = captions;
+            const stub = stubClients({
+                WEB: unavailableResponse("Video unavailable"),
+                TV_SIMPLY: fallback,
+            });
+            try {
+                const result = await requestPlayer();
+                assertEquals(
+                    (result.data as unknown as { captions: unknown }).captions,
+                    captions,
+                );
+            } finally {
+                stub.restore();
+            }
+        },
+    );
+
+    await t.step(
         "skips candidates with SABR-only adaptive formats",
         async () => {
             const unusable = playableResponse("TV_SIMPLY");
