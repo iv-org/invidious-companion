@@ -145,6 +145,9 @@ export const youtubePlayerReq = async (
             if (fallbackData.videoDetails) {
                 data.videoDetails = fallbackData.videoDetails;
             }
+            if (!data.captions && fallbackData.captions) {
+                data.captions = fallbackData.captions;
+            }
             if (!data.streamingData) {
                 data.streamingData = { ...fallbackData.streamingData! };
             } else {
