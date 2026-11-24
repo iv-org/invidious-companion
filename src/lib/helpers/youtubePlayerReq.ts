@@ -40,6 +40,33 @@ function callWatchEndpoint(
     );
 }
 
+// WEB can refuse a video without any streaming data, so the old check never ran.
+// ANDROID is included because it often still returns usable formats.
+const FALLBACK_CLIENTS = ["TV_SIMPLY", "ANDROID", "ANDROID_VR", "MWEB"];
+
+type PlayerData = ApiResponse["data"];
+
+function getFormats(data: PlayerData) {
+    return [
+        ...(data?.streamingData?.formats ?? []),
+        ...(data?.streamingData?.adaptiveFormats ?? []),
+    ];
+}
+
+// youtubePlayerHandling deciphers every adaptive format, so skip clients with
+// SABR-only formats (no url/signatureCipher).
+function adaptiveFormatsUsable(data: PlayerData): boolean {
+    const adaptive = data?.streamingData?.adaptiveFormats ?? [];
+    return adaptive.length > 0 &&
+        adaptive.every((format) =>
+            Boolean(format?.url || format?.signatureCipher)
+        );
+}
+
+function isPlayable(data: PlayerData): boolean {
+    return data?.playabilityStatus?.status === "OK";
+}
+
 export const youtubePlayerReq = async (
     innertubeClient: Innertube,
     videoId: string,
@@ -62,52 +89,57 @@ export const youtubePlayerReq = async (
         contentPoToken,
     );
 
-    // Check if the first adaptive format URL is undefined, if it is then fallback to multiple YT clients
+    const data = youtubePlayerResponse.data;
+    const primaryUsable = isPlayable(data) && getFormats(data).length > 0 &&
+        adaptiveFormatsUsable(data) &&
+        // Keep the existing behavior of falling back when WEB only provides
+        // signatureCipher-protected adaptive formats without a plain URL.
+        Boolean(data?.streamingData?.adaptiveFormats?.[0]?.url);
 
-    if (
-        !innertubeClientOauthEnabled &&
-        youtubePlayerResponse.data.streamingData &&
-        youtubePlayerResponse.data.streamingData.adaptiveFormats[0].url ===
-            undefined
-    ) {
+    if (!innertubeClientOauthEnabled && !primaryUsable) {
         console.log(
-            "[WARNING] No URLs found for adaptive formats. Falling back to other YT clients.",
+            "[WARNING] No playable stream from the primary YT client. Falling back to other YT clients.",
         );
-        const innertubeClientsTypeFallback = [
-            "TV_SIMPLY",
-            "ANDROID_VR",
-            "MWEB",
-        ];
 
-        for await (const innertubeClientType of innertubeClientsTypeFallback) {
+        for await (const innertubeClientType of FALLBACK_CLIENTS) {
             console.log(
                 `[WARNING] Trying fallback YT client ${innertubeClientType}`,
             );
-            const youtubePlayerResponseFallback = await callWatchEndpoint(
+            const fallbackResponse = await callWatchEndpoint(
                 videoId,
                 innertubeClient,
                 innertubeClientType,
                 contentPoToken,
             );
+            const fallbackData = fallbackResponse.data;
+
             if (
-                youtubePlayerResponseFallback.data.streamingData && (
-                    youtubePlayerResponseFallback.data.streamingData
-                        .adaptiveFormats[0].url ||
-                    youtubePlayerResponseFallback.data.streamingData
-                        .adaptiveFormats[0].signatureCipher
-                )
+                !isPlayable(fallbackData) || !getFormats(fallbackData).length ||
+                !adaptiveFormatsUsable(fallbackData)
             ) {
-                const fallbackFormats =
-                    youtubePlayerResponseFallback.data.streamingData.formats;
-                if (fallbackFormats?.length) {
-                    youtubePlayerResponse.data.streamingData.formats =
-                        fallbackFormats;
-                }
-                youtubePlayerResponse.data.streamingData.adaptiveFormats =
-                    youtubePlayerResponseFallback.data.streamingData
-                        .adaptiveFormats;
-                break;
+                continue;
             }
+
+            // Use the fallback's verdict as well: the primary response may
+            // have been UNPLAYABLE with no videoDetails of its own.
+            data.playabilityStatus = fallbackData.playabilityStatus;
+            if (!data.videoDetails && fallbackData.videoDetails) {
+                data.videoDetails = fallbackData.videoDetails;
+            }
+            if (!data.streamingData) {
+                data.streamingData = { ...fallbackData.streamingData! };
+            } else {
+                const fallbackFormats = fallbackData.streamingData?.formats;
+                if (fallbackFormats?.length) {
+                    data.streamingData.formats = fallbackFormats;
+                }
+                data.streamingData.adaptiveFormats = fallbackData.streamingData!
+                    .adaptiveFormats!;
+            }
+            console.log(
+                `[INFO] Using stream from fallback YT client ${innertubeClientType}`,
+            );
+            break;
         }
     }
 
