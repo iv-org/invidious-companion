@@ -139,10 +139,10 @@ export const youtubePlayerReq = async (
                 continue;
             }
 
-            // Use the fallback's verdict as well: the primary response may
-            // have been UNPLAYABLE with no videoDetails of its own.
+            // Use the fallback's verdict and details: the primary response may
+            // have been UNPLAYABLE with stale or missing metadata.
             data.playabilityStatus = fallbackData.playabilityStatus;
-            if (!data.videoDetails && fallbackData.videoDetails) {
+            if (fallbackData.videoDetails) {
                 data.videoDetails = fallbackData.videoDetails;
             }
             if (!data.streamingData) {
