@@ -148,10 +148,16 @@ export const youtubePlayerReq = async (
             if (!data.streamingData) {
                 data.streamingData = { ...fallbackData.streamingData! };
             } else {
-                const fallbackFormats = fallbackData.streamingData?.formats;
-                if (fallbackFormats?.length) {
-                    data.streamingData.formats = fallbackFormats;
-                }
+                const fallbackFormats = fallbackData.streamingData?.formats ??
+                    [];
+                const primaryFormats = data.streamingData.formats ?? [];
+                // Keep usable primary muxed formats (0b9b9ea), but never retain
+                // formats that would fail deciphering once status becomes OK.
+                data.streamingData.formats = fallbackFormats.length
+                    ? fallbackFormats
+                    : primaryFormats.filter((format) =>
+                        Boolean(format?.url || format?.signatureCipher)
+                    );
                 data.streamingData.adaptiveFormats = fallbackData.streamingData!
                     .adaptiveFormats!;
             }
