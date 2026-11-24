@@ -103,9 +103,11 @@ captionsHandler.get("/:videoId", async (c) => {
         match = captionsTrackArray.find((c: CaptionTrackData) =>
             c.language_code === lang
         );
-    } else {
+    } else if (label !== undefined) {
         match = captionsTrackArray.find((c: CaptionTrackData) =>
             c.name.text === label
+        ) ?? captionsTrackArray.find((c: CaptionTrackData) =>
+            (c.name.text || "").split(" - ")[0] === label
         );
     }
 
