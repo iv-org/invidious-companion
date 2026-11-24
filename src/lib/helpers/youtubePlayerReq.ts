@@ -105,12 +105,22 @@ export const youtubePlayerReq = async (
             console.log(
                 `[WARNING] Trying fallback YT client ${innertubeClientType}`,
             );
-            const fallbackResponse = await callWatchEndpoint(
-                videoId,
-                innertubeClient,
-                innertubeClientType,
-                contentPoToken,
-            );
+            let fallbackResponse: ApiResponse;
+            try {
+                fallbackResponse = await callWatchEndpoint(
+                    videoId,
+                    innertubeClient,
+                    innertubeClientType,
+                    contentPoToken,
+                );
+            } catch (error) {
+                console.log(
+                    `[WARNING] YT client ${innertubeClientType} failed: ${
+                        error instanceof Error ? error.message : String(error)
+                    }`,
+                );
+                continue;
+            }
             const fallbackData = fallbackResponse.data;
 
             if (
