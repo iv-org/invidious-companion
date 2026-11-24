@@ -63,6 +63,14 @@ function adaptiveFormatsUsable(data: PlayerData): boolean {
         );
 }
 
+// youtubePlayerHandling deciphers regular formats too, so skip clients with
+// SABR-only regular formats. An empty list is fine.
+function formatsUsable(data: PlayerData): boolean {
+    return (data?.streamingData?.formats ?? []).every((format) =>
+        Boolean(format?.url || format?.signatureCipher)
+    );
+}
+
 function isPlayable(data: PlayerData): boolean {
     return data?.playabilityStatus?.status === "OK";
 }
@@ -125,7 +133,8 @@ export const youtubePlayerReq = async (
 
             if (
                 !isPlayable(fallbackData) || !getFormats(fallbackData).length ||
-                !adaptiveFormatsUsable(fallbackData)
+                !adaptiveFormatsUsable(fallbackData) ||
+                !formatsUsable(fallbackData)
             ) {
                 continue;
             }
