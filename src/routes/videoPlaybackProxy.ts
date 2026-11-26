@@ -189,9 +189,6 @@ videoPlaybackProxy.get("/", async (c) => {
     // chunk fetches themselves (which also aborts their bodies).
     const clientAbort = new AbortController();
     stream.onAbort(() => clientAbort.abort());
-    // Passing a signal replaces the timeout signal set in getFetchClient, so
-    // keep the configured timeout here.
-    const fetchTimeout = config.networking.fetch?.timeout_ms;
     const fetchChunk = async (start: number, end: number) => {
         const googleVideoUrl = new URL(location);
         googleVideoUrl.searchParams.set("range", `${start}-${end}`);
@@ -202,12 +199,8 @@ videoPlaybackProxy.get("/", async (c) => {
                 body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
                 headers: headersToSend,
                 client: httpClient,
-                signal: fetchTimeout
-                    ? AbortSignal.any([
-                        clientAbort.signal,
-                        AbortSignal.timeout(Number(fetchTimeout)),
-                    ])
-                    : clientAbort.signal,
+                // combined with a fresh timeout per attempt in getFetchClient
+                signal: clientAbort.signal,
             });
             if (postResponse.status !== 200 || !postResponse.body) {
                 await postResponse.body?.cancel();
