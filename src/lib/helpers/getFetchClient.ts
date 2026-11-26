@@ -73,6 +73,7 @@ export const getFetchClient = (config: Config): {
                 method: init?.method,
                 body: init?.body,
                 redirect: init?.redirect,
+                signal: init?.signal,
             });
 
             // If using a reusable client, return directly without closing
@@ -130,14 +131,21 @@ function fetchShim(
     const fetchTimeout = config.networking.fetch?.timeout_ms;
     const fetchRetry = config.networking.fetch?.retry?.enabled;
 
-    const callFetch = () =>
-        fetch(input, {
-            // only set the AbortSignal if the timeout is supplied in the config
-            signal: fetchTimeout
-                ? AbortSignal.timeout(Number(fetchTimeout))
-                : null,
+    const callFetch = () => {
+        // A fresh timeout for every attempt (only if it is supplied in the
+        // config), combined with the caller's signal when there is one, so a
+        // caller-provided signal does not drop the timeout and a timed-out
+        // attempt does not make the retries fail immediately.
+        const signals: AbortSignal[] = [];
+        if (fetchTimeout) {
+            signals.push(AbortSignal.timeout(Number(fetchTimeout)));
+        }
+        if (init?.signal) signals.push(init.signal);
+        return fetch(input, {
             ...(init || {}),
+            signal: signals.length > 0 ? AbortSignal.any(signals) : null,
         });
+    };
     // if retry enabled, call retry with the fetch shim, otherwise pass the fetch shim back directly
     return fetchRetry ? retry(callFetch, retryOptions) : callFetch();
 }
