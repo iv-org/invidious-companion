@@ -33,10 +33,11 @@ export const getFetchClient = (config: Config): {
     // IPv6 rotation generates a unique localAddress for each request to help
     // avoid YouTube's "Please login" errors
     if (proxyAddress || ipv6Block) {
-        // For proxy-only (no IPv6 rotation), reuse a single client
-        const reusableClient = proxyAddress && !ipv6Block
-            ? Deno.createHttpClient({ proxy: { url: proxyAddress } })
-            : undefined;
+        // For proxy-only (no IPv6 rotation), reuse a single client. It is
+        // created on first use, so callers that always bring their own
+        // client (e.g. the videoplayback proxy) never allocate it.
+        const useReusableClient = Boolean(proxyAddress && !ipv6Block);
+        let reusableClient: Deno.HttpClient | undefined;
 
         return async (
             input: FetchInputParameter,
@@ -50,7 +51,10 @@ export const getFetchClient = (config: Config): {
 
             let client: Deno.HttpClient;
 
-            if (reusableClient) {
+            if (useReusableClient) {
+                reusableClient ??= Deno.createHttpClient({
+                    proxy: { url: proxyAddress as string },
+                });
                 client = reusableClient;
             } else {
                 const clientOptions: Deno.CreateHttpClientOptions = {};
@@ -72,7 +76,7 @@ export const getFetchClient = (config: Config): {
             });
 
             // If using a reusable client, return directly without closing
-            if (reusableClient) {
+            if (useReusableClient) {
                 return new Response(fetchRes.body, {
                     status: fetchRes.status,
                     headers: fetchRes.headers,

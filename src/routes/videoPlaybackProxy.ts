@@ -200,7 +200,39 @@ videoPlaybackProxy.get("/", async (c) => {
                     `Non-200 response from google servers: ${postResponse.status}`,
                 );
             }
-            return { body: postResponse.body, httpClient };
+            // A 200 only means the headers arrived. Wait for the first body
+            // bytes too, so a connection dropped right after the headers
+            // still turns into an error before the response head is sent.
+            const reader = postResponse.body.getReader();
+            let firstBytes: Uint8Array | undefined;
+            try {
+                while (!firstBytes) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        throw new Error(
+                            "googlevideo closed the response before sending any data",
+                        );
+                    }
+                    if (value.byteLength > 0) firstBytes = value;
+                }
+            } catch (err) {
+                reader.cancel().catch(() => {});
+                throw err;
+            }
+            const body = new ReadableStream<Uint8Array>({
+                start(controller) {
+                    controller.enqueue(firstBytes);
+                },
+                async pull(controller) {
+                    const { done, value } = await reader.read();
+                    if (done) controller.close();
+                    else controller.enqueue(value);
+                },
+                cancel(reason) {
+                    return reader.cancel(reason);
+                },
+            });
+            return { body, httpClient };
         } catch (err) {
             httpClient.close();
             throw err;
