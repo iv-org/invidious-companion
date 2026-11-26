@@ -40,8 +40,14 @@ export const getFetchClient = (config: Config): {
 
         return async (
             input: FetchInputParameter,
-            init?: RequestInit,
+            init?: FetchInitParameterWithClient,
         ) => {
+            // The caller brought its own client (already configured with the
+            // proxy / IPv6 address), so it also owns closing it.
+            if (init && "client" in init && init.client) {
+                return fetchShim(config, retryOptions, input, init);
+            }
+
             let client: Deno.HttpClient;
 
             if (reusableClient) {
@@ -62,6 +68,7 @@ export const getFetchClient = (config: Config): {
                 headers: init?.headers,
                 method: init?.method,
                 body: init?.body,
+                redirect: init?.redirect,
             });
 
             // If using a reusable client, return directly without closing
