@@ -183,6 +183,13 @@ videoPlaybackProxy.get("/", async (c) => {
     // into chunks and stream the response back to the client to avoid rate limiting
     const { readable, writable } = new TransformStream();
     const stream = new StreamingApi(writable, readable);
+    // Upstream body currently waiting for its first bytes. Once piped, Hono
+    // cancels it on client abort, but before that nothing would, so the
+    // upstream request would linger until data or the fetch timeout.
+    let pendingReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+    stream.onAbort(() => {
+        pendingReader?.cancel().catch(() => {});
+    });
     const fetchChunk = async (start: number, end: number) => {
         const googleVideoUrl = new URL(location);
         googleVideoUrl.searchParams.set("range", `${start}-${end}`);
@@ -204,9 +211,13 @@ videoPlaybackProxy.get("/", async (c) => {
             // bytes too, so a connection dropped right after the headers
             // still turns into an error before the response head is sent.
             const reader = postResponse.body.getReader();
+            pendingReader = reader;
             let firstBytes: Uint8Array | undefined;
             try {
                 while (!firstBytes) {
+                    if (stream.aborted) {
+                        throw new Error("client aborted the response");
+                    }
                     const { done, value } = await reader.read();
                     if (done) {
                         throw new Error(
@@ -218,6 +229,8 @@ videoPlaybackProxy.get("/", async (c) => {
             } catch (err) {
                 reader.cancel().catch(() => {});
                 throw err;
+            } finally {
+                pendingReader = undefined;
             }
             const body = new ReadableStream<Uint8Array>({
                 start(controller) {
@@ -264,7 +277,9 @@ videoPlaybackProxy.get("/", async (c) => {
     const chunkRanges: [number, number][] = [];
     for (
         let startByte = wholeRequestStartByte;
-        startByte < wholeRequestEndByte;
+        // the end byte is inclusive: `<=` keeps the last byte of the range
+        // (e.g. `bytes=0-0`, or a range one byte longer than a chunk)
+        startByte <= wholeRequestEndByte;
         startByte += chunkSize
     ) {
         // i.e.
@@ -294,13 +309,14 @@ videoPlaybackProxy.get("/", async (c) => {
     (async () => {
         if (firstChunk) await pipeChunk(firstChunk);
         for (const [startByte, endByte] of chunkRanges.slice(1)) {
+            if (stream.aborted) return;
             await pipeChunk(await fetchChunk(startByte, endByte));
         }
         await stream.close();
     })().catch((err) => {
         // The client cancelling the response (e.g. the player switching
-        // quality) rejects the pipe with an undefined reason: not an error.
-        if (err !== undefined) {
+        // quality) is not an error: don't log it.
+        if (err !== undefined && !stream.aborted) {
             console.error("[ERROR] googlevideo chunk streaming failed:", err);
         }
         stream.abort();
