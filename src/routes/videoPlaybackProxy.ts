@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import { encodeRFC5987ValueChars } from "../lib/helpers/encodeRFC5987ValueChars.ts";
 import { decryptQuery } from "../lib/helpers/encryptQuery.ts";
 import { StreamingApi } from "hono/utils/stream";
+import { generateRandomIPv6 } from "../lib/helpers/ipv6Rotation.ts";
 
 let getFetchClientLocation = "getFetchClient";
 if (Deno.env.get("GET_FETCH_CLIENT_LOCATION")) {
@@ -106,6 +107,33 @@ videoPlaybackProxy.get("/", async (c) => {
 
     const fetchClient = await getFetchClient(config);
 
+    // googlevideo closes the connection after answering the POST below, even
+    // though it advertises keep-alive. A pooled client would then hand that
+    // dead connection to the next request, which fails with "peer closed
+    // connection without sending TLS close_notify" (every other request).
+    // So every googlevideo request gets its own client, closed once its body
+    // has been consumed.
+    const proxyAddress = config.networking.proxy;
+    const ipv6Block = config.networking.ipv6_block;
+    const newHttpClient = () => {
+        const clientOptions: Deno.CreateHttpClientOptions = {};
+        if (proxyAddress) {
+            clientOptions.proxy = { url: proxyAddress };
+        }
+        if (ipv6Block) {
+            clientOptions.localAddress = generateRandomIPv6(ipv6Block);
+        }
+        return Deno.createHttpClient(clientOptions);
+    };
+
+    // Error responses need CORS too, otherwise browsers only see an opaque
+    // network error instead of a status they can react to.
+    const upstreamError = (status: number, message: string) =>
+        new Response(message, {
+            status,
+            headers: { "access-control-allow-origin": "*" },
+        });
+
     let headResponse: Response | undefined;
     let location = `https://${host}/videoplayback?${queryParams.toString()}`;
 
@@ -113,15 +141,26 @@ videoPlaybackProxy.get("/", async (c) => {
     // A maximum of 5 redirections is defined in the note of the section 7.3
     // of this RFC, that's why `i < 5`
     for (let i = 0; i < 5; i++) {
-        const googlevideoResponse: Response = await fetchClient(location, {
-            method: "HEAD",
-            headers: headersToSend,
-            redirect: "manual",
-        });
+        const httpClient = newHttpClient();
+        let googlevideoResponse: Response;
+        try {
+            googlevideoResponse = await fetchClient(location, {
+                method: "HEAD",
+                headers: headersToSend,
+                redirect: "manual",
+                client: httpClient,
+            });
+        } catch (err) {
+            console.error("[ERROR] googlevideo HEAD request failed:", err);
+            return upstreamError(502, "googlevideo HEAD request failed");
+        } finally {
+            httpClient.close();
+        }
         if (googlevideoResponse.status == 403) {
             return new Response(googlevideoResponse.body, {
                 status: googlevideoResponse.status,
                 statusText: googlevideoResponse.statusText,
+                headers: { "access-control-allow-origin": "*" },
             });
         }
         if (googlevideoResponse.headers.has("Location")) {
@@ -133,11 +172,10 @@ videoPlaybackProxy.get("/", async (c) => {
         }
     }
     if (headResponse === undefined) {
-        throw new HTTPException(502, {
-            res: new Response(
-                "Google headResponse redirected too many times",
-            ),
-        });
+        return upstreamError(
+            502,
+            "Google headResponse redirected too many times",
+        );
     }
 
     // =================== REQUEST CHUNKING =======================
@@ -145,21 +183,72 @@ videoPlaybackProxy.get("/", async (c) => {
     // into chunks and stream the response back to the client to avoid rate limiting
     const { readable, writable } = new TransformStream();
     const stream = new StreamingApi(writable, readable);
-    const googleVideoUrl = new URL(location);
-    const getChunk = async (start: number, end: number) => {
-        googleVideoUrl.searchParams.set(
-            "range",
-            `${start}-${end}`,
-        );
-        const postResponse = await fetchClient(googleVideoUrl, {
-            method: "POST",
-            body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
-            headers: headersToSend,
-        });
-        if (postResponse.status !== 200) {
-            throw new Error("Non-200 response from google servers");
+    const fetchChunk = async (start: number, end: number) => {
+        const googleVideoUrl = new URL(location);
+        googleVideoUrl.searchParams.set("range", `${start}-${end}`);
+        const httpClient = newHttpClient();
+        try {
+            const postResponse: Response = await fetchClient(googleVideoUrl, {
+                method: "POST",
+                body: new Uint8Array([0x78, 0]), // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses),
+                headers: headersToSend,
+                client: httpClient,
+            });
+            if (postResponse.status !== 200 || !postResponse.body) {
+                await postResponse.body?.cancel();
+                throw new Error(
+                    `Non-200 response from google servers: ${postResponse.status}`,
+                );
+            }
+            // A 200 only means the headers arrived. Wait for the first body
+            // bytes too, so a connection dropped right after the headers
+            // still turns into an error before the response head is sent.
+            const reader = postResponse.body.getReader();
+            let firstBytes: Uint8Array | undefined;
+            try {
+                while (!firstBytes) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        throw new Error(
+                            "googlevideo closed the response before sending any data",
+                        );
+                    }
+                    if (value.byteLength > 0) firstBytes = value;
+                }
+            } catch (err) {
+                reader.cancel().catch(() => {});
+                throw err;
+            }
+            const body = new ReadableStream<Uint8Array>({
+                start(controller) {
+                    controller.enqueue(firstBytes);
+                },
+                async pull(controller) {
+                    const { done, value } = await reader.read();
+                    if (done) controller.close();
+                    else controller.enqueue(value);
+                },
+                cancel(reason) {
+                    return reader.cancel(reason);
+                },
+            });
+            return { body, httpClient };
+        } catch (err) {
+            httpClient.close();
+            throw err;
         }
-        await stream.pipe(postResponse.body);
+    };
+    const pipeChunk = async (
+        chunk: {
+            body: ReadableStream<Uint8Array>;
+            httpClient: Deno.HttpClient;
+        },
+    ) => {
+        try {
+            await stream.pipe(chunk.body);
+        } finally {
+            chunk.httpClient.close();
+        }
     };
 
     const chunkSize =
@@ -172,7 +261,7 @@ videoPlaybackProxy.get("/", async (c) => {
     const wholeRequestStartByte = Number(firstByte || "0");
     const wholeRequestEndByte = wholeRequestStartByte + Number(totalBytes) - 1;
 
-    let chunk = Promise.resolve();
+    const chunkRanges: [number, number][] = [];
     for (
         let startByte = wholeRequestStartByte;
         startByte < wholeRequestEndByte;
@@ -186,9 +275,34 @@ videoPlaybackProxy.get("/", async (c) => {
         if (endByte > wholeRequestEndByte) {
             endByte = wholeRequestEndByte;
         }
-        chunk = chunk.then(() => getChunk(startByte, endByte));
+        chunkRanges.push([startByte, endByte]);
     }
-    chunk.catch(() => {
+
+    // Wait for googlevideo to answer the first chunk before committing to a
+    // 200/206 head: once the head is sent, an upstream failure can only show
+    // up as a truncated body, which players do not retry properly.
+    let firstChunk: Awaited<ReturnType<typeof fetchChunk>> | undefined;
+    if (chunkRanges.length > 0) {
+        try {
+            firstChunk = await fetchChunk(...chunkRanges[0]);
+        } catch (err) {
+            console.error("[ERROR] googlevideo POST request failed:", err);
+            return upstreamError(502, "googlevideo POST request failed");
+        }
+    }
+
+    (async () => {
+        if (firstChunk) await pipeChunk(firstChunk);
+        for (const [startByte, endByte] of chunkRanges.slice(1)) {
+            await pipeChunk(await fetchChunk(startByte, endByte));
+        }
+        await stream.close();
+    })().catch((err) => {
+        // The client cancelling the response (e.g. the player switching
+        // quality) rejects the pipe with an undefined reason: not an error.
+        if (err !== undefined) {
+            console.error("[ERROR] googlevideo chunk streaming failed:", err);
+        }
         stream.abort();
     });
     // =================== REQUEST CHUNKING =======================
